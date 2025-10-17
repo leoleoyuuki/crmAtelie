@@ -11,22 +11,22 @@ export function StatsCards({ inProcessCount, awaitingPickupCount }: StatsCardsPr
         <>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">In Process</CardTitle>
+                    <CardTitle className="text-sm font-medium">Em Andamento</CardTitle>
                     <ClipboardList className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{inProcessCount}</div>
-                    <p className="text-xs text-muted-foreground">Orders currently being worked on</p>
+                    <p className="text-xs text-muted-foreground">Pedidos em andamento</p>
                 </CardContent>
             </Card>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Awaiting Pickup</CardTitle>
+                    <CardTitle className="text-sm font-medium">Aguardando Retirada</CardTitle>
                     <PackageCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{awaitingPickupCount}</div>
-                    <p className="text-xs text-muted-foreground">Orders ready for customers</p>
+                    <p className="text-xs text-muted-foreground">Pedidos prontos para retirada</p>
                 </CardContent>
             </Card>
         </>

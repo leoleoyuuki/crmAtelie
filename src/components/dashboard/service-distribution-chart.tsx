@@ -26,22 +26,22 @@ type ServiceDistributionChartProps = {
 
 const chartConfig = {
   count: {
-    label: "Orders",
+    label: "Pedidos",
   },
-  Alteration: {
-    label: "Alteration",
+  Ajuste: {
+    label: "Ajuste",
     color: "hsl(var(--chart-1))",
   },
-  "Custom Design": {
-    label: "Custom Design",
+  "Design Personalizado": {
+    label: "Design Personalizado",
     color: "hsl(var(--chart-2))",
   },
-  Repair: {
-    label: "Repair",
+  Reparo: {
+    label: "Reparo",
     color: "hsl(var(--chart-3))",
   },
-  "Dry Cleaning": {
-    label: "Dry Cleaning",
+  "Lavagem a Seco": {
+    label: "Lavagem a Seco",
     color: "hsl(var(--chart-4))",
   },
 }
@@ -55,9 +55,9 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="items-center pb-0">
-        <CardTitle className="font-headline">Service Distribution - Last 30 Days</CardTitle>
+        <CardTitle className="font-headline">Distribuição de Serviços - Últimos 30 Dias</CardTitle>
         <CardDescription>
-          Breakdown of order types in the last month.
+          Detalhamento dos tipos de pedidos no último mês.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
@@ -104,7 +104,7 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
               {totalOrders}
             </span>
             <span className="ml-2 text-sm text-muted-foreground">
-              Total Orders
+              Pedidos Totais
             </span>
           </div>
         )}

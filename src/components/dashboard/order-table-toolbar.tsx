@@ -18,21 +18,21 @@ interface OrderTableToolbarProps<TData> {
   onOrderCreated: (order: Order) => void
 }
 
-const statuses: OrderStatus[] = ['Pending', 'In Process', 'Awaiting Pickup', 'Completed', 'Delivered'];
+const statuses: OrderStatus[] = ['Pendente', 'Em Andamento', 'Aguardando Retirada', 'Concluído', 'Entregue'];
 
 export function OrderTableToolbar<TData>({ table, onOrderCreated }: OrderTableToolbarProps<TData>) {
   return (
     <>
       <CardHeader>
-        <CardTitle className="font-headline">Your Orders</CardTitle>
+        <CardTitle className="font-headline">Seus Pedidos</CardTitle>
         <CardDescription>
-          Manage and track all your customer orders in one place.
+          Gerencie e acompanhe todos os pedidos de seus clientes em um só lugar.
         </CardDescription>
       </CardHeader>
       <div className="flex items-center justify-between p-6 pt-0">
         <div className="flex flex-1 items-center space-x-2">
           <Input
-            placeholder="Filter by customer name..."
+            placeholder="Filtrar por nome do cliente..."
             value={(table.getColumn("customerName")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("customerName")?.setFilterValue(event.target.value)
@@ -50,10 +50,10 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated }: OrderTableTo
             }}
           >
             <SelectTrigger className="h-10 w-[180px]">
-              <SelectValue placeholder="Filter by status..." />
+              <SelectValue placeholder="Filtrar por status..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="all">Todos os Status</SelectItem>
               {statuses.map(status => (
                 <SelectItem key={status} value={status}>{status}</SelectItem>
               ))}

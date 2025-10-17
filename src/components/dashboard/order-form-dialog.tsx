@@ -12,9 +12,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -41,19 +41,19 @@ import { useToast } from "@/hooks/use-toast";
 import { PlusCircle } from "lucide-react";
 
 const orderFormSchema = z.object({
-  customerName: z.string().min(2, "Name must be at least 2 characters."),
-  customerPhone: z.string().min(10, "Phone number seems too short."),
-  serviceType: z.enum(["Alteration", "Custom Design", "Repair", "Dry Cleaning"]),
-  description: z.string().max(200, "Description is too long.").optional(),
-  totalValue: z.coerce.number().min(0, "Value must be positive."),
-  dueDate: z.date({ required_error: "A due date is required." }),
-  status: z.enum(['Pending', 'In Process', 'Awaiting Pickup', 'Completed', 'Delivered']),
+  customerName: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
+  customerPhone: z.string().min(10, "O número de telefone parece muito curto."),
+  serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
+  description: z.string().max(200, "A descrição é muito longa.").optional(),
+  totalValue: z.coerce.number().min(0, "O valor deve ser positivo."),
+  dueDate: z.date({ required_error: "A data de entrega é obrigatória." }),
+  status: z.enum(['Pendente', 'Em Andamento', 'Aguardando Retirada', 'Concluído', 'Entregue']),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
-const serviceTypes: ServiceType[] = ["Alteration", "Custom Design", "Repair", "Dry Cleaning"];
-const statuses: OrderStatus[] = ['Pending', 'In Process', 'Awaiting Pickup', 'Completed', 'Delivered'];
+const serviceTypes: ServiceType[] = ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"];
+const statuses: OrderStatus[] = ['Pendente', 'Em Andamento', 'Aguardando Retirada', 'Concluído', 'Entregue'];
 
 interface OrderFormDialogProps {
   order?: Order;
@@ -81,7 +81,7 @@ export function OrderFormDialog({
     ...order,
     totalValue: order.totalValue,
   } : {
-    status: 'Pending',
+    status: 'Pendente',
   };
 
   const form = useForm<OrderFormValues>({
@@ -97,7 +97,7 @@ export function OrderFormDialog({
             customerName: '',
             customerPhone: '',
             description: '',
-            status: 'Pending',
+            status: 'Pendente',
         });
     }
   }, [order, form, isOpen]);
@@ -108,16 +108,16 @@ export function OrderFormDialog({
       if (isEditing && order) {
         const updated = await updateOrder(order.id, data);
         onOrderUpdated?.(updated);
-        toast({ title: "Order Updated", description: `Order #${order.id} has been updated.` });
+        toast({ title: "Pedido Atualizado", description: `O pedido #${order.id} foi atualizado.` });
       } else {
         const newOrder = await addOrder(data as Omit<Order, 'id' | 'createdAt'>);
         onOrderCreated?.(newOrder);
-        toast({ title: "Order Created", description: `New order #${newOrder.id} has been created.` });
+        toast({ title: "Pedido Criado", description: `Novo pedido #${newOrder.id} foi criado.` });
       }
       setIsOpen(false);
       form.reset();
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Something went wrong." });
+      toast({ variant: "destructive", title: "Erro", description: "Algo deu errado." });
     }
   };
 
@@ -127,15 +127,15 @@ export function OrderFormDialog({
         <DialogTrigger asChild>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
-            New Order
+            Novo Pedido
           </Button>
         </DialogTrigger>
       )}
       <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle className="font-headline">{isEditing ? "Edit Order" : "Create New Order"}</DialogTitle>
+          <DialogTitle className="font-headline">{isEditing ? "Editar Pedido" : "Criar Novo Pedido"}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update the details for this order." : "Fill in the details for the new customer order."}
+            {isEditing ? "Atualize os detalhes deste pedido." : "Preencha os detalhes para o novo pedido do cliente."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -146,9 +146,9 @@ export function OrderFormDialog({
                 name="customerName"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Customer Name</FormLabel>
+                    <FormLabel>Nome do Cliente</FormLabel>
                     <FormControl>
-                        <Input placeholder="e.g., Jane Doe" {...field} />
+                        <Input placeholder="ex: João da Silva" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -159,9 +159,9 @@ export function OrderFormDialog({
                 name="customerPhone"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel>Customer Phone</FormLabel>
+                    <FormLabel>Telefone do Cliente</FormLabel>
                     <FormControl>
-                        <Input placeholder="e.g., 123-456-7890" {...field} />
+                        <Input placeholder="ex: (11) 99999-9999" {...field} />
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -174,11 +174,11 @@ export function OrderFormDialog({
               name="serviceType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Service Type</FormLabel>
+                  <FormLabel>Tipo de Serviço</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a service type" />
+                        <SelectValue placeholder="Selecione um tipo de serviço" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -197,9 +197,9 @@ export function OrderFormDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describe the service details..." {...field} />
+                    <Textarea placeholder="Descreva os detalhes do serviço..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -212,9 +212,9 @@ export function OrderFormDialog({
                 name="totalValue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Value ($)</FormLabel>
+                    <FormLabel>Valor Total (R$)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g., 50.00" {...field} />
+                      <Input type="number" placeholder="ex: 50,00" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -225,7 +225,7 @@ export function OrderFormDialog({
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel className="mb-1.5">Due Date</FormLabel>
+                    <FormLabel className="mb-1.5">Data de Entrega</FormLabel>
                     <DatePicker date={field.value} setDate={field.onChange} />
                     <FormMessage />
                   </FormItem>
@@ -242,7 +242,7 @@ export function OrderFormDialog({
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select order status" />
+                        <SelectValue placeholder="Selecione o status do pedido" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -259,10 +259,10 @@ export function OrderFormDialog({
             <DialogFooter>
                 <DialogClose asChild>
                     <Button type="button" variant="outline">
-                        Cancel
+                        Cancelar
                     </Button>
                 </DialogClose>
-                <Button type="submit">{isEditing ? 'Save Changes' : 'Create Order'}</Button>
+                <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Criar Pedido'}</Button>
             </DialogFooter>
           </form>
         </Form>

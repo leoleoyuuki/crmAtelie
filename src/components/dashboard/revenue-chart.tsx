@@ -23,7 +23,7 @@ type RevenueChartProps = {
 
 const chartConfig = {
   revenue: {
-    label: "Revenue",
+    label: "Receita",
     color: "hsl(var(--primary))",
   },
 }
@@ -32,9 +32,9 @@ export function RevenueChart({ data }: RevenueChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-headline">Revenue - Last 6 Months</CardTitle>
+        <CardTitle className="font-headline">Receita - Últimos 6 Meses</CardTitle>
         <CardDescription>
-          A summary of your total revenue from completed orders.
+          Um resumo da sua receita total de pedidos concluídos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -52,7 +52,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
               cursor={false}
               content={<ChartTooltipContent 
                 indicator="dot"
-                formatter={(value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value as number)}
+                formatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value as number)}
               />}
             />
             <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
@@ -61,10 +61,10 @@ export function RevenueChart({ data }: RevenueChartProps) {
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+          Tendência de alta de 5,2% este mês <TrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-muted-foreground">
-          Showing total revenue for the last 6 months
+          Mostrando a receita total dos últimos 6 meses
         </div>
       </CardFooter>
     </Card>

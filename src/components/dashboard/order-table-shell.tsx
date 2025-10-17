@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { OrderTableRowActions } from "./order-table-row-actions";
 import { OrderTableToolbar } from "./order-table-toolbar";
 import { Card, CardContent } from "../ui/card";
@@ -52,7 +53,7 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
     () => [
       {
         accessorKey: "customerName",
-        header: "Customer",
+        header: "Cliente",
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-medium">{row.original.customerName}</span>
@@ -62,44 +63,36 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
       },
       {
         accessorKey: "serviceType",
-        header: "Service",
+        header: "Serviço",
       },
       {
         accessorKey: "totalValue",
         header: () => <div className="text-right">Total</div>,
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("totalValue"));
-          const formatted = new Intl.NumberFormat("en-US", {
+          const formatted = new Intl.NumberFormat("pt-BR", {
             style: "currency",
-            currency: "USD",
+            currency: "BRL",
           }).format(amount);
           return <div className="text-right font-medium">{formatted}</div>;
         },
       },
       {
         accessorKey: "dueDate",
-        header: "Due Date",
-        cell: ({ row }) => format(row.original.dueDate, "PPP"),
+        header: "Data de Entrega",
+        cell: ({ row }) => format(row.original.dueDate, "PPP", { locale: ptBR }),
       },
       {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
           const status = row.getValue("status") as OrderStatus;
-          const variant = {
-              "Pending": "secondary",
-              "In Process": "default",
-              "Awaiting Pickup": "outline",
-              "Completed": "default",
-              "Delivered": "secondary",
-          }[status] as "default" | "secondary" | "destructive" | "outline" | null | undefined;
-          
           const colorClass = {
-            "Pending": "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
-            "In Process": "bg-blue-500/20 text-blue-700 border-blue-500/50",
-            "Awaiting Pickup": "bg-purple-500/20 text-purple-700 border-purple-500/50",
-            "Completed": "bg-green-500/20 text-green-700 border-green-500/50",
-            "Delivered": "bg-gray-500/20 text-gray-700 border-gray-500/50",
+            "Pendente": "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
+            "Em Andamento": "bg-blue-500/20 text-blue-700 border-blue-500/50",
+            "Aguardando Retirada": "bg-purple-500/20 text-purple-700 border-purple-500/50",
+            "Concluído": "bg-green-500/20 text-green-700 border-green-500/50",
+            "Entregue": "bg-gray-500/20 text-gray-700 border-gray-500/50",
           }[status];
 
           return <Badge className={colorClass} variant="outline">{status}</Badge>;
@@ -178,7 +171,7 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No results.
+                    Nenhum resultado.
                   </TableCell>
                 </TableRow>
               )}
@@ -192,7 +185,7 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            Anterior
           </Button>
           <Button
             variant="outline"
@@ -200,7 +193,7 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            Próximo
           </Button>
         </div>
       </CardContent>

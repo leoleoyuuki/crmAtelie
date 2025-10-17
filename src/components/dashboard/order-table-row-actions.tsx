@@ -27,6 +27,7 @@ import {
 import { deleteOrder } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface OrderTableRowActionsProps {
   order: Order;
@@ -43,22 +44,22 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   };
 
-  const confirmationMessage = `Hello ${order.customerName}, this is a confirmation for your order #${order.id} at AtelierFlow. Details: ${order.serviceType} - ${order.description}. Total: $${order.totalValue.toFixed(2)}. Due by: ${format(order.dueDate, "PPP")}. Thank you!`;
-  const readyMessage = `Hello ${order.customerName}, your order #${order.id} at AtelierFlow is ready for pickup! We are excited for you to see it.`;
+  const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id} no AtelierFlow. Detalhes: ${order.serviceType} - ${order.description}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
+  const readyMessage = `Olá ${order.customerName}, seu pedido #${order.id} no AtelierFlow está pronto para retirada! Estamos ansiosos para que você veja.`;
 
   const handleDelete = async () => {
     try {
       await deleteOrder(order.id);
       onDelete(order.id);
       toast({
-        title: "Order Deleted",
-        description: `Order #${order.id} has been successfully deleted.`,
+        title: "Pedido Excluído",
+        description: `O pedido #${order.id} foi excluído com sucesso.`,
       });
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to delete the order.",
+        title: "Erro",
+        description: "Falha ao excluir o pedido.",
       });
     }
   };
@@ -69,29 +70,29 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">Abrir menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              Editar
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>Communication</DropdownMenuLabel>
+            <DropdownMenuLabel>Comunicação</DropdownMenuLabel>
              <DropdownMenuItem asChild>
               <a href={generateWaLink(confirmationMessage)} target="_blank" rel="noopener noreferrer">
                 <MessageSquare className="mr-2 h-4 w-4" />
-                Send Confirmation
+                Enviar Confirmação
               </a>
             </DropdownMenuItem>
-            {order.status === "Awaiting Pickup" && (
+            {order.status === "Aguardando Retirada" && (
               <DropdownMenuItem asChild>
                  <a href={generateWaLink(readyMessage)} target="_blank" rel="noopener noreferrer">
                     <MessageSquare className="mr-2 h-4 w-4 text-green-600" />
-                    Notify Ready for Pickup
+                    Notificar Pronto para Retirada
                 </a>
               </DropdownMenuItem>
             )}
@@ -99,7 +100,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
              <AlertDialogTrigger asChild>
                 <DropdownMenuItem className="text-red-600" onSelect={(e) => e.preventDefault()}>
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
+                    Excluir
                 </DropdownMenuItem>
             </AlertDialogTrigger>
           </DropdownMenuContent>
@@ -107,15 +108,15 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
 
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
                 <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the order
-                for {order.customerName}.
+                Essa ação não pode ser desfeita. Isso excluirá permanentemente o pedido
+                de {order.customerName}.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Continue</AlertDialogAction>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

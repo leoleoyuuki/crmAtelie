@@ -1,21 +1,23 @@
 import { Order, OrderStatus, ServiceType } from '@/lib/types';
-import { subMonths, format, startOfMonth } from 'date-fns';
+import { subMonths, format, startOfMonth, subDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // Mock data using faker-js would be ideal, but for this self-contained example, we'll manually create it.
 const now = new Date();
 
 let mockOrders: Order[] = [
-  { id: 'ORD001', customerName: 'Eleanor Vance', customerPhone: '12025550191', serviceType: 'Alteration', description: 'Hem trousers and adjust waist', totalValue: 45.00, dueDate: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000), status: 'In Process', createdAt: subMonths(now, 0) },
-  { id: 'ORD002', customerName: 'Marcus Holloway', customerPhone: '13125550188', serviceType: 'Custom Design', description: 'Design and create a formal evening gown', totalValue: 650.00, dueDate: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000), status: 'Pending', createdAt: subMonths(now, 0) },
-  { id: 'ORD003', customerName: 'Isabella Rossi', customerPhone: '12155550134', serviceType: 'Repair', description: 'Fix torn seam on a silk blouse', totalValue: 30.00, dueDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), status: 'Awaiting Pickup', createdAt: subMonths(now, 1) },
-  { id: 'ORD004', customerName: 'Jameson Locke', customerPhone: '14155550101', serviceType: 'Dry Cleaning', description: 'Full suit dry clean and press', totalValue: 25.00, dueDate: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000), status: 'In Process', createdAt: subMonths(now, 1) },
-  { id: 'ORD005', customerName: 'Clara Oswald', customerPhone: '16465550158', serviceType: 'Alteration', description: 'Shorten sleeves on a winter coat', totalValue: 70.00, dueDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), status: 'Delivered', createdAt: subMonths(now, 2) },
-  { id: 'ORD006', customerName: 'Arthur Morgan', customerPhone: '15125550123', serviceType: 'Repair', description: 'Patch denim jacket', totalValue: 35.00, dueDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), status: 'Completed', createdAt: subMonths(now, 2) },
-  { id: 'ORD007', customerName: 'Sadie Adler', customerPhone: '18175550145', serviceType: 'Custom Design', description: 'Bespoke leather vest', totalValue: 320.00, dueDate: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000), status: 'In Process', createdAt: subMonths(now, 3) },
-  { id: 'ORD008', customerName: 'John Marston', customerPhone: '19725550177', serviceType: 'Alteration', description: 'Take in a vintage shirt', totalValue: 40.00, dueDate: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000), status: 'Delivered', createdAt: subMonths(now, 4) },
-  { id: 'ORD009', customerName: 'Geralt of Rivia', customerPhone: '12145550166', serviceType: 'Repair', description: 'Reinforce leather armor seams', totalValue: 150.00, dueDate: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000), status: 'Delivered', createdAt: subMonths(now, 5) },
-  { id: 'ORD010', customerName: 'Yennefer of Vengerberg', customerPhone: '12135550199', serviceType: 'Custom Design', description: 'Enchanted ball gown, black and white', totalValue: 1200.00, dueDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), status: 'Delivered', createdAt: subMonths(now, 6) },
+  { id: 'ORD001', customerName: 'Eleanor Vance', customerPhone: '11987654321', serviceType: 'Ajuste', description: 'Fazer a barra da calça e ajustar a cintura', totalValue: 45.00, dueDate: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000), status: 'Em Andamento', createdAt: subDays(now, 2) },
+  { id: 'ORD002', customerName: 'Marcos Oliveira', customerPhone: '21998765432', serviceType: 'Design Personalizado', description: 'Desenhar e criar um vestido de noite formal', totalValue: 650.00, dueDate: new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000), status: 'Pendente', createdAt: subDays(now, 1) },
+  { id: 'ORD003', customerName: 'Isabella Rossi', customerPhone: '31988887777', serviceType: 'Reparo', description: 'Consertar costura rasgada em uma blusa de seda', totalValue: 30.00, dueDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), status: 'Aguardando Retirada', createdAt: subMonths(now, 1) },
+  { id: 'ORD004', customerName: 'Jameson Locke', customerPhone: '41977776666', serviceType: 'Lavagem a Seco', description: 'Terno completo, lavagem a seco e prensagem', totalValue: 25.00, dueDate: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000), status: 'Em Andamento', createdAt: subMonths(now, 1) },
+  { id: 'ORD005', customerName: 'Clara Oswald', customerPhone: '51966665555', serviceType: 'Ajuste', description: 'Encurtar mangas de um casaco de inverno', totalValue: 70.00, dueDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), status: 'Entregue', createdAt: subMonths(now, 2) },
+  { id: 'ORD006', customerName: 'Arthur Morgan', customerPhone: '61955554444', serviceType: 'Reparo', description: 'Remendar jaqueta jeans', totalValue: 35.00, dueDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000), status: 'Concluído', createdAt: subMonths(now, 2) },
+  { id: 'ORD007', customerName: 'Sadie Adler', customerPhone: '71944443333', serviceType: 'Design Personalizado', description: 'Colete de couro sob medida', totalValue: 320.00, dueDate: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000), status: 'Em Andamento', createdAt: subMonths(now, 3) },
+  { id: 'ORD008', customerName: 'John Marston', customerPhone: '81933332222', serviceType: 'Ajuste', description: 'Apertar uma camisa vintage', totalValue: 40.00, dueDate: new Date(now.getTime() - 8 * 24 * 60 * 60 * 1000), status: 'Entregue', createdAt: subMonths(now, 4) },
+  { id: 'ORD009', customerName: 'Geralt de Rivia', customerPhone: '91922221111', serviceType: 'Reparo', description: 'Reforçar costuras de armadura de couro', totalValue: 150.00, dueDate: new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000), status: 'Entregue', createdAt: subMonths(now, 5) },
+  { id: 'ORD010', customerName: 'Yennefer de Vengerberg', customerPhone: '11911110000', serviceType: 'Design Personalizado', description: 'Vestido de baile encantado, preto e branco', totalValue: 1200.00, dueDate: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), status: 'Entregue', createdAt: subMonths(now, 6) },
 ];
+
 
 // Simulate API latency
 const api_delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -27,8 +29,8 @@ export async function getOrders(): Promise<Order[]> {
 
 export async function getStatusMetrics() {
   await api_delay(50);
-  const inProcessCount = mockOrders.filter(o => o.status === 'In Process').length;
-  const awaitingPickupCount = mockOrders.filter(o => o.status === 'Awaiting Pickup').length;
+  const inProcessCount = mockOrders.filter(o => o.status === 'Em Andamento').length;
+  const awaitingPickupCount = mockOrders.filter(o => o.status === 'Aguardando Retirada').length;
   return { inProcessCount, awaitingPickupCount };
 }
 
@@ -39,11 +41,11 @@ export async function getRevenueLast6Months() {
     const month = subMonths(now, i);
     const revenue = mockOrders
       .filter(o => o.createdAt >= startOfMonth(month) && o.createdAt < startOfMonth(subMonths(now, i-1)))
-      .filter(o => o.status === 'Completed' || o.status === 'Delivered')
+      .filter(o => o.status === 'Concluído' || o.status === 'Entregue')
       .reduce((sum, o) => sum + o.totalValue, 0);
 
     data.push({
-      month: format(month, 'MMM'),
+      month: format(month, 'MMM', { locale: ptBR }),
       revenue: Math.round(revenue),
     });
   }
@@ -52,7 +54,7 @@ export async function getRevenueLast6Months() {
 
 export async function getServiceDistribution() {
   await api_delay(150);
-  const last30Days = subMonths(now, 1);
+  const last30Days = subDays(now, 30);
   const recentOrders = mockOrders.filter(o => o.createdAt >= last30Days);
   
   const distribution = recentOrders.reduce((acc, order) => {
@@ -60,10 +62,17 @@ export async function getServiceDistribution() {
     return acc;
   }, {} as Record<ServiceType, number>);
 
-  return Object.entries(distribution).map(([service, count], index) => ({
+  const serviceTypeToChartMap: Record<ServiceType, number> = {
+    "Ajuste": 1,
+    "Design Personalizado": 2,
+    "Reparo": 3,
+    "Lavagem a Seco": 4
+  }
+
+  return Object.entries(distribution).map(([service, count]) => ({
     service,
     count,
-    fill: `var(--chart-${index + 1})`
+    fill: `var(--chart-${serviceTypeToChartMap[service as ServiceType] || Object.keys(distribution).indexOf(service) + 1})`
   }));
 }
 
@@ -86,7 +95,7 @@ export async function updateOrder(orderId: string, updatedData: Partial<Order>) 
     mockOrders[index] = { ...mockOrders[index], ...updatedData };
     return mockOrders[index];
   }
-  throw new Error('Order not found');
+  throw new Error('Pedido não encontrado');
 }
 
 export async function deleteOrder(orderId: string) {
@@ -94,7 +103,7 @@ export async function deleteOrder(orderId: string) {
   const initialLength = mockOrders.length;
   mockOrders = mockOrders.filter(o => o.id !== orderId);
   if (mockOrders.length === initialLength) {
-    throw new Error('Order not found');
+    throw new Error('Pedido não encontrado');
   }
   return { success: true };
 }
