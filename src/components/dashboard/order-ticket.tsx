@@ -14,12 +14,9 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
   ({ order, customer }, ref) => {
     const formattedDate = (date: Date) => format(date, "dd/MM/yy HH:mm", { locale: ptBR });
     const formattedCurrency = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-
-    // Styles are mostly handled by Tailwind classes now, but we keep the print-specific setup
-    // The font sizes and layout are adjusted using Tailwind's utility classes.
     
     return (
-      <div ref={ref} className="bg-white text-black font-mono w-[48mm] p-1 text-[8pt]">
+      <div ref={ref} className="bg-white text-black font-mono w-[48mm] p-1 text-[8pt] leading-tight">
         <div className="text-center mb-2">
             <Logo className="h-8 w-8 mx-auto" />
             <h1 className="text-[10pt] font-bold mt-1">AtelierFlow</h1>
@@ -46,7 +43,7 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
         <div className="mb-2 text-center">
             <h2 className="font-bold text-[9pt] uppercase">Serviço</h2>
             <p><strong>Tipo:</strong> {order.serviceType}</p>
-            {order.description && <p className="text-wrap text-[7pt]"><strong>Detalhes:</strong> {order.description}</p>}
+            {order.description && <p className="text-wrap text-[7pt] break-words"><strong>Detalhes:</strong> {order.description}</p>}
         </div>
 
         <div className="border-t border-dashed border-black pt-1 my-2">

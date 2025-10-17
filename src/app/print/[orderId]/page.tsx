@@ -17,7 +17,6 @@ export default function PrintPage() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const ticketRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (orderId) {
@@ -47,7 +46,7 @@ export default function PrintPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="p-10 bg-white shadow-md">
+        <div className="p-10 bg-white shadow-md w-[58mm] h-[150mm]">
           <Skeleton className="h-10 w-10 mx-auto mb-4" />
           <Skeleton className="h-4 w-32 mx-auto mb-2" />
           <Skeleton className="h-3 w-24 mx-auto mb-4" />
@@ -73,6 +72,11 @@ export default function PrintPage() {
     <>
       <style jsx global>{`
         @media print {
+          body, html {
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
           body * {
             visibility: hidden;
           }
@@ -80,10 +84,11 @@ export default function PrintPage() {
             visibility: visible;
           }
           #printable-area {
-            position: absolute;
-            left: 0;
+            position: fixed;
             top: 0;
-            width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48mm;
           }
           .no-print {
             display: none;
@@ -94,7 +99,7 @@ export default function PrintPage() {
           margin: 5mm;
         }
       `}</style>
-      <main className="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+      <main className="bg-gray-100 flex flex-col items-center justify-start min-h-screen py-8">
         <div className="no-print mb-4 p-4 bg-white rounded-lg shadow-md flex flex-col items-center gap-2">
           <p className="text-sm text-center text-gray-600">
             Pré-visualização da impressão. Use o botão abaixo ou Ctrl/Cmd+P para imprimir.
@@ -104,7 +109,7 @@ export default function PrintPage() {
             Imprimir Comprovante
           </Button>
         </div>
-        <div id="printable-area" ref={ticketRef}>
+        <div id="printable-area" className="bg-white shadow-lg">
           <OrderTicket order={order} customer={customer} />
         </div>
       </main>
