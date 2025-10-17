@@ -1,7 +1,8 @@
+
 "use client"
 
 import * as React from "react"
-import { Pie, PieChart, Sector } from "recharts"
+import { Pie, PieChart, Sector, Cell } from "recharts"
 import { PieSectorDataItem } from "recharts/types/polar/Pie"
 
 import {
@@ -89,6 +90,9 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
                 </g>
               )}
             >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
             </Pie>
             <ChartLegend
               content={<ChartLegendContent nameKey="service" />}
