@@ -84,10 +84,11 @@ export default function PrintPage() {
             visibility: visible;
           }
           #printable-area {
-            position: fixed;
+            position: absolute;
             top: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
+            right: 0;
+            margin: auto;
             width: 48mm;
           }
           .no-print {
