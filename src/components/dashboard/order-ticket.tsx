@@ -18,7 +18,7 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
     return (
       <div ref={ref} className="bg-white text-black font-mono w-[48mm] p-1 text-[8pt] leading-tight">
         <div className="text-center mb-2">
-            <Logo className="h-8 w-8 mx-auto" />
+            <Logo className="h-6 w-6 mx-auto" />
             <h1 className="text-[10pt] font-bold mt-1">AtelierFlow</h1>
             <p className="text-[7pt]">Comprovante de Pedido</p>
         </div>
