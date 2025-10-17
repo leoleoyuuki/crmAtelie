@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react";
-import { MoreHorizontal, MessageSquare, Pencil, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { MoreHorizontal, MessageSquare, Pencil, Trash2, Printer } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
+import { OrderTicket } from "./order-ticket";
 
 interface OrderTableRowActionsProps {
   order: Order;
@@ -41,6 +43,14 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
+
+  const ticketRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => ticketRef.current,
+    documentTitle: `Pedido_${order.id.substring(0, 5)}`,
+    bodyClass: "bg-white",
+  });
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -84,6 +94,10 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   
   return (
     <>
+      <div className="hidden">
+        <OrderTicket ref={ticketRef} order={order} customer={customer} />
+      </div>
+
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -97,6 +111,10 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
             <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
               <Pencil className="mr-2 h-4 w-4" />
               Editar
+            </DropdownMenuItem>
+             <DropdownMenuItem onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4" />
+              Imprimir Comprovante
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Comunicação</DropdownMenuLabel>
