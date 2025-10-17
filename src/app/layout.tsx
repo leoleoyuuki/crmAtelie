@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from '@/firebase';
 import AuthGate from '@/components/auth-gate';
 import AppShell from '@/components/app-shell';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'AtelierFlow',
@@ -25,9 +26,11 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AuthGate>
-            <AppShell>
-              {children}
-            </AppShell>
+            <SidebarProvider>
+              <AppShell>
+                {children}
+              </AppShell>
+            </SidebarProvider>
           </AuthGate>
         </FirebaseClientProvider>
         <Toaster />
