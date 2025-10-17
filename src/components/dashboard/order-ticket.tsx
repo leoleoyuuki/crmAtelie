@@ -12,44 +12,24 @@ interface OrderTicketProps {
 
 export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
   ({ order, customer }, ref) => {
-    const formattedDate = (date: Date) => format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    const formattedDate = (date: Date) => format(date, "dd/MM/yy HH:mm", { locale: ptBR });
     const formattedCurrency = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-    const styles = `
-      @media print {
-        @page {
-          size: 58mm;
-          margin: 0;
-        }
-        body {
-          width: 48mm;
-          margin: 5mm;
-          font-family: 'monospace', sans-serif;
-          font-size: 8pt;
-          color: #000;
-          background-color: #fff;
-        }
-        .ticket-container {
-          width: 48mm;
-          padding: 0;
-          margin: 0;
-        }
-      }
-    `;
-
+    // Styles are mostly handled by Tailwind classes now, but we keep the print-specific setup
+    // The font sizes and layout are adjusted using Tailwind's utility classes.
+    
     return (
-      <div ref={ref} className="ticket-container p-4 font-mono text-xs text-black bg-white">
-        <style>{styles}</style>
-        <div className="text-center">
-            <Logo className="h-10 w-10 mx-auto" />
-            <h1 className="text-sm font-bold mt-2">AtelierFlow</h1>
-            <p className="text-[10px]">Comprovante de Pedido</p>
+      <div ref={ref} className="bg-white text-black font-mono w-[48mm] p-1 text-[8pt]">
+        <div className="text-center mb-2">
+            <Logo className="h-8 w-8 mx-auto" />
+            <h1 className="text-[10pt] font-bold mt-1">AtelierFlow</h1>
+            <p className="text-[7pt]">Comprovante de Pedido</p>
         </div>
 
-        <div className="border-t border-b border-dashed border-black my-2 py-1">
+        <div className="border-t border-b border-dashed border-black my-2 py-1 text-[7pt]">
           <div className="flex justify-between">
             <span>Pedido:</span>
-            <span>#{order.id.substring(0, 7)}</span>
+            <span>#{order.id.substring(0, 7).toUpperCase()}</span>
           </div>
           <div className="flex justify-between">
             <span>Data:</span>
@@ -57,31 +37,31 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
           </div>
         </div>
 
-        <div className="mb-2">
-            <h2 className="font-bold text-center">CLIENTE</h2>
-            <p>{order.customerName}</p>
-            {customer?.phone && <p>{customer.phone}</p>}
+        <div className="mb-2 text-center">
+            <h2 className="font-bold text-[9pt] uppercase">Cliente</h2>
+            <p className="text-[8pt]">{order.customerName}</p>
+            {customer?.phone && <p className="text-[8pt]">{customer.phone}</p>}
         </div>
 
-        <div className="mb-2">
-            <h2 className="font-bold text-center">SERVIÇO</h2>
+        <div className="mb-2 text-center">
+            <h2 className="font-bold text-[9pt] uppercase">Serviço</h2>
             <p><strong>Tipo:</strong> {order.serviceType}</p>
-            {order.description && <p className="text-wrap"><strong>Detalhes:</strong> {order.description}</p>}
+            {order.description && <p className="text-wrap text-[7pt]"><strong>Detalhes:</strong> {order.description}</p>}
         </div>
 
-        <div className="border-t border-dashed border-black pt-1">
-            <div className="flex justify-between font-bold text-sm">
+        <div className="border-t border-dashed border-black pt-1 my-2">
+            <div className="flex justify-between font-bold text-[10pt]">
                 <span>TOTAL:</span>
                 <span>{formattedCurrency(order.totalValue)}</span>
             </div>
         </div>
 
          <div className="mt-2 text-center">
-            <p className="font-bold">ENTREGA PREVISTA:</p>
-            <p>{format(order.dueDate, "PPP", { locale: ptBR })}</p>
+            <p className="font-bold text-[9pt]">ENTREGA PREVISTA:</p>
+            <p className="text-[8pt]">{format(order.dueDate, "PPP", { locale: ptBR })}</p>
         </div>
 
-        <div className="mt-4 text-center text-[10px] border-t border-dashed border-black pt-2">
+        <div className="mt-3 text-center text-[7pt] border-t border-dashed border-black pt-2">
             <p>Obrigado pela sua preferência!</p>
             <p>AtelierFlow</p>
         </div>
