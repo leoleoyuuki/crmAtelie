@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Order, Customer } from '@/lib/types';
 import { OrderTicket } from './order-ticket';
@@ -24,15 +24,12 @@ export function OrderPrintDialog({ isOpen, onClose, order, customer }: OrderPrin
     onPrintError: onClose,
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      // Small delay to ensure the component is rendered and ref is set
-      const timer = setTimeout(() => {
-        handlePrint();
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, handlePrint]);
+  // Call print directly when the component is open and rendered
+  if (isOpen) {
+    // We call handlePrint in a timeout of 0 to push it to the end of the event loop.
+    // This ensures the ref is set before the print dialog is triggered.
+    setTimeout(handlePrint, 0);
+  }
 
   if (!isOpen) {
     return null;
