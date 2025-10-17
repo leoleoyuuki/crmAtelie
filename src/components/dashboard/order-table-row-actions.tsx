@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { MoreHorizontal, MessageSquare, Pencil, Trash2, Printer } from "lucide-react";
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +29,6 @@ import { deleteOrder, getCustomerById } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { OrderPrintDialog } from "./order-print-dialog";
 
 interface OrderTableRowActionsProps {
   order: Order;
@@ -40,7 +40,6 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
@@ -86,18 +85,13 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   
   return (
     <>
-      <OrderPrintDialog
-        isOpen={showPrintDialog}
-        onClose={() => setShowPrintDialog(false)}
-        order={order}
-        customer={customer}
-      />
-
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <div className="flex items-center justify-end gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 p-0" onClick={() => setShowPrintDialog(true)}>
+            <Button asChild variant="ghost" size="icon" className="h-8 w-8 p-0">
+              <Link href={`/print/${order.id}`} target="_blank">
                 <Printer className="h-4 w-4" />
                 <span className="sr-only">Imprimir Comprovante</span>
+              </Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

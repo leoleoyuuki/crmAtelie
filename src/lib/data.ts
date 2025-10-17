@@ -47,7 +47,12 @@ export async function getCustomerById(customerId: string): Promise<Customer | nu
     const docRef = doc(db, 'customers', customerId);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-        return fromFirebase(docSnap.data(), docSnap.id) as Customer;
+        const customerData = fromFirebase(docSnap.data(), docSnap.id);
+        if (customerData?.userId !== auth.currentUser?.uid) {
+            console.error("Permissão negada: Cliente não pertence ao usuário.");
+            return null;
+        }
+        return customerData as Customer;
     }
     return null;
 }
@@ -86,6 +91,21 @@ export async function deleteCustomer(customerId: string) {
 
 // Order Functions
 const ordersCollection = collection(db, 'orders');
+
+export async function getOrderById(orderId: string): Promise<Order | null> {
+    const docRef = doc(db, 'orders', orderId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        const orderData = fromFirebase(docSnap.data(), docSnap.id);
+         if (orderData?.userId !== auth.currentUser?.uid) {
+            console.error("Permissão negada: Pedido não pertence ao usuário.");
+            return null;
+        }
+        return orderData as Order;
+    }
+    return null;
+}
+
 
 export async function getOrders(): Promise<Order[]> {
   if (!auth.currentUser) return [];
