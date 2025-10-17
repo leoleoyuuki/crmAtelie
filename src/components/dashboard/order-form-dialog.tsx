@@ -81,6 +81,12 @@ export function OrderFormDialog({
     ...order,
     totalValue: order.totalValue,
   } : {
+    customerName: '',
+    customerPhone: '',
+    serviceType: 'Ajuste',
+    description: '',
+    totalValue: 0,
+    dueDate: new Date(),
     status: 'Novo',
   };
 
@@ -92,12 +98,18 @@ export function OrderFormDialog({
   useEffect(() => {
     if (isOpen) {
       if (order) {
-          form.reset(order);
+          form.reset({
+            ...order,
+            description: order.description ?? '',
+          });
       } else {
           form.reset({
               customerName: '',
               customerPhone: '',
+              serviceType: 'Ajuste',
               description: '',
+              totalValue: 0,
+              dueDate: new Date(),
               status: 'Novo',
           });
       }
@@ -117,7 +129,6 @@ export function OrderFormDialog({
         toast({ title: "Pedido Criado", description: `Novo pedido #${newOrder.id} foi criado.` });
       }
       setIsOpen(false);
-      form.reset();
     } catch (error) {
       toast({ variant: "destructive", title: "Erro", description: "Algo deu errado." });
     }
@@ -177,7 +188,7 @@ export function OrderFormDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo de Serviço</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um tipo de serviço" />
@@ -201,7 +212,7 @@ export function OrderFormDialog({
                 <FormItem>
                   <FormLabel>Descrição</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Descreva os detalhes do serviço..." {...field} />
+                    <Textarea placeholder="Descreva os detalhes do serviço..." {...field} value={field.value ?? ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -241,7 +252,7 @@ export function OrderFormDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o status do pedido" />
