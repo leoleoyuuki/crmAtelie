@@ -3,12 +3,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDRoNk2BUS4FetYBnr_4pYqnNv8QuDfLK8",
-  authDomain: "prefab-botany-452618-d2.firebaseapp.com",
-  projectId: "prefab-botany-452618-d2",
-  storageBucket: "prefab-botany-452618-d2.appspot.com",
-  messagingSenderId: "1035582953447",
-  appId: "1:1035582953447:web:707e7388f3aa0c14f4cf42"
+  apiKey: "AIzaSyANKnkA1zrs4TU3OeFzCLYWk6Lkfk70Gh0",
+  authDomain: "booklove-microsaas.firebaseapp.com",
+  projectId: "booklove-microsaas",
+  storageBucket: "booklove-microsaas.appspot.com",
+  messagingSenderId: "1054144080507",
+  appId: "1:1054144080507:web:cb1eca7ac412d9fde810de"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
