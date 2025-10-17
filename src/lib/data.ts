@@ -60,10 +60,10 @@ export async function getServiceDistribution() {
     return acc;
   }, {} as Record<ServiceType, number>);
 
-  return Object.entries(distribution).map(([service, count]) => ({
+  return Object.entries(distribution).map(([service, count], index) => ({
     service,
     count,
-    fill: `var(--chart-${Object.keys(acc).length + 1})`
+    fill: `var(--chart-${index + 1})`
   }));
 }
 
