@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Order, OrderStatus } from "@/lib/types";
+import { Order, OrderStatus, Customer } from "@/lib/types";
 import {
   ColumnDef,
   flexRender,
@@ -64,10 +64,7 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
         accessorKey: "customerName",
         header: "Cliente",
         cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.customerName}</span>
-            <span className="text-sm text-muted-foreground">{row.original.customerPhone}</span>
-          </div>
+          <div className="font-medium">{row.original.customerName}</div>
         ),
       },
       {

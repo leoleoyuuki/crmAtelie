@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -35,14 +35,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Order, OrderStatus, ServiceType } from "@/lib/types";
-import { addOrder, updateOrder } from "@/lib/data";
+import { Order, OrderStatus, ServiceType, Customer } from "@/lib/types";
+import { addOrder, updateOrder, getCustomers, addCustomer } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, UserPlus } from "lucide-react";
+import { Combobox } from "../ui/combobox";
+import { CustomerFormDialog } from "./customer-form-dialog";
 
 const orderFormSchema = z.object({
-  customerName: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
-  customerPhone: z.string().min(10, "O número de telefone parece muito curto."),
+  customerId: z.string({ required_error: "Selecione um cliente." }),
   serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
   description: z.string().max(200, "A descrição é muito longa.").optional().default(''),
   totalValue: z.coerce.number().min(0, "O valor deve ser positivo."),
@@ -71,15 +72,35 @@ export function OrderFormDialog({
   onOrderUpdated,
 }: OrderFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
+  const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  
   const isEditing = !!order;
   const { toast } = useToast();
 
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
+  useEffect(() => {
+    const fetchAndSetCustomers = async () => {
+      try {
+        const fetchedCustomers = await getCustomers();
+        setCustomers(fetchedCustomers);
+      } catch (error) {
+        console.error("Failed to fetch customers", error);
+        toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os clientes." });
+      }
+    };
+
+    if (isOpen) {
+      fetchAndSetCustomers();
+    }
+  }, [isOpen, toast]);
+
+  const customerOptions = customers.map(c => ({ value: c.id, label: `${c.name} - ${c.phone}` }));
+
   const defaultValues: Partial<OrderFormValues> = {
-    customerName: '',
-    customerPhone: '',
+    customerId: '',
     serviceType: 'Ajuste',
     description: '',
     totalValue: 0,
@@ -107,13 +128,24 @@ export function OrderFormDialog({
 
 
   const onSubmit = async (data: OrderFormValues) => {
+    const selectedCustomer = customers.find(c => c.id === data.customerId);
+    if (!selectedCustomer) {
+        toast({ variant: "destructive", title: "Erro", description: "Cliente selecionado não encontrado." });
+        return;
+    }
+    
     try {
+      const orderData = {
+        ...data,
+        customerName: selectedCustomer.name, // Denormalize name for display
+      };
+
       if (isEditing && order) {
-        const updated = await updateOrder(order.id, data);
+        const updated = await updateOrder(order.id, orderData);
         onOrderUpdated?.(order.id, updated);
         toast({ title: "Pedido Atualizado", description: `O pedido #${order.id} foi atualizado.` });
       } else {
-        const newOrder = await addOrder(data as Omit<Order, 'id' | 'createdAt'>);
+        const newOrder = await addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'userId'>);
         onOrderCreated?.(newOrder as Order);
         toast({ title: "Pedido Criado", description: `Novo pedido #${newOrder.id} foi criado.` });
       }
@@ -124,152 +156,161 @@ export function OrderFormDialog({
     }
   };
 
+  const handleCustomerCreated = (newCustomer: Customer) => {
+    setCustomers(prev => [...prev, newCustomer]);
+    form.setValue('customerId', newCustomer.id);
+  };
+
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {!isEditing && (
-        <DialogTrigger asChild>
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Novo Pedido
-          </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className="sm:max-w-[625px]">
-        <DialogHeader>
-          <DialogTitle className="font-headline">{isEditing ? "Editar Pedido" : "Criar Novo Pedido"}</DialogTitle>
-          <DialogDescription>
-            {isEditing ? "Atualize os detalhes deste pedido." : "Preencha os detalhes para o novo pedido do cliente."}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                control={form.control}
-                name="customerName"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Nome do Cliente</FormLabel>
-                    <FormControl>
-                        <Input placeholder="ex: João da Silva" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="customerPhone"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Telefone do Cliente</FormLabel>
-                    <FormControl>
-                        <Input placeholder="ex: (11) 99999-9999" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="serviceType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Serviço</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um tipo de serviço" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {serviceTypes.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Descreva os detalhes do serviço..." {...field} value={field.value ?? ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        {!isEditing && (
+          <DialogTrigger asChild>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Novo Pedido
+            </Button>
+          </DialogTrigger>
+        )}
+        <DialogContent className="sm:max-w-[625px]">
+          <DialogHeader>
+            <DialogTitle className="font-headline">{isEditing ? "Editar Pedido" : "Criar Novo Pedido"}</DialogTitle>
+            <DialogDescription>
+              {isEditing ? "Atualize os detalhes deste pedido." : "Preencha os detalhes para o novo pedido do cliente."}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="totalValue"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor Total (R$)</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="ex: 50,00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="dueDate"
+                name="customerId"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel className="mb-1.5">Data de Entrega</FormLabel>
-                    <DatePicker date={field.value} setDate={field.onChange} />
+                    <FormLabel>Cliente</FormLabel>
+                    <div className="flex items-center gap-2">
+                      <Combobox
+                        options={customerOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Selecione um cliente..."
+                        searchPlaceholder="Buscar cliente..."
+                        notFoundText="Nenhum cliente encontrado."
+                        className="w-full"
+                      />
+                      <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}>
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+
+              <FormField
+                control={form.control}
+                name="serviceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Serviço</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um tipo de serviço" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {serviceTypes.map(type => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o status do pedido" />
-                      </SelectTrigger>
+                      <Textarea placeholder="Descreva os detalhes do serviço..." {...field} value={field.value ?? ''} />
                     </FormControl>
-                    <SelectContent>
-                      {statuses.map(status => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">
-                        Cancelar
-                    </Button>
-                </DialogClose>
-                <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Criar Pedido'}</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="totalValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor Total (R$)</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="ex: 50,00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="dueDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="mb-1.5">Data de Entrega</FormLabel>
+                      <DatePicker date={field.value} setDate={field.onChange} />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status do pedido" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {statuses.map(status => (
+                          <SelectItem key={status} value={status}>{status}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                  <DialogClose asChild>
+                      <Button type="button" variant="outline">
+                          Cancelar
+                      </Button>
+                  </DialogClose>
+                  <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Criar Pedido'}</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      <CustomerFormDialog 
+        isOpen={isCustomerDialogOpen} 
+        setIsOpen={setIsCustomerDialogOpen}
+        onCustomerCreated={handleCustomerCreated}
+      />
+    </>
   );
 }

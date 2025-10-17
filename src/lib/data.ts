@@ -11,27 +11,57 @@ import {
   Timestamp,
   writeBatch,
   getDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, OrderStatus, ServiceType } from '@/lib/types';
+import { Order, OrderStatus, ServiceType, Customer } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { auth } from '@/firebase/config';
 
-const ordersCollection = collection(db, 'orders');
 
-// Helper para converter Timestamps do Firebase em Date
-const fromFirebase = (order: any): Order => {
-    return {
-        ...order,
-        id: order.id,
-        dueDate: (order.dueDate as Timestamp).toDate(),
-        createdAt: (order.createdAt as Timestamp).toDate(),
-    };
+const fromFirebase = (docData: any, id: string) => {
+    const data = { ...docData, id };
+    for (const key in data) {
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate();
+        }
+    }
+    return data;
 };
 
+
+// Customer Functions
+const customersCollection = collection(db, 'customers');
+
+export async function getCustomers(): Promise<Customer[]> {
+  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+  const q = query(customersCollection, where("userId", "==", auth.currentUser.uid));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Customer);
+}
+
+export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'userId'>): Promise<Customer> {
+  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+  const newCustomerData = {
+      ...customer,
+      userId: auth.currentUser.uid,
+      createdAt: serverTimestamp(),
+  };
+  const docRef = await addDoc(customersCollection, newCustomerData);
+  const newDoc = await getDoc(docRef);
+  return fromFirebase(newDoc.data(), newDoc.id) as Customer;
+}
+
+
+// Order Functions
+const ordersCollection = collection(db, 'orders');
+
 export async function getOrders(): Promise<Order[]> {
-  const snapshot = await getDocs(ordersCollection);
-  return snapshot.docs.map(doc => fromFirebase({ ...doc.data(), id: doc.id }));
+  if (!auth.currentUser) return [];
+  const q = query(ordersCollection, where("userId", "==", auth.currentUser.uid));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Order);
 }
 
 export async function getStatusMetrics(orders: Order[]) {
@@ -106,17 +136,20 @@ export async function getServiceDistribution(orders: Order[]) {
   }));
 }
 
-export async function addOrder(order: Omit<Order, 'id' | 'createdAt'>) {
+export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>) {
+  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
   const newOrderData = {
       ...order,
-      createdAt: Timestamp.now(),
+      userId: auth.currentUser.uid,
+      createdAt: serverTimestamp(),
       dueDate: Timestamp.fromDate(order.dueDate),
   };
   const docRef = await addDoc(ordersCollection, newOrderData);
-  return { ...newOrderData, id: docRef.id };
+  const newDoc = await getDoc(docRef);
+  return fromFirebase(newDoc.data(), newDoc.id) as Order;
 }
 
-export async function updateOrder(orderId: string, updatedData: Partial<Omit<Order, 'id' | 'createdAt'>>) {
+export async function updateOrder(orderId: string, updatedData: Partial<Omit<Order, 'id' | 'createdAt' | 'userId'>>) {
   const docRef = doc(db, 'orders', orderId);
   const updatePayload: any = { ...updatedData };
 
@@ -127,7 +160,7 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
   await updateDoc(docRef, updatePayload);
   
   const updatedDoc = await getDoc(docRef);
-  return fromFirebase({ ...updatedDoc.data(), id: updatedDoc.id });
+  return fromFirebase(updatedDoc.data(), updatedDoc.id) as Order;
 }
 
 export async function deleteOrder(orderId: string) {

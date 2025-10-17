@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MoreHorizontal, MessageSquare, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Order } from "@/lib/types";
+import { Order, Customer } from "@/lib/types";
 import { OrderFormDialog } from "./order-form-dialog";
 import {
   AlertDialog,
@@ -22,12 +22,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { deleteOrder } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/config";
 
 interface OrderTableRowActionsProps {
   order: Order;
@@ -38,14 +39,30 @@ interface OrderTableRowActionsProps {
 export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRowActionsProps) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [customer, setCustomer] = useState<Customer | null>(null);
+
+  useEffect(() => {
+    const fetchCustomer = async () => {
+      if (order.customerId) {
+        const customerRef = doc(db, "customers", order.customerId);
+        const customerSnap = await getDoc(customerRef);
+        if (customerSnap.exists()) {
+          setCustomer(customerSnap.data() as Customer);
+        }
+      }
+    };
+    fetchCustomer();
+  }, [order.customerId]);
+
   const generateWaLink = (message: string) => {
-    const phone = order.customerPhone.replace(/\D/g, ""); // remove non-digits
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    if (!customer?.phone) return "";
+    const phone = customer.phone.replace(/\D/g, ""); // remove non-digits
+    return `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`;
   };
 
-  const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id} no AtelierFlow. Detalhes: ${order.serviceType} - ${order.description}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
-  const readyMessage = `Olá ${order.customerName}, seu pedido #${order.id} no AtelierFlow está pronto para retirada! Estamos ansiosos para que você veja.`;
+  const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id.substring(0, 5)} no AtelierFlow. Detalhes: ${order.serviceType} - ${order.description}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
+  const readyMessage = `Olá ${order.customerName}, seu pedido #${order.id.substring(0, 5)} no AtelierFlow está pronto para retirada! Estamos ansiosos para que você veja.`;
 
   const handleDelete = async () => {
     try {
@@ -53,8 +70,9 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
       onDelete(order.id);
       toast({
         title: "Pedido Excluído",
-        description: `O pedido #${order.id} foi excluído com sucesso.`,
+        description: `O pedido #${order.id.substring(0, 5)} foi excluído com sucesso.`,
       });
+      setIsDeleteDialogOpen(false);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -66,7 +84,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   
   return (
     <>
-      <AlertDialog>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -82,14 +100,14 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Comunicação</DropdownMenuLabel>
-             <DropdownMenuItem asChild>
+             <DropdownMenuItem asChild disabled={!customer}>
               <a href={generateWaLink(confirmationMessage)} target="_blank" rel="noopener noreferrer">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Enviar Confirmação
               </a>
             </DropdownMenuItem>
             {order.status === "Aguardando Retirada" && (
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild disabled={!customer}>
                  <a href={generateWaLink(readyMessage)} target="_blank" rel="noopener noreferrer">
                     <MessageSquare className="mr-2 h-4 w-4 text-green-600" />
                     Notificar Pronto para Retirada
@@ -97,12 +115,10 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-             <AlertDialogTrigger asChild>
-                <DropdownMenuItem className="text-red-600" onSelect={(e) => e.preventDefault()}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Excluir
-                </DropdownMenuItem>
-            </AlertDialogTrigger>
+             <DropdownMenuItem className="text-red-600" onSelect={() => setIsDeleteDialogOpen(true)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Excluir
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -125,7 +141,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
         order={order}
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
-        onOrderUpdated={(updatedOrder) => onUpdate(order.id, updatedOrder)}
+        onOrderUpdated={onUpdate}
       />
     </>
   );

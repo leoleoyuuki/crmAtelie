@@ -8,11 +8,11 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
 import { LayoutDashboard, Users, ShoppingCart, LogOut } from "lucide-react";
 import React from "react";
-import { useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -23,7 +23,9 @@ function AppHeader() {
 
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
-            {isMobile && <SidebarTrigger />}
+            <div className="md:hidden">
+              <SidebarTrigger />
+            </div>
             <div className="w-full flex-1" />
             {user && (
                 <div className="flex items-center gap-4">
@@ -46,7 +48,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { auth } = useAuth();
   return (
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-        <Sidebar collapsible="icon" className="hidden md:block">
+        <Sidebar className="hidden md:block">
           <SidebarHeader>
             <div className="flex items-center gap-2">
               <Logo className="h-6 w-6 text-primary" />
