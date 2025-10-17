@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { MoreHorizontal, MessageSquare, Pencil, Trash2, Printer } from "lucide-react";
-import { useReactToPrint } from "react-to-print";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +30,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase/config";
-import { OrderTicket } from "./order-ticket";
+import { OrderPrintDialog } from "./order-print-dialog";
 
 interface OrderTableRowActionsProps {
   order: Order;
@@ -43,23 +42,8 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
-
-  const ticketRef = useRef(null);
-
-  const handlePrint = useReactToPrint({
-    content: () => ticketRef.current,
-    documentTitle: `Pedido_${order.id.substring(0, 5)}`,
-    bodyClass: "bg-white",
-    onAfterPrint: () => setIsPrinting(false), 
-  });
-
-  useEffect(() => {
-    if (isPrinting) {
-      handlePrint();
-    }
-  }, [isPrinting, handlePrint]);
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -103,9 +87,12 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   
   return (
     <>
-      <div className="hidden">
-        <OrderTicket ref={ticketRef} order={order} customer={customer} />
-      </div>
+      <OrderPrintDialog
+        isOpen={showPrintDialog}
+        onClose={() => setShowPrintDialog(false)}
+        order={order}
+        customer={customer}
+      />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DropdownMenu>
@@ -121,7 +108,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
               <Pencil className="mr-2 h-4 w-4" />
               Editar
             </DropdownMenuItem>
-             <DropdownMenuItem onClick={() => setIsPrinting(true)}>
+             <DropdownMenuItem onSelect={() => setShowPrintDialog(true)}>
               <Printer className="mr-2 h-4 w-4" />
               Imprimir Comprovante
             </DropdownMenuItem>
@@ -142,7 +129,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-             <DropdownMenuItem className="text-red-600" onSelect={() => setIsDeleteDialogOpen(true)}>
+             <DropdownMenuItem className="text-red-600" onSelect={(e) => { e.preventDefault(); setIsDeleteDialogOpen(true); }}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Excluir
             </DropdownMenuItem>
