@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { format, isBefore, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { OrderTableRowActions } from "./order-table-row-actions";
 import { OrderTableToolbar } from "./order-table-toolbar";
@@ -80,7 +80,11 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
       {
         accessorKey: "dueDate",
         header: "Data de Entrega",
-        cell: ({ row }) => format(row.original.dueDate, "PPP", { locale: ptBR }),
+        cell: ({ row }) => {
+            const dueDate = row.original.dueDate;
+            const isDueSoon = isBefore(dueDate, addDays(new Date(), 3)) && !isBefore(dueDate, new Date());
+            return <span className={isDueSoon ? 'text-destructive font-semibold' : ''}>{format(dueDate, "PPP", { locale: ptBR })}</span>
+        }
       },
       {
         accessorKey: "status",
@@ -88,11 +92,10 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
         cell: ({ row }) => {
           const status = row.getValue("status") as OrderStatus;
           const colorClass = {
-            "Pendente": "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
-            "Em Andamento": "bg-blue-500/20 text-blue-700 border-blue-500/50",
+            "Novo": "bg-blue-500/20 text-blue-700 border-blue-500/50",
+            "Em Processo": "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
             "Aguardando Retirada": "bg-purple-500/20 text-purple-700 border-purple-500/50",
             "Concluído": "bg-green-500/20 text-green-700 border-green-500/50",
-            "Entregue": "bg-gray-500/20 text-gray-700 border-gray-500/50",
           }[status];
 
           return <Badge className={colorClass} variant="outline">{status}</Badge>;

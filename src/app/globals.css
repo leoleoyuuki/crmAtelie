@@ -4,58 +4,59 @@
 
 @layer base {
   :root {
-    --background: 40 30% 97%;
+    --background: 38 22% 92%; /* Light Sand */
     --foreground: 40 10% 10%;
-    --card: 40 40% 99%;
+    --card: 38 22% 98%;
     --card-foreground: 40 10% 10%;
-    --popover: 40 40% 99%;
+    --popover: 38 22% 98%;
     --popover-foreground: 40 10% 10%;
-    --primary: 19 52% 48%;
+    --primary: 19 52% 48%; /* Earthy Rust */
     --primary-foreground: 20 20% 98%;
-    --secondary: 54 16% 57%;
-    --secondary-foreground: 40 30% 97%;
-    --muted: 54 20% 90%;
-    --muted-foreground: 50 10% 40%;
-    --accent: 19 52% 48%;
+    --secondary: 85 14% 54%; /* Soft Olive Green */
+    --secondary-foreground: 38 22% 98%;
+    --muted: 85 14% 84%;
+    --muted-foreground: 85 10% 40%;
+    --accent: 19 52% 48%; /* Earthy Rust */
     --accent-foreground: 20 20% 98%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 33 21% 85%;
-    --input: 33 21% 90%;
-    --ring: 19 52% 48%;
+    --border: 85 14% 74%;
+    --input: 85 14% 88%;
+    --ring: 19 52% 48%; /* Earthy Rust */
     --radius: 0.5rem;
     --chart-1: 19 52% 48%;
-    --chart-2: 54 16% 57%;
-    --chart-3: 33 21% 70%;
-    --chart-4: 19 40% 60%;
-    --chart-5: 54 10% 40%;
+    --chart-2: 85 14% 54%;
+    --chart-3: 19 32% 58%;
+    --chart-4: 85 14% 74%;
+    --chart-5: 19 22% 68%;
   }
 
   .dark {
-    --background: 40 30% 97%;
+    --background: 38 22% 92%; /* Light Sand */
     --foreground: 40 10% 10%;
-    --card: 40 40% 99%;
+    --card: 38 22% 98%;
     --card-foreground: 40 10% 10%;
-    --popover: 40 40% 99%;
+    --popover: 38 22% 98%;
     --popover-foreground: 40 10% 10%;
-    --primary: 19 52% 48%;
+    --primary: 19 52% 48%; /* Earthy Rust */
     --primary-foreground: 20 20% 98%;
-    --secondary: 54 16% 57%;
-    --secondary-foreground: 40 30% 97%;
-    --muted: 54 20% 90%;
-    --muted-foreground: 50 10% 40%;
-    --accent: 19 52% 48%;
+    --secondary: 85 14% 54%; /* Soft Olive Green */
+    --secondary-foreground: 38 22% 98%;
+    --muted: 85 14% 84%;
+    --muted-foreground: 85 10% 40%;
+    --accent: 19 52% 48%; /* Earthy Rust */
     --accent-foreground: 20 20% 98%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 33 21% 85%;
-    --input: 33 21% 90%;
-    --ring: 19 52% 48%;
+    --border: 85 14% 74%;
+    --input: 85 14% 88%;
+    --ring: 19 52% 48%; /* Earthy Rust */
+    --radius: 0.5rem;
     --chart-1: 19 52% 48%;
-    --chart-2: 54 16% 57%;
-    --chart-3: 33 21% 70%;
-    --chart-4: 19 40% 60%;
-    --chart-5: 54 10% 40%;
+    --chart-2: 85 14% 54%;
+    --chart-3: 19 32% 58%;
+    --chart-4: 85 14% 74%;
+    --chart-5: 19 22% 68%;
   }
 }
 

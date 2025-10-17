@@ -55,7 +55,7 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="items-center pb-0">
-        <CardTitle className="font-headline">Distribuição de Serviços - Últimos 30 Dias</CardTitle>
+        <CardTitle className="font-headline">Distribuição de Serviços</CardTitle>
         <CardDescription>
           Detalhamento dos tipos de pedidos no último mês.
         </CardDescription>

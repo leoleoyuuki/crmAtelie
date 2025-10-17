@@ -47,13 +47,13 @@ const orderFormSchema = z.object({
   description: z.string().max(200, "A descrição é muito longa.").optional(),
   totalValue: z.coerce.number().min(0, "O valor deve ser positivo."),
   dueDate: z.date({ required_error: "A data de entrega é obrigatória." }),
-  status: z.enum(['Pendente', 'Em Andamento', 'Aguardando Retirada', 'Concluído', 'Entregue']),
+  status: z.enum(['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído']),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
 const serviceTypes: ServiceType[] = ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"];
-const statuses: OrderStatus[] = ['Pendente', 'Em Andamento', 'Aguardando Retirada', 'Concluído', 'Entregue'];
+const statuses: OrderStatus[] = ['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído'];
 
 interface OrderFormDialogProps {
   order?: Order;
@@ -81,7 +81,7 @@ export function OrderFormDialog({
     ...order,
     totalValue: order.totalValue,
   } : {
-    status: 'Pendente',
+    status: 'Novo',
   };
 
   const form = useForm<OrderFormValues>({
@@ -90,15 +90,17 @@ export function OrderFormDialog({
   });
   
   useEffect(() => {
-    if (order) {
-        form.reset(order);
-    } else {
-        form.reset({
-            customerName: '',
-            customerPhone: '',
-            description: '',
-            status: 'Pendente',
-        });
+    if (isOpen) {
+      if (order) {
+          form.reset(order);
+      } else {
+          form.reset({
+              customerName: '',
+              customerPhone: '',
+              description: '',
+              status: 'Novo',
+          });
+      }
     }
   }, [order, form, isOpen]);
 

@@ -1,4 +1,4 @@
-export type OrderStatus = 'Pendente' | 'Em Andamento' | 'Concluído' | 'Aguardando Retirada' | 'Entregue';
+export type OrderStatus = 'Novo' | 'Em Processo' | 'Aguardando Retirada' | 'Concluído';
 export type ServiceType = 'Ajuste' | 'Design Personalizado' | 'Reparo' | 'Lavagem a Seco';
 
 export interface Order {

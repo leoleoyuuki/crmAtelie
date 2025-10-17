@@ -18,15 +18,15 @@ interface OrderTableToolbarProps<TData> {
   onOrderCreated: (order: Order) => void
 }
 
-const statuses: OrderStatus[] = ['Pendente', 'Em Andamento', 'Aguardando Retirada', 'Concluído', 'Entregue'];
+const statuses: OrderStatus[] = ['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído'];
 
 export function OrderTableToolbar<TData>({ table, onOrderCreated }: OrderTableToolbarProps<TData>) {
   return (
     <>
       <CardHeader>
-        <CardTitle className="font-headline">Seus Pedidos</CardTitle>
+        <CardTitle className="font-headline">Pedidos Recentes</CardTitle>
         <CardDescription>
-          Gerencie e acompanhe todos os pedidos de seus clientes em um só lugar.
+          Gerencie e acompanhe todos os pedidos de seus clientes.
         </CardDescription>
       </CardHeader>
       <div className="flex items-center justify-between p-6 pt-0">
