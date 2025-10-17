@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from "react";
@@ -42,6 +43,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
 
   const ticketRef = useRef(null);
@@ -50,7 +52,14 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
     content: () => ticketRef.current,
     documentTitle: `Pedido_${order.id.substring(0, 5)}`,
     bodyClass: "bg-white",
+    onAfterPrint: () => setIsPrinting(false), 
   });
+
+  useEffect(() => {
+    if (isPrinting) {
+      handlePrint();
+    }
+  }, [isPrinting, handlePrint]);
 
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -112,7 +121,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
               <Pencil className="mr-2 h-4 w-4" />
               Editar
             </DropdownMenuItem>
-             <DropdownMenuItem onClick={handlePrint}>
+             <DropdownMenuItem onClick={() => setIsPrinting(true)}>
               <Printer className="mr-2 h-4 w-4" />
               Imprimir Comprovante
             </DropdownMenuItem>
