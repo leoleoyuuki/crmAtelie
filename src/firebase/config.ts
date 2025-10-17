@@ -3,12 +3,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyDRoNk2BUS4FetYBnr_4pYqnNv8QuDfLK8",
+  authDomain: "prefab-botany-452618-d2.firebaseapp.com",
+  projectId: "prefab-botany-452618-d2",
+  storageBucket: "prefab-botany-452618-d2.appspot.com",
+  messagingSenderId: "1035582953447",
+  appId: "1:1035582953447:web:707e7388f3aa0c14f4cf42"
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
