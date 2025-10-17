@@ -1,7 +1,7 @@
 "use client"
 
 import { TrendingUp } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
   Card,
@@ -39,24 +39,52 @@ export function RevenueChart({ data }: RevenueChartProps) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <BarChart accessibilityLayer data={data}>
+          <LineChart
+            accessibilityLayer
+            data={data}
+            margin={{
+              left: 12,
+              right: 12,
+            }}
+          >
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="month"
               tickLine={false}
-              tickMargin={10}
               axisLine={false}
+              tickMargin={8}
               tickFormatter={(value) => value.slice(0, 3)}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tickFormatter={(value) =>
+                `R$${value / 1000}k`
+              }
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent 
-                indicator="dot"
-                formatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value as number)}
-              />}
+              content={
+                <ChartTooltipContent
+                  indicator="dot"
+                  formatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value as number)}
+                />
+              }
             />
-            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
-          </BarChart>
+            <Line
+              dataKey="revenue"
+              type="monotone"
+              stroke="var(--color-revenue)"
+              strokeWidth={2}
+              dot={{
+                fill: "var(--color-revenue)",
+              }}
+              activeDot={{
+                r: 6,
+              }}
+            />
+          </LineChart>
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
