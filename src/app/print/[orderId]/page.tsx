@@ -47,7 +47,7 @@ export default function PrintPage() {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
         <div className="p-10 bg-white shadow-md w-[58mm]">
-          <Skeleton className="h-10 w-10 mx-auto mb-4" />
+          <Skeleton className="h-6 w-6 mx-auto mb-2" />
           <Skeleton className="h-4 w-32 mx-auto mb-2" />
           <Skeleton className="h-3 w-24 mx-auto mb-4" />
           <div className="space-y-2">
