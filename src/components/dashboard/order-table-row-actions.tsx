@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { MoreHorizontal, MessageSquare, Pencil, Trash2, Printer } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,12 +24,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteOrder } from "@/lib/data";
+import { deleteOrder, getCustomerById } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/firebase/config";
 import { OrderPrintDialog } from "./order-print-dialog";
 
 interface OrderTableRowActionsProps {
@@ -48,10 +46,11 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   useEffect(() => {
     const fetchCustomer = async () => {
       if (order.customerId) {
-        const customerRef = doc(db, "customers", order.customerId);
-        const customerSnap = await getDoc(customerRef);
-        if (customerSnap.exists()) {
-          setCustomer(customerSnap.data() as Customer);
+        try {
+          const fetchedCustomer = await getCustomerById(order.customerId);
+          setCustomer(fetchedCustomer);
+        } catch (error) {
+          console.error("Failed to fetch customer for order actions", error);
         }
       }
     };
@@ -64,7 +63,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
     return `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`;
   };
 
-  const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id.substring(0, 5)} no AtelierFlow. Detalhes: ${order.serviceType} - ${order.description}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
+  const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id.substring(0, 5)} no AtelierFlow. Detalhes: ${order.serviceType} - ${order.description || 'N/A'}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
   const readyMessage = `Olá ${order.customerName}, seu pedido #${order.id.substring(0, 5)} no AtelierFlow está pronto para retirada! Estamos ansiosos para que você veja.`;
 
   const handleDelete = async () => {
@@ -108,20 +107,23 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
               <Pencil className="mr-2 h-4 w-4" />
               Editar
             </DropdownMenuItem>
-             <DropdownMenuItem onSelect={() => setShowPrintDialog(true)}>
+             <DropdownMenuItem onSelect={(e) => {
+                e.preventDefault();
+                setShowPrintDialog(true);
+             }}>
               <Printer className="mr-2 h-4 w-4" />
               Imprimir Comprovante
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Comunicação</DropdownMenuLabel>
-             <DropdownMenuItem asChild disabled={!customer}>
+             <DropdownMenuItem asChild disabled={!customer?.phone}>
               <a href={generateWaLink(confirmationMessage)} target="_blank" rel="noopener noreferrer">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Enviar Confirmação
               </a>
             </DropdownMenuItem>
             {order.status === "Aguardando Retirada" && (
-              <DropdownMenuItem asChild disabled={!customer}>
+              <DropdownMenuItem asChild disabled={!customer?.phone}>
                  <a href={generateWaLink(readyMessage)} target="_blank" rel="noopener noreferrer">
                     <MessageSquare className="mr-2 h-4 w-4 text-green-600" />
                     Notificar Pronto para Retirada

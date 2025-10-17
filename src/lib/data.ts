@@ -22,6 +22,7 @@ import { auth } from '@/firebase/config';
 
 
 const fromFirebase = (docData: any, id: string) => {
+    if (!docData) return null;
     const data = { ...docData, id };
     for (const key in data) {
         if (data[key] instanceof Timestamp) {
@@ -41,6 +42,16 @@ export async function getCustomers(): Promise<Customer[]> {
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Customer);
 }
+
+export async function getCustomerById(customerId: string): Promise<Customer | null> {
+    const docRef = doc(db, 'customers', customerId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return fromFirebase(docSnap.data(), docSnap.id) as Customer;
+    }
+    return null;
+}
+
 
 export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'userId'>): Promise<Customer> {
   if (!auth.currentUser) throw new Error("Usuário não autenticado.");
