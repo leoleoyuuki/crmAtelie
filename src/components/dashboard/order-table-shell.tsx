@@ -118,11 +118,13 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
       {
         id: "actions",
         cell: ({ row }) => (
-          <OrderTableRowActions 
-            order={row.original} 
-            onUpdate={updateOptimisticOrder} 
-            onDelete={removeOptimisticOrder} 
-          />
+          <div className="text-right">
+            <OrderTableRowActions 
+              order={row.original} 
+              onUpdate={updateOptimisticOrder} 
+              onDelete={removeOptimisticOrder} 
+            />
+          </div>
         ),
       },
     ],
