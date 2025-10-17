@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Order, OrderStatus } from "@/lib/types";
+import { Customer } from "@/lib/types";
 import {
   ColumnDef,
   flexRender,
@@ -22,106 +22,73 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { format, isBefore, addDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { OrderTableRowActions } from "./order-table-row-actions";
-import { OrderTableToolbar } from "./order-table-toolbar";
+import { format } from "date-fns";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
+import { CustomerTableToolbar } from "./customer-table-toolbar";
+import { CustomerTableRowActions } from "./customer-table-row-actions";
+import { Skeleton } from "../ui/skeleton";
 
-interface OrderTableShellProps {
-  data: Order[];
-  isPage?: boolean;
+interface CustomerTableShellProps {
+  data: Customer[];
+  loading: boolean;
 }
 
-export default function OrderTableShell({ data, isPage = false }: OrderTableShellProps) {
-  const [orders, setOrders] = useState<Order[]>(data);
+export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
+  const [customers, setCustomers] = useState<Customer[]>(data);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
   
   useEffect(() => {
-    setOrders(data);
+    setCustomers(data);
   }, [data]);
 
-  const addOptimisticOrder = (order: Order) => {
-    setOrders(currentOrders => [order, ...currentOrders]);
+  const addOptimisticCustomer = (customer: Customer) => {
+    setCustomers(currentCustomers => [customer, ...currentCustomers]);
   };
 
-  const updateOptimisticOrder = (orderId: string, updatedOrder: Partial<Order>) => {
-    setOrders(currentOrders =>
-      currentOrders.map(o => o.id === orderId ? { ...o, ...updatedOrder } : o)
+  const updateOptimisticCustomer = (customerId: string, updatedCustomer: Partial<Customer>) => {
+    setCustomers(currentCustomers =>
+      currentCustomers.map(c => c.id === customerId ? { ...c, ...updatedCustomer } as Customer : c)
     );
   };
 
-  const removeOptimisticOrder = (orderId: string) => {
-    setOrders(currentOrders => currentOrders.filter(o => o.id !== orderId));
+  const removeOptimisticCustomer = (customerId: string) => {
+    setCustomers(currentCustomers => currentCustomers.filter(c => c.id !== customerId));
   };
   
-  const columns: ColumnDef<Order>[] = useMemo(
+  const columns: ColumnDef<Customer>[] = useMemo(
     () => [
       {
-        accessorKey: "customerName",
-        header: "Cliente",
+        accessorKey: "name",
+        header: "Nome",
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.customerName}</div>
+          <div className="font-medium">{row.original.name}</div>
         ),
       },
       {
-        accessorKey: "serviceType",
-        header: "Serviço",
+        accessorKey: "phone",
+        header: "Telefone",
       },
       {
-        accessorKey: "totalValue",
-        header: () => <div className="text-right">Total</div>,
-        cell: ({ row }) => {
-          const amount = parseFloat(row.getValue("totalValue"));
-          const formatted = new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(amount);
-          return <div className="text-right font-medium">{formatted}</div>;
-        },
+        accessorKey: "email",
+        header: "Email",
+        cell: ({ row }) => row.original.email || "N/A",
       },
       {
-        accessorKey: "dueDate",
-        header: "Data de Entrega",
-        cell: ({ row }) => {
-            const dueDate = row.original.dueDate;
-            if (!dueDate) return null;
-            const isDueSoon = isBefore(dueDate, addDays(new Date(), 3)) && !isBefore(dueDate, new Date());
-            return <span className={isDueSoon ? 'text-destructive font-semibold' : ''}>{format(dueDate, "PPP", { locale: ptBR })}</span>
-        }
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => {
-          const status = row.getValue("status") as OrderStatus;
-          const colorClass = {
-            "Novo": "bg-blue-500/20 text-blue-700 border-blue-500/50",
-            "Em Processo": "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
-            "Aguardando Retirada": "bg-purple-500/20 text-purple-700 border-purple-500/50",
-            "Concluído": "bg-green-500/20 text-green-700 border-green-500/50",
-          }[status];
-
-          return <Badge className={colorClass} variant="outline">{status}</Badge>;
-        },
-      },
-       {
         accessorKey: 'createdAt',
-        header: 'Criado em',
+        header: 'Cliente Desde',
         cell: ({ row }) => format(row.original.createdAt, 'dd/MM/yyyy'),
       },
       {
         id: "actions",
         cell: ({ row }) => (
-          <OrderTableRowActions 
-            order={row.original} 
-            onUpdate={updateOptimisticOrder} 
-            onDelete={removeOptimisticOrder} 
+          <CustomerTableRowActions 
+            customer={row.original} 
+            onUpdate={updateOptimisticCustomer} 
+            onDelete={removeOptimisticCustomer} 
           />
         ),
       },
@@ -130,7 +97,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
   );
 
   const table = useReactTable({
-    data: orders,
+    data: customers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -144,21 +111,21 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
     },
     initialState: {
       pagination: {
-        pageSize: isPage ? 10 : 5,
+        pageSize: 10,
       },
        columnVisibility: {
-        createdAt: false, 
+        createdAt: false,
       },
     }
   });
 
+  if (loading) {
+      return <Skeleton className="h-[600px] w-full" />;
+  }
+
   return (
     <Card>
-      <OrderTableToolbar 
-        table={table} 
-        onOrderCreated={addOptimisticOrder} 
-        isPage={isPage} 
-      />
+      <CustomerTableToolbar table={table} onCustomerCreated={addOptimisticCustomer} />
       <CardContent>
         <div className="rounded-md border">
           <Table>
@@ -203,7 +170,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    Nenhum resultado.
+                    Nenhum cliente encontrado.
                   </TableCell>
                 </TableRow>
               )}

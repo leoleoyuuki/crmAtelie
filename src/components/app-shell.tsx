@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -16,6 +17,8 @@ import React from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { usePathname } from "next/navigation";
+
 
 function AppHeader() {
     const { isMobile } = useSidebar();
@@ -46,6 +49,14 @@ function AppHeader() {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { auth } = useAuth();
+  const pathname = usePathname();
+
+  const menuItems = [
+    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/pedidos", label: "Pedidos", icon: ShoppingCart },
+    { href: "/clientes", label: "Clientes", icon: Users },
+  ]
+
   return (
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <Sidebar className="hidden md:block">
@@ -59,24 +70,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="/" isActive>
-                  <LayoutDashboard />
-                  Dashboard
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="#">
-                  <ShoppingCart />
-                  Pedidos
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="#">
-                  <Users />
-                  Clientes
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton href={item.href} isActive={pathname === item.href}>
+                    <item.icon />
+                    {item.label}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarContent>
            <SidebarHeader>

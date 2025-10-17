@@ -1,6 +1,7 @@
+
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -14,6 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -25,7 +27,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { addCustomer } from "@/lib/data";
+import { addCustomer, updateCustomer } from "@/lib/data";
 import { Customer } from "@/lib/types";
 
 const customerFormSchema = z.object({
@@ -37,17 +39,28 @@ const customerFormSchema = z.object({
 type CustomerFormValues = z.infer<typeof customerFormSchema>;
 
 interface CustomerFormDialogProps {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
+  customer?: Customer;
+  isOpen?: boolean;
+  setIsOpen?: (open: boolean) => void;
+  trigger?: React.ReactNode;
   onCustomerCreated: (customer: Customer) => void;
+  onCustomerUpdated: (customer: Customer) => void;
 }
 
 export function CustomerFormDialog({
-  isOpen,
-  setIsOpen,
+  customer,
+  isOpen: controlledIsOpen,
+  setIsOpen: setControlledIsOpen,
+  trigger,
   onCustomerCreated,
+  onCustomerUpdated,
 }: CustomerFormDialogProps) {
+  const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const { toast } = useToast();
+  const isEditing = !!customer;
+
+  const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
+  const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
   const defaultValues: Partial<CustomerFormValues> = {
     name: "",
@@ -60,86 +73,122 @@ export function CustomerFormDialog({
     defaultValues,
   });
 
+  useEffect(() => {
+    if (isOpen) {
+        if (isEditing && customer) {
+            form.reset({
+                name: customer.name,
+                phone: customer.phone,
+                email: customer.email || "",
+            });
+        } else {
+            form.reset(defaultValues);
+        }
+    }
+  }, [customer, form, isEditing, isOpen]);
+
   const onSubmit = async (data: CustomerFormValues) => {
     try {
-      const newCustomer = await addCustomer(data);
-      onCustomerCreated(newCustomer);
-      toast({
-        title: "Cliente Criado",
-        description: `O cliente ${newCustomer.name} foi adicionado.`,
-      });
+      if (isEditing && customer) {
+        const updatedCustomer = await updateCustomer(customer.id, data);
+        onCustomerUpdated(updatedCustomer);
+        toast({
+          title: "Cliente Atualizado",
+          description: `Os dados de ${updatedCustomer.name} foram atualizados.`,
+        });
+      } else {
+        const newCustomer = await addCustomer(data);
+        onCustomerCreated(newCustomer);
+        toast({
+          title: "Cliente Criado",
+          description: `O cliente ${newCustomer.name} foi adicionado.`,
+        });
+      }
       setIsOpen(false);
       form.reset(defaultValues);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível criar o cliente.",
+        description: isEditing ? "Não foi possível atualizar o cliente." : "Não foi possível criar o cliente.",
       });
     }
   };
 
+  const dialogContent = (
+    <DialogContent className="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle className="font-headline">{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+        <DialogDescription>
+          {isEditing ? 'Atualize os detalhes deste cliente.' : 'Preencha os detalhes para adicionar um novo cliente.'}
+        </DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nome Completo</FormLabel>
+                <FormControl>
+                  <Input placeholder="ex: João da Silva" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefone</FormLabel>
+                <FormControl>
+                  <Input placeholder="ex: (11) 99999-9999" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email (Opcional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="ex: joao@email.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Salvar Cliente'}</Button>
+          </DialogFooter>
+        </form>
+      </Form>
+    </DialogContent>
+  );
+
+  if (trigger) {
+      return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>{trigger}</DialogTrigger>
+          {dialogContent}
+        </Dialog>
+      )
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle className="font-headline">Novo Cliente</DialogTitle>
-          <DialogDescription>
-            Preencha os detalhes para adicionar um novo cliente.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome Completo</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ex: João da Silva" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Telefone</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ex: (11) 99999-9999" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="ex: joao@email.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Cancelar
-                </Button>
-              </DialogClose>
-              <Button type="submit">Salvar Cliente</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+      {dialogContent}
     </Dialog>
   );
 }

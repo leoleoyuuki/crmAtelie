@@ -1,3 +1,4 @@
+
 'use client';
 import {
   addDoc,
@@ -51,6 +52,24 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
   const docRef = await addDoc(customersCollection, newCustomerData);
   const newDoc = await getDoc(docRef);
   return fromFirebase(newDoc.data(), newDoc.id) as Customer;
+}
+
+export async function updateCustomer(customerId: string, customer: Partial<Omit<Customer, 'id' | 'createdAt' | 'userId'>>): Promise<Customer> {
+    const docRef = doc(db, 'customers', customerId);
+    await updateDoc(docRef, customer);
+    const updatedDoc = await getDoc(docRef);
+    return fromFirebase(updatedDoc.data(), updatedDoc.id) as Customer;
+}
+
+export async function deleteCustomer(customerId: string) {
+    const ordersQuery = query(collection(db, 'orders'), where('customerId', '==', customerId));
+    const ordersSnapshot = await getDocs(ordersQuery);
+    if (!ordersSnapshot.empty) {
+        throw new Error("Não é possível excluir clientes com pedidos existentes.");
+    }
+    const docRef = doc(db, 'customers', customerId);
+    await deleteDoc(docRef);
+    return { success: true };
 }
 
 
