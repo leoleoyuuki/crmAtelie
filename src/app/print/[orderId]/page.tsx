@@ -96,7 +96,7 @@ export default function PrintPage() {
           margin: 0;
         }
       `}</style>
-      <main className="bg-gray-100 flex flex-col items-center justify-start py-8">
+      <main className="bg-gray-100 flex flex-col items-center justify-start min-h-screen py-8">
         <div className="no-print mb-4 p-4 bg-white rounded-lg shadow-md flex flex-col items-center gap-2">
           <p className="text-sm text-center text-gray-600">
             Pré-visualização da impressão. Use o botão abaixo ou Ctrl/Cmd+P para imprimir.
