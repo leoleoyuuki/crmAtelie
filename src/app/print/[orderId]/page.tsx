@@ -77,30 +77,26 @@ export default function PrintPage() {
             padding: 0;
             background: white;
           }
-          body * {
-            visibility: hidden;
-          }
-          #printable-area, #printable-area * {
-            visibility: visible;
+          .no-print {
+            display: none !important;
           }
           #printable-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            margin: auto;
-            width: 48mm;
+            margin: 0;
+            padding: 0;
           }
-          .no-print {
+          body > * {
             display: none;
+          }
+          body > #printable-area {
+            display: block;
           }
         }
         @page {
           size: 58mm;
-          margin: 5mm;
+          margin: 0;
         }
       `}</style>
-      <main className="bg-gray-100 flex flex-col items-center justify-start min-h-screen py-8">
+      <main className="bg-gray-100 flex flex-col items-center justify-start py-8">
         <div className="no-print mb-4 p-4 bg-white rounded-lg shadow-md flex flex-col items-center gap-2">
           <p className="text-sm text-center text-gray-600">
             Pré-visualização da impressão. Use o botão abaixo ou Ctrl/Cmd+P para imprimir.
@@ -110,7 +106,7 @@ export default function PrintPage() {
             Imprimir Comprovante
           </Button>
         </div>
-        <div id="printable-area" className="bg-white shadow-lg">
+        <div id="printable-area" className="bg-white shadow-lg p-2">
           <OrderTicket order={order} customer={customer} />
         </div>
       </main>
