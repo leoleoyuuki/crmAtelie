@@ -66,13 +66,8 @@ export function Combobox({
                     key={option.value}
                     value={option.label}
                     onSelect={() => {
-                      onChange(option.value)
+                      onChange(option.value === value ? "" : option.value)
                       setOpen(false)
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      onChange(option.value);
-                      setOpen(false);
                     }}
                 >
                     <Check
