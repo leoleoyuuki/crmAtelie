@@ -7,34 +7,44 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarProvider,
-  SidebarInset,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, LogOut } from "lucide-react";
 import React from "react";
+import { useSidebar } from "@/components/ui/sidebar";
+import { useAuth } from "@/firebase";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 function AppHeader() {
-    const { isMobile, open, setOpen } = useSidebar();
+    const { isMobile } = useSidebar();
+    const { user } = useAuth();
 
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
             {isMobile && <SidebarTrigger />}
-            <div className="w-full flex-1">
-                <h1 className="font-semibold text-lg">AtelierFlow</h1>
-            </div>
-            {!isMobile && <SidebarTrigger />}
+            <div className="w-full flex-1" />
+            {user && (
+                <div className="flex items-center gap-4">
+                    <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.photoURL ?? ''} alt="Avatar" />
+                        <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="hidden md:flex flex-col">
+                        <span className="font-semibold text-sm">{user.displayName}</span>
+                        <span className="text-xs text-muted-foreground">{user.email}</span>
+                    </div>
+                </div>
+            )}
+            
         </header>
     );
 }
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const { auth } = useAuth();
   return (
-    <SidebarProvider>
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <Sidebar collapsible="icon" className="hidden md:block">
           <SidebarHeader>
@@ -67,12 +77,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
+           <SidebarHeader>
+              <Button variant="ghost" onClick={() => auth.signOut()} className="w-full justify-start">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sair
+              </Button>
+          </SidebarHeader>
         </Sidebar>
         <div className="flex flex-col">
             <AppHeader />
             {children}
         </div>
       </div>
-    </SidebarProvider>
   );
 }

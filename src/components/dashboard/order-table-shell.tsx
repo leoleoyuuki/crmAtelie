@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Order, OrderStatus } from "@/lib/types";
 import {
   ColumnDef,
@@ -10,6 +10,8 @@ import {
   getFilteredRowModel,
   useReactTable,
   ColumnFiltersState,
+  SortingState,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -34,6 +36,13 @@ interface OrderTableShellProps {
 export default function OrderTableShell({ data }: OrderTableShellProps) {
   const [orders, setOrders] = useState<Order[]>(data);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: 'createdAt', desc: true },
+  ]);
+  
+  useEffect(() => {
+    setOrders(data);
+  }, [data]);
 
   const addOptimisticOrder = (order: Order) => {
     setOrders(currentOrders => [order, ...currentOrders]);
@@ -82,6 +91,7 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
         header: "Data de Entrega",
         cell: ({ row }) => {
             const dueDate = row.original.dueDate;
+            if (!dueDate) return null;
             const isDueSoon = isBefore(dueDate, addDays(new Date(), 3)) && !isBefore(dueDate, new Date());
             return <span className={isDueSoon ? 'text-destructive font-semibold' : ''}>{format(dueDate, "PPP", { locale: ptBR })}</span>
         }
@@ -101,6 +111,11 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
           return <Badge className={colorClass} variant="outline">{status}</Badge>;
         },
       },
+       {
+        accessorKey: 'createdAt',
+        header: 'Criado em',
+        cell: ({ row }) => format(row.original.createdAt, 'dd/MM/yyyy'),
+      },
       {
         id: "actions",
         cell: ({ row }) => (
@@ -112,7 +127,7 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
         ),
       },
     ],
-    [updateOptimisticOrder, removeOptimisticOrder]
+    []
   );
 
   const table = useReactTable({
@@ -122,9 +137,20 @@ export default function OrderTableShell({ data }: OrderTableShellProps) {
     getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
     state: {
       columnFilters,
+      sorting,
     },
+    initialState: {
+      pagination: {
+        pageSize: 5,
+      },
+       columnVisibility: {
+        createdAt: false, 
+      },
+    }
   });
 
   return (

@@ -44,7 +44,7 @@ const orderFormSchema = z.object({
   customerName: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
   customerPhone: z.string().min(10, "O número de telefone parece muito curto."),
   serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
-  description: z.string().max(200, "A descrição é muito longa.").optional(),
+  description: z.string().max(200, "A descrição é muito longa.").optional().default(''),
   totalValue: z.coerce.number().min(0, "O valor deve ser positivo."),
   dueDate: z.date({ required_error: "A data de entrega é obrigatória." }),
   status: z.enum(['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído']),
@@ -60,7 +60,7 @@ interface OrderFormDialogProps {
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
   onOrderCreated?: (order: Order) => void;
-  onOrderUpdated?: (updatedOrder: Partial<Order>) => void;
+  onOrderUpdated?: (orderId: string, updatedOrder: Partial<Order>) => void;
 }
 
 export function OrderFormDialog({
@@ -77,10 +77,7 @@ export function OrderFormDialog({
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
-  const defaultValues: Partial<OrderFormValues> = order ? {
-    ...order,
-    totalValue: order.totalValue,
-  } : {
+  const defaultValues: Partial<OrderFormValues> = {
     customerName: '',
     customerPhone: '',
     serviceType: 'Ajuste',
@@ -103,15 +100,7 @@ export function OrderFormDialog({
             description: order.description ?? '',
           });
       } else {
-          form.reset({
-              customerName: '',
-              customerPhone: '',
-              serviceType: 'Ajuste',
-              description: '',
-              totalValue: 0,
-              dueDate: new Date(),
-              status: 'Novo',
-          });
+          form.reset(defaultValues);
       }
     }
   }, [order, form, isOpen]);
@@ -121,14 +110,15 @@ export function OrderFormDialog({
     try {
       if (isEditing && order) {
         const updated = await updateOrder(order.id, data);
-        onOrderUpdated?.(updated);
+        onOrderUpdated?.(order.id, updated);
         toast({ title: "Pedido Atualizado", description: `O pedido #${order.id} foi atualizado.` });
       } else {
         const newOrder = await addOrder(data as Omit<Order, 'id' | 'createdAt'>);
-        onOrderCreated?.(newOrder);
+        onOrderCreated?.(newOrder as Order);
         toast({ title: "Pedido Criado", description: `Novo pedido #${newOrder.id} foi criado.` });
       }
       setIsOpen(false);
+      form.reset(defaultValues);
     } catch (error) {
       toast({ variant: "destructive", title: "Erro", description: "Algo deu errado." });
     }
