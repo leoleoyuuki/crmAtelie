@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Order, Customer } from '@/lib/types';
 import { OrderTicket } from './order-ticket';
@@ -14,7 +13,7 @@ interface OrderPrintDialogProps {
 }
 
 export function OrderPrintDialog({ isOpen, onClose, order, customer }: OrderPrintDialogProps) {
-  const ticketRef = useRef(null);
+  const ticketRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
     content: () => ticketRef.current,
@@ -24,12 +23,13 @@ export function OrderPrintDialog({ isOpen, onClose, order, customer }: OrderPrin
     onPrintError: onClose,
   });
 
-  // Call print directly when the component is open and rendered
-  if (isOpen) {
-    // We call handlePrint in a timeout of 0 to push it to the end of the event loop.
-    // This ensures the ref is set before the print dialog is triggered.
-    setTimeout(handlePrint, 0);
-  }
+  useEffect(() => {
+    if (isOpen && ticketRef.current) {
+      // Small delay to ensure the component is rendered and ref is set
+      const timer = setTimeout(handlePrint, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, handlePrint]);
 
   if (!isOpen) {
     return null;
@@ -38,7 +38,9 @@ export function OrderPrintDialog({ isOpen, onClose, order, customer }: OrderPrin
   // Render the component to be printed, but keep it off-screen
   return (
     <div style={{ position: 'absolute', left: '-9999px' }}>
-      <OrderTicket ref={ticketRef} order={order} customer={customer} />
+      <div ref={ticketRef}>
+        <OrderTicket order={order} customer={customer} />
+      </div>
     </div>
   );
 }
