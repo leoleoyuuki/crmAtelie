@@ -77,6 +77,9 @@ export default function PrintPage() {
             padding: 0;
             background: white;
           }
+          .no-print {
+            display: none;
+          }
           body * {
             visibility: hidden;
           }
@@ -85,15 +88,10 @@ export default function PrintPage() {
           }
           #printable-area {
             position: absolute;
-            top: 0;
             left: 0;
-            right: 0;
-            margin: auto;
-            width: 48mm;
+            top: 0;
+            width: 48mm; /* Força a largura exata na impressão */
             height: auto;
-          }
-          .no-print {
-            display: none;
           }
         }
         @page {
