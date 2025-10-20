@@ -1,13 +1,15 @@
 'use client';
 
 import { useAuth } from '@/firebase';
-import LoginPage from '@/app/login/page';
 import { Skeleton } from './ui/skeleton';
+import React from 'react';
 
 export default function AuthGate({
   children,
+  loginPage,
 }: {
   children: React.ReactNode;
+  loginPage: React.ReactNode;
 }) {
   const { user, loading } = useAuth();
 
@@ -26,7 +28,7 @@ export default function AuthGate({
   }
 
   if (!user) {
-    return <LoginPage />;
+    return <>{loginPage}</>;
   }
 
   return <>{children}</>;
