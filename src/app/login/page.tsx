@@ -1,6 +1,7 @@
+
 'use client';
 
-import { GoogleAuthProvider, signInWithRedirect } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
@@ -11,10 +12,9 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithRedirect(auth, provider);
-      // After redirecting, the user will be sent to the Google login page
-      // and then redirected back to your app. The onAuthStateChanged
-      // listener will handle the result.
+      await signInWithPopup(auth, provider);
+      // After a successful sign-in, the onAuthStateChanged listener will
+      // trigger a re-render and the user will be redirected.
     } catch (error) {
       console.error('Error signing in with Google: ', error);
     }
