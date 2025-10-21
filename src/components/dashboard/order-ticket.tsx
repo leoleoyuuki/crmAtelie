@@ -43,7 +43,7 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
         <div className="mb-1 text-center">
             <h2 className="font-bold text-[9pt] uppercase">Serviço</h2>
             <p><strong>Tipo:</strong> {order.serviceType}</p>
-            {order.description && <p className="text-[7pt] line-clamp-2"><strong>Detalhes:</strong> {order.description}</p>}
+            {order.description && <p className="text-[7pt] Ajuste camiseta preta tamanho p -ajustar mangas e peitoral, 33cm e 80cm respectivamente "><strong>Detalhes:</strong> {order.description}</p>}
         </div>
 
         <div className="border-t border-dashed border-black pt-1 my-2">
