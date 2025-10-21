@@ -91,14 +91,14 @@ export default function PrintPage() {
             position: absolute;
             left: 0;
             top: 0;
-            width: 58mm; /* Força a largura exata na impressão */
+            width: 48mm; /* Força a largura exata na impressão */
             height: 85mm;
           }
         }
         @page {
           size: 58mm;
           height: 85mm;
-          margin: 10mm;
+          margin: 5mm;
         }
       `}</style>
       <main className="bg-gray-100 flex flex-col items-center justify-start py-8">
