@@ -59,6 +59,7 @@ export default function PrintPage() {
       </div>
     );
   }
+  
 
   if (error) {
     return <div className="flex justify-center items-center h-screen bg-red-100 text-red-700">{error}</div>;
