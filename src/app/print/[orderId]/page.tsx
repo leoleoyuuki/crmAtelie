@@ -97,7 +97,7 @@ export default function PrintPage() {
         }
         @page {
           size: 58mm;
-          height: 85mm;
+          height: 95mm;
           margin: 5mm;
         }
       `}</style>
