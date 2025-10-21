@@ -91,7 +91,7 @@ export default function PrintPage() {
             position: absolute;
             left: 0;
             top: 0;
-            width: 48mm; /* Força a largura exata na impressão */
+            width: 58mm; /* Força a largura exata na impressão */
             height: 85mm;
           }
         }
