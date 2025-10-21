@@ -92,7 +92,7 @@ export default function PrintPage() {
             left: 0;
             top: 0;
             width: 48mm; /* Força a largura exata na impressão */
-            height: 85mm;
+            height: 95mm;
           }
         }
         @page {
