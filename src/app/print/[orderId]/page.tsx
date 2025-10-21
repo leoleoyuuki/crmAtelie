@@ -59,7 +59,7 @@ export default function PrintPage() {
       </div>
     );
   }
-  
+
 
   if (error) {
     return <div className="flex justify-center items-center h-screen bg-red-100 text-red-700">{error}</div>;
@@ -92,11 +92,12 @@ export default function PrintPage() {
             left: 0;
             top: 0;
             width: 48mm; /* Força a largura exata na impressão */
-            height: auto;
+            height: 85mm;
           }
         }
         @page {
           size: 58mm;
+          height: 85mm;
           margin: 5mm;
         }
       `}</style>
