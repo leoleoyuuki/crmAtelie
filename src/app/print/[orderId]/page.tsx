@@ -98,7 +98,7 @@ export default function PrintPage() {
         @page {
           size: 58mm;
           height: 85mm;
-          margin: 5mm;
+          margin: 10mm;
         }
       `}</style>
       <main className="bg-gray-100 flex flex-col items-center justify-start py-8">
