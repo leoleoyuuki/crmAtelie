@@ -46,15 +46,12 @@ export async function getCustomers(): Promise<Customer[]> {
 export async function getCustomerById(customerId: string): Promise<Customer | null> {
     const docRef = doc(db, 'customers', customerId);
     const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        const customerData = fromFirebase(docSnap.data(), docSnap.id);
-        if (customerData?.userId !== auth.currentUser?.uid) {
-            console.error("Permissão negada: Cliente não pertence ao usuário.");
-            return null;
-        }
-        return customerData as Customer;
+    if (!docSnap.exists()) {
+        return null;
     }
-    return null;
+    // A verificação de permissão deve ser feita pelas regras do Firestore.
+    // O servidor não tem um `auth.currentUser` confiável.
+    return fromFirebase(docSnap.data(), docSnap.id) as Customer;
 }
 
 
@@ -95,15 +92,12 @@ const ordersCollection = collection(db, 'orders');
 export async function getOrderById(orderId: string): Promise<Order | null> {
     const docRef = doc(db, 'orders', orderId);
     const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        const orderData = fromFirebase(docSnap.data(), docSnap.id);
-         if (orderData?.userId !== auth.currentUser?.uid) {
-            console.error("Permissão negada: Pedido não pertence ao usuário.");
-            return null;
-        }
-        return orderData as Order;
+    if (!docSnap.exists()) {
+        return null;
     }
-    return null;
+    // A verificação de permissão deve ser feita pelas regras do Firestore.
+    // O servidor não tem um `auth.currentUser` confiável.
+    return fromFirebase(docSnap.data(), docSnap.id) as Order;
 }
 
 
