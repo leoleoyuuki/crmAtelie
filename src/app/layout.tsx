@@ -5,11 +5,13 @@ import type { Metadata } from 'next';
 import { usePathname } from 'next/navigation';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import { FirebaseClientProvider, useAuth } from '@/firebase';
+import { FirebaseClientProvider } from '@/firebase';
 import AppShell from '@/components/app-shell';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import LoginPage from './login/page';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser } from '@/firebase/auth/use-user';
+import { PasswordProvider } from '@/contexts/password-context';
 
 // Metadata is now static as it's a client component
 // export const metadata: Metadata = {
@@ -18,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 // };
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useUser();
   const pathname = usePathname();
 
   if (loading) {
@@ -44,9 +46,11 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <AppShell>
-        {children}
-      </AppShell>
+      <PasswordProvider>
+        <AppShell>
+          {children}
+        </AppShell>
+      </PasswordProvider>
     </SidebarProvider>
   );
 }

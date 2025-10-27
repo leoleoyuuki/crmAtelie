@@ -12,18 +12,31 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, LogOut } from "lucide-react";
-import React from "react";
+import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff } from "lucide-react";
+import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useUser } from "@/firebase/auth/use-user";
+import { PasswordContext } from "@/contexts/password-context";
+import { PasswordDialog } from "./password-dialog";
 
 
 function AppHeader() {
     const { isMobile } = useSidebar();
-    const { user } = useAuth();
+    const { user } = useUser();
+    const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
+
+    const handleToggleClick = () => {
+        if (!isPasswordSet) {
+            setIsPasswordDialogOpen(true);
+        } else {
+            togglePrivacyMode();
+        }
+    };
 
     return (
         <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6">
@@ -31,6 +44,12 @@ function AppHeader() {
               <SidebarTrigger />
             </div>
             <div className="w-full flex-1" />
+
+            <Button variant="ghost" size="icon" onClick={handleToggleClick} aria-label="Toggle Privacy Mode">
+                {isPrivacyMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </Button>
+            <PasswordDialog isOpen={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} />
+
             {user && (
                 <div className="flex items-center gap-4">
                     <Avatar className="h-9 w-9">

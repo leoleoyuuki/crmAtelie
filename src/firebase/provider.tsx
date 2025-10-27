@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -5,21 +6,16 @@ import {
   useContext,
   ReactNode,
   useMemo,
-  useEffect,
-  useState,
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Auth, User, onAuthStateChanged } from 'firebase/auth';
+import { Auth } from 'firebase/auth';
 import { Firestore, collection, onSnapshot, query } from 'firebase/firestore';
 import { app, auth, db } from './config';
-import { Order } from '@/lib/types';
 
 interface FirebaseContextValue {
   app: FirebaseApp;
   auth: Auth;
   db: Firestore;
-  user: User | null;
-  loading: boolean;
 }
 
 const FirebaseContext = createContext<FirebaseContextValue | undefined>(
@@ -27,26 +23,13 @@ const FirebaseContext = createContext<FirebaseContextValue | undefined>(
 );
 
 export function FirebaseProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
   const value = useMemo(
     () => ({
       app,
       auth,
       db,
-      user,
-      loading,
     }),
-    [user, loading]
+    []
   );
 
   return (
@@ -75,11 +58,11 @@ export function useFirestore() {
 
 export function useCollection<T>(path: string) {
   const db = useFirestore();
-  const [data, setData] = useState<T[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = React.useState<T[] | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<Error | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const q = query(collection(db, path));
     const unsubscribe = onSnapshot(
       q,
