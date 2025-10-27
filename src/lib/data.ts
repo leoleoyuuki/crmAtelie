@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { Order, ServiceType, Customer, OrderItem } from '@/lib/types';
-import { subMonths, format, startOfMonth, endOfMonth, subDays } from 'date-fns';
+import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
 
@@ -48,7 +48,12 @@ export async function getCustomerById(customerId: string): Promise<Customer | nu
     if (!docSnap.exists()) {
         return null;
     }
-    return fromFirebase(docSnap.data(), docSnap.id) as Customer;
+    const data = fromFirebase(docSnap.data(), docSnap.id) as Customer;
+    if (data.userId !== auth.currentUser?.uid) {
+        // This is a basic security check, proper security should be handled by Firestore rules
+        return null;
+    }
+    return data;
 }
 
 
@@ -94,7 +99,12 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
     if (!docSnap.exists()) {
         return null;
     }
-    return fromFirebase(docSnap.data(), docSnap.id) as Order;
+     const data = fromFirebase(docSnap.data(), docSnap.id) as Order;
+    if (data.userId !== auth.currentUser?.uid) {
+        // This is a basic security check, proper security should be handled by Firestore rules
+        return null;
+    }
+    return data;
 }
 
 
@@ -179,6 +189,19 @@ export async function getServiceDistribution(orders: Order[]) {
     count,
     fill: `var(--chart-${serviceTypeToChartMap[service as ServiceType] || Object.keys(distribution).indexOf(service) + 1})`
   }));
+}
+
+export function getMonths() {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+        const date = subMonths(now, i);
+        months.push({
+            value: `${getMonth(date)}-${getYear(date)}`,
+            label: format(date, 'MMMM yyyy', { locale: ptBR })
+        });
+    }
+    return months;
 }
 
 export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>) {

@@ -13,6 +13,7 @@ import {
   ColumnFiltersState,
   SortingState,
   getSortedRowModel,
+  FilterFn,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -23,16 +24,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { format, isBefore, addDays } from "date-fns";
+import { format, isBefore, addDays, getMonth, getYear } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { OrderTableRowActions } from "./order-table-row-actions";
 import { OrderTableToolbar } from "./order-table-toolbar";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
+import { ArrowUpDown } from "lucide-react";
 
 interface OrderTableShellProps {
   data: Order[];
   isPage?: boolean;
+}
+
+const monthFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
+    const date = row.original.createdAt;
+    const [month, year] = value.split('-').map(Number);
+    return getMonth(date) === month && getYear(date) === year;
+}
+
+const serviceTypeFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
+    const items = row.original.items || [];
+    return items.some(item => item.serviceType === value);
 }
 
 export default function OrderTableShell({ data, isPage = false }: OrderTableShellProps) {
@@ -47,7 +60,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
   }, [data]);
 
   const addOptimisticOrder = (order: Order) => {
-    setOrders(currentOrders => [order, ...currentOrders]);
+    setOrders(currentOrders => [{...order, createdAt: new Date()}, ...currentOrders]);
   };
 
   const updateOptimisticOrder = (orderId: string, updatedOrder: Partial<Order>) => {
@@ -72,6 +85,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
       {
         accessorKey: "items",
         header: "Serviços",
+        filterFn: serviceTypeFilterFn,
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-1">
             {row.original.items && row.original.items.map((item, index) => (
@@ -94,12 +108,22 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
       },
       {
         accessorKey: "dueDate",
-        header: "Data de Entrega",
+        header: ({ column }) => {
+            return (
+              <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              >
+                Data de Entrega
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              </Button>
+            )
+        },
         cell: ({ row }) => {
             const dueDate = row.original.dueDate;
             if (!dueDate) return null;
             const isDueSoon = isBefore(dueDate, addDays(new Date(), 3)) && !isBefore(dueDate, new Date());
-            return <span className={isDueSoon ? 'text-destructive font-semibold' : ''}>{format(dueDate, "PPP", { locale: ptBR })}</span>
+            return <div className={cn('text-center', isDueSoon ? 'text-destructive font-semibold' : '')}>{format(dueDate, "PPP", { locale: ptBR })}</div>
         }
       },
       {
@@ -120,6 +144,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
        {
         accessorKey: 'createdAt',
         header: 'Criado em',
+        filterFn: monthFilterFn,
         cell: ({ row }) => format(row.original.createdAt, 'dd/MM/yyyy'),
       },
       {

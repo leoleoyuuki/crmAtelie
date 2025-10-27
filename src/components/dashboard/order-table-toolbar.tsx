@@ -4,7 +4,7 @@
 import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import { OrderFormDialog } from "./order-form-dialog"
-import { Order, OrderStatus } from "@/lib/types"
+import { Order, OrderStatus, ServiceType } from "@/lib/types"
 import {
   Select,
   SelectContent,
@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { CardHeader, CardTitle, CardDescription } from "../ui/card"
+import { getMonths } from "@/lib/data"
 
 interface OrderTableToolbarProps<TData> {
   table: Table<TData>
@@ -21,6 +22,9 @@ interface OrderTableToolbarProps<TData> {
 }
 
 const statuses: OrderStatus[] = ['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído'];
+const serviceTypes: ServiceType[] = ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"];
+const months = getMonths();
+
 
 export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false }: OrderTableToolbarProps<TData>) {
   return (
@@ -34,7 +38,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
         </CardHeader>
       )}
       <div className="flex items-center justify-between p-6 pt-0">
-        <div className="flex flex-1 items-center space-x-2">
+        <div className="flex flex-1 items-center space-x-2 flex-wrap gap-y-2">
           <Input
             placeholder="Filtrar por nome do cliente..."
             value={(table.getColumn("customerName")?.getFilterValue() as string) ?? ""}
@@ -46,11 +50,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
           <Select
             value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
             onValueChange={(value) => {
-              if (value === "all") {
-                table.getColumn("status")?.setFilterValue(undefined);
-              } else {
-                table.getColumn("status")?.setFilterValue(value);
-              }
+              table.getColumn("status")?.setFilterValue(value === "all" ? undefined : value);
             }}
           >
             <SelectTrigger className="h-10 w-[180px]">
@@ -63,8 +63,42 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
               ))}
             </SelectContent>
           </Select>
+           <Select
+            value={(table.getColumn("items")?.getFilterValue() as string) ?? "all"}
+            onValueChange={(value) => {
+              table.getColumn("items")?.setFilterValue(value === "all" ? undefined : value)
+            }}
+          >
+            <SelectTrigger className="h-10 w-[180px]">
+              <SelectValue placeholder="Tipo de Serviço..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Serviços</SelectItem>
+              {serviceTypes.map(type => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+             value={(table.getColumn("createdAt")?.getFilterValue() as string) ?? "all"}
+             onValueChange={(value) => {
+                table.getColumn("createdAt")?.setFilterValue(value === "all" ? undefined : value)
+             }}
+          >
+            <SelectTrigger className="h-10 w-[180px]">
+                <SelectValue placeholder="Filtrar por Mês..." />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="all">Todos os Meses</SelectItem>
+                 {months.map(month => (
+                    <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         </div>
-        <OrderFormDialog onOrderCreated={onOrderCreated} />
+        <div className="pl-2">
+            <OrderFormDialog onOrderCreated={onOrderCreated} />
+        </div>
       </div>
     </>
   )
