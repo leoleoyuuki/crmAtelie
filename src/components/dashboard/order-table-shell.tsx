@@ -31,6 +31,7 @@ import { OrderTableToolbar } from "./order-table-toolbar";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface OrderTableShellProps {
   data: Order[];
@@ -266,3 +267,5 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
     </Card>
   );
 }
+
+    
