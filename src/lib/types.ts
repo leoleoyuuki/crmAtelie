@@ -28,3 +28,10 @@ export interface Order {
   createdAt: Date;
   userId: string;
 }
+
+export interface PriceTableItem {
+    id: string;
+    serviceName: string;
+    price: number;
+    userId: string;
+}

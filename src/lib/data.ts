@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, ServiceType, Customer, OrderItem } from '@/lib/types';
+import { Order, ServiceType, Customer, OrderItem, PriceTableItem } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -233,6 +233,43 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
 
 export async function deleteOrder(orderId: string) {
   const docRef = doc(db, 'orders', orderId);
+  await deleteDoc(docRef);
+  return { success: true };
+}
+
+
+// Price Table Functions
+const priceTableCollection = collection(db, 'priceTable');
+
+export async function getPriceTableItems(): Promise<PriceTableItem[]> {
+  if (!auth.currentUser) return [];
+  const q = query(priceTableCollection, where("userId", "==", auth.currentUser.uid));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as PriceTableItem);
+}
+
+export async function addPriceTableItem(item: Omit<PriceTableItem, 'id' | 'userId'>): Promise<PriceTableItem> {
+  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+  const newItemData = {
+    ...item,
+    userId: auth.currentUser.uid,
+  };
+  const docRef = await addDoc(priceTableCollection, newItemData);
+  const newDoc = await getDoc(docRef);
+  return fromFirebase(newDoc.data(), newDoc.id) as PriceTableItem;
+}
+
+export async function updatePriceTableItem(itemId: string, item: Partial<Omit<PriceTableItem, 'id' | 'userId'>>): Promise<PriceTableItem> {
+  const docRef = doc(db, 'priceTable', itemId);
+  // Security check should be done with Firestore rules
+  await updateDoc(docRef, item);
+  const updatedDoc = await getDoc(docRef);
+  return fromFirebase(updatedDoc.data(), updatedDoc.id) as PriceTableItem;
+}
+
+export async function deletePriceTableItem(itemId: string): Promise<{ success: boolean }> {
+  const docRef = doc(db, 'priceTable', itemId);
+  // Security check should be done with Firestore rules
   await deleteDoc(docRef);
   return { success: true };
 }

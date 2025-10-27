@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff, ListChecks } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff, ListChecks, Tags } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -76,6 +76,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/pedidos", label: "Pedidos", icon: ShoppingCart },
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },
+    { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
   ]
 
   return (

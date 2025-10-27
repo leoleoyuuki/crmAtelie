@@ -1,5 +1,25 @@
 {
   "entities": {
+    "PriceTableItem": {
+      "title": "Price Table Item",
+      "description": "Represents a single service and its price in the price table.",
+      "type": "object",
+      "properties": {
+        "serviceName": {
+          "type": "string",
+          "description": "The name of the service."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the service."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who created the item."
+        }
+      },
+      "required": ["serviceName", "price", "userId"]
+    },
     "OrderItem": {
       "title": "Order Item",
       "description": "Represents a single item within a customer's order.",
@@ -127,6 +147,12 @@
     "providers": ["Google"]
   },
   "firestore": {
+    "/priceTable/{itemId}": {
+      "schema": {
+        "$ref": "#/entities/PriceTableItem"
+      },
+      "description": "Stores items for the price table."
+    },
     "/orders/{orderId}": {
       "schema": {
         "$ref": "#/entities/Order"
