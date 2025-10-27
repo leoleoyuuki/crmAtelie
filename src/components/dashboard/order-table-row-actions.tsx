@@ -62,7 +62,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
     return `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`;
   };
   
-  const servicesSummary = order.items.map(i => i.serviceType).join(', ');
+  const servicesSummary = order.items && order.items.length > 0 ? order.items.map(i => i.serviceType).join(', ') : 'Serviços Diversos';
   const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id.substring(0, 5)} no AtelierFlow. Detalhes: ${servicesSummary}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
   const readyMessage = `Olá ${order.customerName}, seu pedido #${order.id.substring(0, 5)} no AtelierFlow está pronto para retirada! Estamos ansiosos para que você veja.`;
 

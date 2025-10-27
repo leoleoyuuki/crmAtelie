@@ -74,7 +74,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
         header: "Serviços",
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-1">
-            {row.original.items.map((item, index) => (
+            {row.original.items && row.original.items.map((item, index) => (
               <Badge key={index} variant="secondary">{item.serviceType}</Badge>
             ))}
           </div>
