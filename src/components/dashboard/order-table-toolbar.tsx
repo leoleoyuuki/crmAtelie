@@ -63,6 +63,21 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
               ))}
             </SelectContent>
           </Select>
+          <Select
+            value={(table.getColumn("completionStatus")?.getFilterValue() as string) ?? "all"}
+            onValueChange={(value) => {
+                table.getColumn("completionStatus")?.setFilterValue(value === "all" ? undefined : value)
+            }}
+          >
+            <SelectTrigger className="h-10 w-[180px]">
+              <SelectValue placeholder="Filtrar por conclusão..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos (Conclusão)</SelectItem>
+              <SelectItem value="Concluído">Concluídos</SelectItem>
+              <SelectItem value="Não Concluído">Não Concluídos</SelectItem>
+            </SelectContent>
+          </Select>
            <Select
             value={(table.getColumn("items")?.getFilterValue() as string) ?? "all"}
             onValueChange={(value) => {

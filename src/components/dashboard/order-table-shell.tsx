@@ -49,6 +49,18 @@ const serviceTypeFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
     return items.some(item => item.serviceType === value);
 }
 
+const completionStatusFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
+    const status = row.original.status;
+    if (value === "Concluído") {
+        return status === "Concluído";
+    }
+    if (value === "Não Concluído") {
+        return status !== "Concluído";
+    }
+    return true;
+}
+
+
 export default function OrderTableShell({ data, isPage = false }: OrderTableShellProps) {
   const [orders, setOrders] = useState<Order[]>(data);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -148,6 +160,10 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
         filterFn: monthFilterFn,
         cell: ({ row }) => format(row.original.createdAt, 'dd/MM/yyyy'),
       },
+       {
+        accessorKey: 'completionStatus',
+        filterFn: completionStatusFilterFn,
+      },
       {
         id: "actions",
         cell: ({ row }) => (
@@ -183,6 +199,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
       },
        columnVisibility: {
         createdAt: false, 
+        completionStatus: false,
       },
     }
   });
