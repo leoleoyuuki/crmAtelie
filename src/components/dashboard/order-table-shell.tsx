@@ -96,6 +96,15 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
         ),
       },
       {
+        accessorKey: "id",
+        header: "Pedido",
+        cell: ({ row }) => (
+            <div className="font-mono text-xs uppercase">
+                #{row.original.id.substring(0, 7)}
+            </div>
+        )
+      },
+      {
         accessorKey: "items",
         header: "Serviços",
         filterFn: serviceTypeFilterFn,
