@@ -45,7 +45,7 @@ export function TaskItemCard({ task }: TaskItemCardProps) {
         <div className="flex items-center">
           <Package className="h-4 w-4 mr-2 text-muted-foreground" />
           Pedido{' '}
-          <Link href="/pedidos" passHref>
+          <Link href={`/print/${task.orderId}`} passHref target="_blank">
              <span className="font-semibold text-primary hover:underline ml-1">#{task.orderId.substring(0, 5)}</span>
           </Link>
         </div>
