@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, OrderStatus, ServiceType, Customer } from '@/lib/types';
+import { Order, ServiceType, Customer, OrderItem } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -37,8 +37,7 @@ const fromFirebase = (docData: any, id: string) => {
 const customersCollection = collection(db, 'customers');
 
 export async function getCustomers(): Promise<Customer[]> {
-  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
-  const q = query(customersCollection, where("userId", "==", auth.currentUser.uid));
+  const q = query(customersCollection, where("userId", "==", auth.currentUser?.uid || ''));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Customer);
 }
@@ -49,8 +48,6 @@ export async function getCustomerById(customerId: string): Promise<Customer | nu
     if (!docSnap.exists()) {
         return null;
     }
-    // A verificação de permissão deve ser feita pelas regras do Firestore.
-    // O servidor não tem um `auth.currentUser` confiável.
     return fromFirebase(docSnap.data(), docSnap.id) as Customer;
 }
 
@@ -69,18 +66,20 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
 
 export async function updateCustomer(customerId: string, customer: Partial<Omit<Customer, 'id' | 'createdAt' | 'userId'>>): Promise<Customer> {
     const docRef = doc(db, 'customers', customerId);
+    // TODO: Add security rule check
     await updateDoc(docRef, customer);
     const updatedDoc = await getDoc(docRef);
     return fromFirebase(updatedDoc.data(), updatedDoc.id) as Customer;
 }
 
 export async function deleteCustomer(customerId: string) {
-    const ordersQuery = query(collection(db, 'orders'), where('customerId', '==', customerId));
+    const ordersQuery = query(collection(db, 'orders'), where('customerId', '==', customerId), where('userId', '==', auth.currentUser?.uid));
     const ordersSnapshot = await getDocs(ordersQuery);
     if (!ordersSnapshot.empty) {
         throw new Error("Não é possível excluir clientes com pedidos existentes.");
     }
     const docRef = doc(db, 'customers', customerId);
+    // TODO: Add security rule check
     await deleteDoc(docRef);
     return { success: true };
 }
@@ -95,8 +94,6 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
     if (!docSnap.exists()) {
         return null;
     }
-    // A verificação de permissão deve ser feita pelas regras do Firestore.
-    // O servidor não tem um `auth.currentUser` confiável.
     return fromFirebase(docSnap.data(), docSnap.id) as Order;
 }
 
@@ -162,7 +159,9 @@ export async function getServiceDistribution(orders: Order[]) {
   const recentOrders = orders.filter(o => o.createdAt >= last30Days);
   
   const distribution = recentOrders.reduce((acc, order) => {
-    acc[order.serviceType] = (acc[order.serviceType] || 0) + 1;
+    order.items.forEach(item => {
+      acc[item.serviceType] = (acc[item.serviceType] || 0) + 1;
+    });
     return acc;
   }, {} as Record<ServiceType, number>);
 

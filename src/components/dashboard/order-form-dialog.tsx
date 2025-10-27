@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import * as z from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,7 +25,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -35,18 +33,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Order, OrderStatus, ServiceType, Customer } from "@/lib/types";
-import { addOrder, updateOrder, getCustomers, addCustomer } from "@/lib/data";
+import { Order, OrderStatus, ServiceType, Customer, OrderItem } from "@/lib/types";
+import { addOrder, updateOrder, getCustomers } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, UserPlus } from "lucide-react";
+import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { Combobox } from "../ui/combobox";
 import { CustomerFormDialog } from "./customer-form-dialog";
+import { Separator } from "../ui/separator";
+
+const orderItemSchema = z.object({
+  serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
+  description: z.string().optional(),
+  value: z.coerce.number().min(0, "O valor deve ser positivo."),
+  assignedTo: z.string().optional(),
+});
 
 const orderFormSchema = z.object({
   customerId: z.string({ required_error: "Selecione um cliente." }),
-  serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
-  description: z.string().max(200, "A descrição é muito longa.").optional().default(''),
-  totalValue: z.coerce.number().min(0, "O valor deve ser positivo."),
+  items: z.array(orderItemSchema).min(1, "O pedido deve ter pelo menos um item."),
   dueDate: z.date({ required_error: "A data de entrega é obrigatória." }),
   status: z.enum(['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído']),
 });
@@ -101,9 +105,7 @@ export function OrderFormDialog({
 
   const defaultValues: Partial<OrderFormValues> = {
     customerId: '',
-    serviceType: 'Ajuste',
-    description: '',
-    totalValue: 0,
+    items: [{ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' }],
     dueDate: new Date(),
     status: 'Novo',
   };
@@ -112,20 +114,24 @@ export function OrderFormDialog({
     resolver: zodResolver(orderFormSchema),
     defaultValues,
   });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
   
   useEffect(() => {
     if (isOpen) {
       if (order) {
           form.reset({
             ...order,
-            description: order.description ?? '',
+            items: order.items.map(item => ({...item, description: item.description ?? '', assignedTo: item.assignedTo ?? ''})),
           });
       } else {
           form.reset(defaultValues);
       }
     }
   }, [order, form, isOpen]);
-
 
   const onSubmit = async (data: OrderFormValues) => {
     const selectedCustomer = customers.find(c => c.id === data.customerId);
@@ -135,19 +141,21 @@ export function OrderFormDialog({
     }
     
     try {
+      const totalValue = data.items.reduce((sum, item) => sum + item.value, 0);
       const orderData = {
         ...data,
-        customerName: selectedCustomer.name, // Denormalize name for display
+        customerName: selectedCustomer.name,
+        totalValue,
       };
 
       if (isEditing && order) {
         const updated = await updateOrder(order.id, orderData);
         onOrderUpdated?.(order.id, updated);
-        toast({ title: "Pedido Atualizado", description: `O pedido #${order.id} foi atualizado.` });
+        toast({ title: "Pedido Atualizado", description: `O pedido foi atualizado.` });
       } else {
         const newOrder = await addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'userId'>);
         onOrderCreated?.(newOrder as Order);
-        toast({ title: "Pedido Criado", description: `Novo pedido #${newOrder.id} foi criado.` });
+        toast({ title: "Pedido Criado", description: `Novo pedido foi criado.` });
       }
       setIsOpen(false);
       form.reset(defaultValues);
@@ -161,7 +169,6 @@ export function OrderFormDialog({
     form.setValue('customerId', newCustomer.id);
   };
 
-
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -173,7 +180,7 @@ export function OrderFormDialog({
             </Button>
           </DialogTrigger>
         )}
-        <DialogContent className="sm:max-w-[625px]">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="font-headline">{isEditing ? "Editar Pedido" : "Criar Novo Pedido"}</DialogTitle>
             <DialogDescription>
@@ -207,57 +214,90 @@ export function OrderFormDialog({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="serviceType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Serviço</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um tipo de serviço" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {serviceTypes.map(type => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Separator />
+              
+              <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
+                {fields.map((field, index) => (
+                  <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                     <FormLabel className="font-semibold">Item {index + 1}</FormLabel>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name={`items.${index}.serviceType`}
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Tipo de Serviço</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Selecione..." />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {serviceTypes.map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name={`items.${index}.value`}
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Valor (R$)</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="50,00" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                     </div>
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.description`}
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Descrição</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Detalhes do serviço..." {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name={`items.${index}.assignedTo`}
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Atribuído a</FormLabel>
+                            <FormControl>
+                            <Input placeholder="Nome do profissional" {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    {fields.length > 1 && (
+                      <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => remove(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
+              </Button>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Descrição</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Descreva os detalhes do serviço..." {...field} value={field.value ?? ''} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Separator />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="totalValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Valor Total (R$)</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="ex: 50,00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="dueDate"
@@ -269,30 +309,29 @@ export function OrderFormDialog({
                     </FormItem>
                   )}
                 />
+                <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {statuses.map(status => (
+                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
               </div>
-              
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status do pedido" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {statuses.map(status => (
-                          <SelectItem key={status} value={status}>{status}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               
               <DialogFooter>
                   <DialogClose asChild>
@@ -310,6 +349,7 @@ export function OrderFormDialog({
         isOpen={isCustomerDialogOpen} 
         setIsOpen={setIsCustomerDialogOpen}
         onCustomerCreated={handleCustomerCreated}
+        onCustomerUpdated={() => {}}
       />
     </>
   );

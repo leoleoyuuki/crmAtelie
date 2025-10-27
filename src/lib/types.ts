@@ -10,12 +10,18 @@ export interface Customer {
   userId: string;
 }
 
+export interface OrderItem {
+  serviceType: ServiceType;
+  description?: string;
+  value: number;
+  assignedTo?: string;
+}
+
 export interface Order {
   id: string;
   customerId: string;
   customerName: string; // Denormalized for easy display
-  serviceType: ServiceType;
-  description?: string;
+  items: OrderItem[];
   totalValue: number;
   dueDate: Date;
   status: OrderStatus;

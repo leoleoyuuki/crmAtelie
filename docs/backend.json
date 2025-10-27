@@ -1,8 +1,33 @@
 {
   "entities": {
+    "OrderItem": {
+      "title": "Order Item",
+      "description": "Represents a single item within a customer's order.",
+      "type": "object",
+      "properties": {
+        "serviceType": {
+          "type": "string",
+          "description": "The type of service for this item.",
+          "enum": ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the item."
+        },
+        "value": {
+          "type": "number",
+          "description": "The value of this specific item."
+        },
+        "assignedTo": {
+          "type": "string",
+          "description": "The professional assigned to work on this item."
+        }
+      },
+      "required": ["serviceType", "value"]
+    },
     "Order": {
       "title": "Order",
-      "description": "Represents a customer's order in the tailoring/crafting workflow.",
+      "description": "Represents a customer's order, containing multiple items.",
       "type": "object",
       "properties": {
         "customerId": {
@@ -13,18 +38,15 @@
             "type": "string",
             "description": "The name of the customer (denormalized for display)."
         },
-        "serviceType": {
-          "type": "string",
-          "description": "The type of service requested.",
-          "enum": ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]
-        },
-        "description": {
-          "type": "string",
-          "description": "A description of the order."
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/entities/OrderItem"
+          }
         },
         "totalValue": {
           "type": "number",
-          "description": "The total value of the order."
+          "description": "The total value of the order (sum of all items)."
         },
         "dueDate": {
           "type": "string",
@@ -46,7 +68,7 @@
             "description": "The ID of the user who created the order."
         }
       },
-      "required": ["customerId", "customerName", "serviceType", "totalValue", "dueDate", "status", "createdAt", "userId"]
+      "required": ["customerId", "customerName", "items", "totalValue", "dueDate", "status", "createdAt", "userId"]
     },
     "Customer": {
       "title": "Customer",

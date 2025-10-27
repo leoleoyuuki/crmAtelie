@@ -61,8 +61,9 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
     const phone = customer.phone.replace(/\D/g, ""); // remove non-digits
     return `https://wa.me/55${phone}?text=${encodeURIComponent(message)}`;
   };
-
-  const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id.substring(0, 5)} no AtelierFlow. Detalhes: ${order.serviceType} - ${order.description || 'N/A'}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
+  
+  const servicesSummary = order.items.map(i => i.serviceType).join(', ');
+  const confirmationMessage = `Olá ${order.customerName}, esta é uma confirmação para seu pedido #${order.id.substring(0, 5)} no AtelierFlow. Detalhes: ${servicesSummary}. Total: R$${order.totalValue.toFixed(2)}. Prazo: ${format(order.dueDate, "PPP", { locale: ptBR })}. Obrigado!`;
   const readyMessage = `Olá ${order.customerName}, seu pedido #${order.id.substring(0, 5)} no AtelierFlow está pronto para retirada! Estamos ansiosos para que você veja.`;
 
   const handleDelete = async () => {
