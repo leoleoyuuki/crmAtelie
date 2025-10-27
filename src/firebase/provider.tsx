@@ -11,6 +11,9 @@ import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
 import { Firestore, collection, onSnapshot, query } from 'firebase/firestore';
 import { app, auth, db } from './config';
+import { errorEmitter } from './error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from './errors';
+import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseContextValue {
   app: FirebaseApp;
@@ -35,6 +38,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   return (
     <FirebaseContext.Provider value={value}>
       {children}
+      <FirebaseErrorListener />
     </FirebaseContext.Provider>
   );
 }
@@ -87,9 +91,14 @@ export function useCollection<T>(path: string) {
         setData(result);
         setLoading(false);
       },
-      (err) => {
+      async (err) => {
         setError(err);
         setLoading(false);
+        const permissionError = new FirestorePermissionError({
+            path: path,
+            operation: 'list',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
       }
     );
 

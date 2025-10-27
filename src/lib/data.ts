@@ -19,6 +19,8 @@ import { Order, ServiceType, Customer, OrderItem, PriceTableItem } from '@/lib/t
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 
 const fromFirebase = (docData: any, id: string) => {
@@ -50,7 +52,6 @@ export async function getCustomerById(customerId: string): Promise<Customer | nu
     }
     const data = fromFirebase(docSnap.data(), docSnap.id) as Customer;
     if (data.userId !== auth.currentUser?.uid) {
-        // This is a basic security check, proper security should be handled by Firestore rules
         return null;
     }
     return data;
@@ -64,15 +65,33 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
       userId: auth.currentUser.uid,
       createdAt: serverTimestamp(),
   };
-  const docRef = await addDoc(customersCollection, newCustomerData);
+  const docRef = await addDoc(customersCollection, newCustomerData)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: customersCollection.path,
+            operation: 'create',
+            requestResourceData: newCustomerData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError; // Re-throw to allow the caller to handle UI state
+    });
+
   const newDoc = await getDoc(docRef);
   return fromFirebase(newDoc.data(), newDoc.id) as Customer;
 }
 
 export async function updateCustomer(customerId: string, customer: Partial<Omit<Customer, 'id' | 'createdAt' | 'userId'>>): Promise<Customer> {
     const docRef = doc(db, 'customers', customerId);
-    // TODO: Add security rule check
-    await updateDoc(docRef, customer);
+    await updateDoc(docRef, customer)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: customer,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+      });
     const updatedDoc = await getDoc(docRef);
     return fromFirebase(updatedDoc.data(), updatedDoc.id) as Customer;
 }
@@ -84,8 +103,16 @@ export async function deleteCustomer(customerId: string) {
         throw new Error("Não é possível excluir clientes com pedidos existentes.");
     }
     const docRef = doc(db, 'customers', customerId);
-    // TODO: Add security rule check
-    await deleteDoc(docRef);
+    await deleteDoc(docRef)
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete',
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+            throw serverError;
+        });
+
     return { success: true };
 }
 
@@ -101,7 +128,6 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
     }
      const data = fromFirebase(docSnap.data(), docSnap.id) as Order;
     if (data.userId !== auth.currentUser?.uid) {
-        // This is a basic security check, proper security should be handled by Firestore rules
         return null;
     }
     return data;
@@ -212,7 +238,16 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
       createdAt: serverTimestamp(),
       dueDate: Timestamp.fromDate(order.dueDate),
   };
-  const docRef = await addDoc(ordersCollection, newOrderData);
+  const docRef = await addDoc(ordersCollection, newOrderData)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: ordersCollection.path,
+            operation: 'create',
+            requestResourceData: newOrderData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
   const newDoc = await getDoc(docRef);
   return fromFirebase(newDoc.data(), newDoc.id) as Order;
 }
@@ -225,7 +260,16 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
     updatePayload.dueDate = Timestamp.fromDate(updatedData.dueDate);
   }
 
-  await updateDoc(docRef, updatePayload);
+  await updateDoc(docRef, updatePayload)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: updatePayload,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
   
   const updatedDoc = await getDoc(docRef);
   return fromFirebase(updatedDoc.data(), updatedDoc.id) as Order;
@@ -233,7 +277,15 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
 
 export async function deleteOrder(orderId: string) {
   const docRef = doc(db, 'orders', orderId);
-  await deleteDoc(docRef);
+  await deleteDoc(docRef)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
   return { success: true };
 }
 
@@ -254,22 +306,46 @@ export async function addPriceTableItem(item: Omit<PriceTableItem, 'id' | 'userI
     ...item,
     userId: auth.currentUser.uid,
   };
-  const docRef = await addDoc(priceTableCollection, newItemData);
+  const docRef = await addDoc(priceTableCollection, newItemData)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: priceTableCollection.path,
+            operation: 'create',
+            requestResourceData: newItemData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
   const newDoc = await getDoc(docRef);
   return fromFirebase(newDoc.data(), newDoc.id) as PriceTableItem;
 }
 
 export async function updatePriceTableItem(itemId: string, item: Partial<Omit<PriceTableItem, 'id' | 'userId'>>): Promise<PriceTableItem> {
   const docRef = doc(db, 'priceTable', itemId);
-  // Security check should be done with Firestore rules
-  await updateDoc(docRef, item);
+  await updateDoc(docRef, item)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: item,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
   const updatedDoc = await getDoc(docRef);
   return fromFirebase(updatedDoc.data(), updatedDoc.id) as PriceTableItem;
 }
 
 export async function deletePriceTableItem(itemId: string): Promise<{ success: boolean }> {
   const docRef = doc(db, 'priceTable', itemId);
-  // Security check should be done with Firestore rules
-  await deleteDoc(docRef);
+  await deleteDoc(docRef)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
   return { success: true };
 }
