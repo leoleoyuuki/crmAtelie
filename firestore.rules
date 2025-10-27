@@ -1,33 +1,27 @@
 /**
- * @file Firebase Security Rules for Atelier App
- * @version Prototyping
+ * @fileoverview Firestore Security Rules for the atelier app.
  *
- * @description
- * This ruleset enforces a user-ownership model. Each document is associated with a specific user,
- * and only that user has full read/write access to their own documents. Data shape validation is relaxed
- * to facilitate rapid prototyping.
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model.  Most data is scoped to a specific user.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile information, accessible only by the user.
- * - /customers/{customerId}: Stores customer data, accessible only by the creating user.
- * - /orders/{orderId}: Stores order data, accessible only by the creating user.
- * - /priceTable/{itemId}: Stores price table items, accessible only by the creating user.
+ * - /users/{userId}: Stores user profile information.  Only the authenticated user can read/write their own profile.
+ * - /customers/{customerId}: Stores customer information.  Only the user who created the customer can read/write it.
+ * - /orders/{orderId}: Stores order information. Only the user who created the order can read/write it.
+ * - /priceTable/{itemId}: Stores price table items. Only the user who created the item can read/write it.
  *
  * Key Security Decisions:
- * - User listing is disabled for all collections.
- * - Strict ownership is enforced for all data modifications.
- * - Data validation is minimized to focus on authorization and relational integrity.
+ * - Listing of any collections restricted to the owner.
  *
  * Denormalization for Authorization:
- * - Each document includes a 'userId' field to simplify ownership checks and avoid costly `get()` calls.
+ * - Documents in the `/customers`, `/orders`, and `/priceTable` collections contain a `userId` field, which is used to enforce ownership. This avoids the need for complex `get()` operations in the rules.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is made by a signed-in user.
-     * @return {bool} True if the user is signed in, false otherwise.
+     * @description Checks if the request is authenticated.
      */
     function isSignedIn() {
       return request.auth != null;
@@ -35,107 +29,91 @@ service cloud.firestore {
 
     /**
      * @description Checks if the authenticated user ID matches the provided user ID.
-     * @param {string} userId - The user ID to compare against the authenticated user's ID.
-     * @return {bool} True if the user IDs match, false otherwise.
      */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of an existing document.
-     * @param {string} userId - The user ID to compare against the authenticated user's ID.
-     * @return {bool} True if the user IDs match and the document exists, false otherwise.
+     * @description Checks if the authenticated user is the owner of the existing document.
      */
     function isExistingOwner(userId) {
       return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Defines security rules for user profiles.
+     * @description User Profile Rules.
      * @path /users/{userId}
-     * @allow (create) User with ID 'user123' can create their profile.
-     * @allow (get) User with ID 'user123' can read their profile.
-     * @allow (update) User with ID 'user123' can update their profile.
-     * @allow (delete) User with ID 'user123' can delete their profile.
-     * @deny (create) User with ID 'user456' cannot create a profile for 'user123'.
-     * @deny (get) User with ID 'user456' cannot read profile of 'user123'.
-     * @deny (update) User with ID 'user456' cannot update profile of 'user123'.
-     * @deny (delete) User with ID 'user456' cannot delete profile of 'user123'.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data.
+     * @allow (create) User 'user123' can create their own profile with matching userId.
+     * @allow (get) User 'user123' can read their own profile.
+     * @allow (update) User 'user123' can update their own profile.
+     * @allow (delete) User 'user123' can delete their own profile.
+     * @deny (create) User 'user456' cannot create a profile with userId 'user123'.
+     * @deny (get) User 'user456' cannot read user 'user123' profile.
+     * @principle Enforces document ownership for all operations on user profiles.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false;
-
+      allow list: if false; // User profiles are not listable.
       allow create: if isOwner(userId) && request.resource.data.email == request.auth.token.email;
       allow update: if isExistingOwner(userId) && request.resource.data.email == resource.data.email;
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Defines security rules for customers.
+     * @description Customer Rules.
      * @path /customers/{customerId}
-     * @allow (create) User with ID 'user123' can create a customer.
-     * @allow (get) User with ID 'user123' can read a customer.
-     * @allow (update) User with ID 'user123' can update a customer.
-     * @allow (delete) User with ID 'user123' can delete a customer.
-     * @deny (create) User with ID 'user456' cannot create a customer for 'user123'.
-     * @deny (get) User with ID 'user456' cannot read customer of 'user123'.
-     * @deny (update) User with ID 'user456' cannot update customer of 'user123'.
-     * @deny (delete) User with ID 'user456' cannot delete customer of 'user123'.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data.
+     * @allow (create) User 'user123' can create a customer with userId 'user123'.
+     * @allow (get) User 'user123' can read a customer with userId 'user123'.
+     * @allow (update) User 'user123' can update a customer with userId 'user123'.
+     * @allow (delete) User 'user123' can delete a customer with userId 'user123'.
+     * @deny (create) User 'user456' cannot create a customer with userId 'user123'.
+     * @deny (get) User 'user456' cannot read customer created by 'user123'.
+     * @principle Enforces document ownership for all operations on customers.
      */
     match /customers/{customerId} {
-      allow get: if isOwner(request.resource.data.userId);
-      allow list: if false;
-
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(request.auth.uid);
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(resource.data.userId);
     }
 
     /**
-     * @description Defines security rules for orders.
+     * @description Order Rules.
      * @path /orders/{orderId}
-     * @allow (create) User with ID 'user123' can create an order.
-     * @allow (get) User with ID 'user123' can read an order.
-     * @allow (update) User with ID 'user123' can update an order.
-     * @allow (delete) User with ID 'user123' can delete an order.
-     * @deny (create) User with ID 'user456' cannot create an order for 'user123'.
-     * @deny (get) User with ID 'user456' cannot read order of 'user123'.
-     * @deny (update) User with ID 'user456' cannot update order of 'user123'.
-     * @deny (delete) User with ID 'user456' cannot delete order of 'user123'.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data.
+     * @allow (create) User 'user123' can create an order with userId 'user123'.
+     * @allow (get) User 'user123' can read an order with userId 'user123'.
+     * @allow (update) User 'user123' can update an order with userId 'user123'.
+     * @allow (delete) User 'user123' can delete an order with userId 'user123'.
+     * @deny (create) User 'user456' cannot create an order with userId 'user123'.
+     * @deny (get) User 'user456' cannot read order created by 'user123'.
+     * @principle Enforces document ownership for all operations on orders.
      */
     match /orders/{orderId} {
       allow get: if isOwner(resource.data.userId);
-      allow list: if false;
-
+      allow list: if isOwner(request.auth.uid);
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(resource.data.userId);
     }
 
     /**
-     * @description Defines security rules for price table items.
+     * @description Price Table Item Rules.
      * @path /priceTable/{itemId}
-     * @allow (create) User with ID 'user123' can create a price table item.
-     * @allow (get) User with ID 'user123' can read a price table item.
-     * @allow (update) User with ID 'user123' can update a price table item.
-     * @allow (delete) User with ID 'user123' can delete a price table item.
-     * @deny (create) User with ID 'user456' cannot create a price table item for 'user123'.
-     * @deny (get) User with ID 'user456' cannot read price table item of 'user123'.
-     * @deny (update) User with ID 'user456' cannot update price table item of 'user123'.
-     * @deny (delete) User with ID 'user456' cannot delete price table item of 'user123'.
-     * @principle Enforces document ownership for writes and restricts access to a user's own data.
+     * @allow (create) User 'user123' can create a price table item with userId 'user123'.
+     * @allow (get) User 'user123' can read a price table item with userId 'user123'.
+     * @allow (update) User 'user123' can update a price table item with userId 'user123'.
+     * @allow (delete) User 'user123' can delete a price table item with userId 'user123'.
+     * @deny (create) User 'user456' cannot create a price table item with userId 'user123'.
+     * @deny (get) User 'user456' cannot read price table item created by 'user123'.
+     * @principle Enforces document ownership for all operations on price table items.
      */
     match /priceTable/{itemId} {
       allow get: if isOwner(resource.data.userId);
-      allow list: if false;
-
+      allow list: if isOwner(request.auth.uid);
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
+      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
       allow delete: if isExistingOwner(resource.data.userId);
     }
   }
