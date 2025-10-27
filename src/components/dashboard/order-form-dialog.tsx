@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -125,7 +126,9 @@ export function OrderFormDialog({
       if (order) {
           form.reset({
             ...order,
-            items: order.items.map(item => ({...item, description: item.description ?? '', assignedTo: item.assignedTo ?? ''})),
+            items: order.items 
+                ? order.items.map(item => ({...item, description: item.description ?? '', assignedTo: item.assignedTo ?? ''})) 
+                : defaultValues.items,
           });
       } else {
           form.reset(defaultValues);
