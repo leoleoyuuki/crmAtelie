@@ -159,9 +159,11 @@ export async function getServiceDistribution(orders: Order[]) {
   const recentOrders = orders.filter(o => o.createdAt >= last30Days);
   
   const distribution = recentOrders.reduce((acc, order) => {
-    order.items.forEach(item => {
-      acc[item.serviceType] = (acc[item.serviceType] || 0) + 1;
-    });
+    if (order.items && Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        acc[item.serviceType] = (acc[item.serviceType] || 0) + 1;
+      });
+    }
     return acc;
   }, {} as Record<ServiceType, number>);
 
