@@ -8,6 +8,10 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
+    
+    function isAdmin() {
+      return request.auth.uid == '3YuL6Ff7G9cHAV7xa81kyQF4bCw2';
+    }
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
@@ -23,7 +27,7 @@ service cloud.firestore {
     }
 
     // A user is updating their own resource if the `userId` in the existing data matches their auth uid.
-    function isResourceOwner(userId) {
+    function isResourceOwner() {
         return isSignedIn() && resource.data.userId == request.auth.uid;
     }
     
@@ -46,23 +50,25 @@ service cloud.firestore {
       allow get: if isSignedIn(); 
       // Only an authenticated user can update a token (to mark it as used). The logic in the cloud function prevents misuse.
       allow update: if isSignedIn(); 
-      allow list, create, delete: if false; // Tokens can only be created via backend/admin function, not listable or deletable.
+      // Only the designated admin can create new activation tokens.
+      allow create: if isAdmin();
+      allow list, delete: if false; // Tokens are not listable or deletable by clients.
     }
 
     match /customers/{customerId} {
-      allow read, write: if isAccountActive() && isResourceOwner(request.auth.uid);
+      allow read, write: if isAccountActive() && isResourceOwner();
       allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
       allow list: if isAccountActive();
     }
 
     match /orders/{orderId} {
-      allow read, write: if isAccountActive() && isResourceOwner(request.auth.uid);
+      allow read, write: if isAccountActive() && isResourceOwner();
       allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
       allow list: if isAccountActive();
     }
 
     match /priceTable/{itemId} {
-      allow read, write: if isAccountActive() && isResourceOwner(request.auth.uid);
+      allow read, write: if isAccountActive() && isResourceOwner();
       allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
       allow list: if isAccountActive();
     }
