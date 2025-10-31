@@ -18,59 +18,76 @@ service cloud.firestore {
     }
 
     function isAccountActive() {
+      // Check the user's profile document to see if their status is 'active'.
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
     }
     
-    // A user is creating their own document if the `userId` field in the new data matches their auth uid.
-    function isCreatingOwnResource(userId) {
-        return isOwner(userId) && request.resource.data.userId == request.auth.uid;
+    function isCreatingOwnResource() {
+        return isSignedIn() && request.resource.data.userId == request.auth.uid;
     }
 
-    // A user is updating their own resource if the `userId` in the existing data matches their auth uid.
     function isResourceOwner() {
         return isSignedIn() && resource.data.userId == request.auth.uid;
     }
     
-    // On update, the userId field cannot be changed
-    function isWritingOwnResource() {
+    function isNotChangingOwner() {
         return request.resource.data.userId == resource.data.userId;
     }
 
     // ======= COLLECTION RULES =======
 
     match /users/{userId} {
+      // Any signed-in user can get a profile (e.g., to see a name/photo).
+      // Write access is restricted.
       allow get: if isSignedIn();
+      
+      // A user can create their own profile.
+      // The email in the new document must match the email from their auth token.
       allow create: if isOwner(userId) && request.resource.data.email == request.auth.token.email;
-      allow update: if isOwner(userId); // An active user can update their own profile (e.g. name, photo), and the activation function can update status.
-      allow list, delete: if false; // Profiles are not listable or deletable by clients.
+      
+      // A user can update their own profile. The activation function also updates it.
+      allow update: if isOwner(userId);
+      
+      // Profiles are not listable or deletable by clients for security.
+      allow list, delete: if false; 
     }
     
     match /accessTokens/{tokenId} {
       // Any authenticated user can attempt to read a token to activate their account.
       allow get: if isSignedIn(); 
-      // Only an authenticated user can update a token (to mark it as used). The logic in the cloud function prevents misuse.
+      // An authenticated user can update a token (to mark it as used).
       allow update: if isSignedIn(); 
       // Only the designated admin can create new activation tokens.
       allow create: if isAdmin();
-      allow list, delete: if false; // Tokens are not listable or deletable by clients.
+      // Tokens are not listable or deletable by clients.
+      allow list, delete: if false;
     }
 
     match /customers/{customerId} {
-      allow read, write: if isAccountActive() && isResourceOwner();
-      allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
-      allow list: if isAccountActive();
+      // Only active users who own the resource can read or write.
+      allow get, update, delete: if isAccountActive() && isResourceOwner();
+      // Only active users can list their own customers.
+      allow list: if isAccountActive() && isOwner(request.auth.uid);
+      // Only active users can create a customer for themselves.
+      allow create: if isAccountActive() && isCreatingOwnResource();
     }
 
     match /orders/{orderId} {
-      allow read, write: if isAccountActive() && isResourceOwner();
-      allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
-      allow list: if isAccountActive();
+      // Only active users who own the resource can read or write.
+      allow get, update, delete: if isAccountActive() && isResourceOwner();
+      // Only active users can list their own orders.
+      allow list: if isAccountActive() && isOwner(request.auth.uid);
+      // Only active users can create an order for themselves.
+      allow create: if isAccountActive() && isCreatingOwnResource();
     }
 
     match /priceTable/{itemId} {
-      allow read, write: if isAccountActive() && isResourceOwner();
-      allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
-      allow list: if isAccountActive();
+      // Only active users who own the resource can read or write.
+      allow get, update, delete: if isAccountActive() && isResourceOwner();
+      // Only active users can list their own price table items.
+      allow list: if isAccountActive() && isOwner(request.auth.uid);
+      // Only active users can create a price table item for themselves.
+      allow create: if isAccountActive() && isCreatingOwnResource();
     }
   }
 }
