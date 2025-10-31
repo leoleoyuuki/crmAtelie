@@ -58,7 +58,8 @@ export default function AtivacaoPage() {
     }
   };
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     const phoneNumber = "5511957211546";
     const message = "Olá! Gostaria de adquirir um código de ativação para o sistema AtelierFlow.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
@@ -86,23 +87,24 @@ export default function AtivacaoPage() {
               onChange={(e) => setToken(e.target.value)}
               disabled={isLoading}
             />
-             <p className="text-xs text-muted-foreground">
-                Se você ainda não tem um código, entre em contato com o administrador do sistema.
-             </p>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-2">
+        <CardFooter className="flex flex-col gap-4">
             <Button onClick={handleActivation} disabled={isLoading} className="w-full">
                 {isLoading ? 'Ativando...' : 'Ativar Conta'}
             </Button>
-            <Button onClick={handleWhatsAppClick} variant="secondary" className="w-full">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Adquirir Código
-            </Button>
+            
+            <p className="text-sm text-muted-foreground text-center">
+              Não tem um código?{' '}
+              <a href="#" onClick={handleWhatsAppClick} className="font-semibold text-primary hover:underline">
+                Adquira aqui
+              </a>
+            </p>
+
             <Button
                 variant="link"
                 size="sm"
-                className="text-muted-foreground mt-4"
+                className="text-muted-foreground"
                 onClick={() => auth.signOut()}
                 >
                 <LogOut className="mr-2 h-4 w-4" />
