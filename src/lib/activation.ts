@@ -1,28 +1,27 @@
 
 'use client';
 
-import { collection, query, where, getDocs, writeBatch, doc, Firestore, User } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, Firestore, User } from 'firebase/firestore';
 import { add } from 'date-fns';
 
 export async function activateAccount(db: Firestore, user: User, token: string): Promise<void> {
 
-  const tokenQuery = query(collection(db, 'accessTokens'), where('code', '==', token));
-  const tokenSnapshot = await getDocs(tokenQuery);
+  // The document ID is the token itself
+  const tokenRef = doc(db, 'accessTokens', token);
+  const tokenSnapshot = await getDoc(tokenRef);
 
-  if (tokenSnapshot.empty) {
+  if (!tokenSnapshot.exists()) {
     throw new Error('Código de ativação inválido.');
   }
 
-  const tokenDoc = tokenSnapshot.docs[0];
-  const tokenData = tokenDoc.data();
+  const tokenData = tokenSnapshot.data();
 
   if (tokenData.isUsed) {
     throw new Error('Este código já foi utilizado.');
   }
 
   const userRef = doc(db, 'users', user.uid);
-  const tokenRef = tokenDoc.ref;
-
+  
   // Calculate expiration date
   const now = new Date();
   const expiresAt = add(now, { months: tokenData.duration });

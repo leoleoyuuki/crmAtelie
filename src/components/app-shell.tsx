@@ -69,7 +69,10 @@ function AppHeader() {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { auth } = useAuth();
+  const { user } = useUser();
   const pathname = usePathname();
+
+  const isAdmin = user?.uid === "3YuL6Ff7G9cHAV7xa81kyQF4bCw2";
 
   const menuItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -77,8 +80,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },
     { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
-    { href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound },
-  ]
+  ];
+
+  if (isAdmin) {
+    menuItems.push({ href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound });
+  }
 
   return (
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">

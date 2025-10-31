@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import type { TokenDuration } from '@/lib/types';
 
 // This is a simplified and insecure way to generate a random code.
@@ -22,6 +22,7 @@ export async function generateActivationCode(duration: TokenDuration): Promise<s
   // We're skipping that check for this MVP.
   
   const code = `${generateRandomCode(4)}-${generateRandomCode(4)}-${generateRandomCode(4)}`;
+  const tokenRef = doc(db, 'accessTokens', code);
 
   const tokenData = {
     code,
@@ -31,7 +32,7 @@ export async function generateActivationCode(duration: TokenDuration): Promise<s
   };
 
   try {
-    await addDoc(collection(db, 'accessTokens'), tokenData);
+    await setDoc(tokenRef, tokenData);
     return code;
   } catch (error) {
     console.error("Error creating activation code:", error);
