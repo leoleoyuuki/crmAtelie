@@ -94,12 +94,13 @@ export default function AtivacaoPage() {
                 {isLoading ? 'Ativando...' : 'Ativar Conta'}
             </Button>
             
-            <p className="text-sm text-muted-foreground text-center">
-              Não tem um código?{' '}
-              <a href="#" onClick={handleWhatsAppClick} className="font-semibold text-primary hover:underline">
-                Adquira aqui
-              </a>
-            </p>
+             <div className="w-full text-center">
+                <p className="text-xs text-muted-foreground mb-2">Não tem um código?</p>
+                <Button variant="outline" className="w-full" onClick={handleWhatsAppClick}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Adquirir Código via WhatsApp
+                </Button>
+            </div>
 
             <Button
                 variant="link"
