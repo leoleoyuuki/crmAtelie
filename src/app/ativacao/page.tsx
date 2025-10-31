@@ -91,20 +91,18 @@ export default function AtivacaoPage() {
              </p>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <Button onClick={handleWhatsAppClick} variant="secondary">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Adquirir Código
-                </Button>
-                <Button onClick={handleActivation} disabled={isLoading} className="w-full">
-                    {isLoading ? 'Ativando...' : 'Ativar Conta'}
-                </Button>
-            </div>
-             <Button
+        <CardFooter className="flex flex-col gap-2">
+            <Button onClick={handleActivation} disabled={isLoading} className="w-full">
+                {isLoading ? 'Ativando...' : 'Ativar Conta'}
+            </Button>
+            <Button onClick={handleWhatsAppClick} variant="secondary" className="w-full">
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Adquirir Código
+            </Button>
+            <Button
                 variant="link"
                 size="sm"
-                className="text-muted-foreground"
+                className="text-muted-foreground mt-4"
                 onClick={() => auth.signOut()}
                 >
                 <LogOut className="mr-2 h-4 w-4" />
