@@ -31,6 +31,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -44,11 +45,33 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
         setProfileLoading(false);
       });
       return () => unsub();
-    } else {
+    } else if (!userLoading) { // Only run if user is confirmed null
       setProfile(null);
       setProfileLoading(false);
     }
-  }, [user, db]);
+  }, [user, db, userLoading]);
+
+  useEffect(() => {
+    if (userLoading || profileLoading) return;
+
+    const isActivationPage = pathname === '/ativacao';
+    const isAdminPage = pathname.startsWith('/admin');
+
+    if (profile?.status !== 'active' && !isActivationPage && !isAdminPage) {
+      setShouldRedirect('/ativacao');
+    } else if (profile?.status === 'active' && isActivationPage) {
+      setShouldRedirect('/');
+    } else {
+      setShouldRedirect(null);
+    }
+  }, [profile, profileLoading, userLoading, pathname]);
+
+  useEffect(() => {
+    if (shouldRedirect) {
+      router.push(shouldRedirect);
+    }
+  }, [shouldRedirect, router]);
+
 
   const loading = userLoading || profileLoading;
 
@@ -65,38 +88,22 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+  
+  if (shouldRedirect) {
+      return (
+         <div className="flex h-screen items-center justify-center">
+          Redirecionando...
+        </div>
+      );
+  }
 
   if (!user) {
     // Not logged in, show login page
     return <LoginPage />;
   }
 
-  // User is logged in, check profile status
-  const isActivationPage = pathname === '/ativacao';
-  const isAdminPage = pathname.startsWith('/admin');
-
-  if (profile?.status !== 'active' && !isActivationPage && !isAdminPage) {
-    // If account is not active and they are not on the activation page, redirect them.
-    router.push('/ativacao');
-    return (
-       <div className="flex h-screen items-center justify-center">
-        Redirecionando para a página de ativação...
-      </div>
-    );
-  }
-  
-  if (profile?.status === 'active' && isActivationPage) {
-     // If account is active and they are on the activation page, redirect them to dashboard.
-    router.push('/');
-    return (
-       <div className="flex h-screen items-center justify-center">
-        Conta ativa. Redirecionando para o painel...
-      </div>
-    );
-  }
-
   // Allow access to admin and activation pages regardless of status
-  if (isActivationPage || isAdminPage) {
+  if (pathname === '/ativacao' || pathname.startsWith('/admin')) {
     return <>{children}</>;
   }
 
