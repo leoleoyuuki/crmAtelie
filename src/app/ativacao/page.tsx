@@ -1,0 +1,82 @@
+
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { activateAccount } from './actions';
+import Logo from '@/components/icons/logo';
+
+export default function AtivacaoPage() {
+  const [token, setToken] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleActivation = async () => {
+    if (!token.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Por favor, insira um código de ativação.',
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await activateAccount(token);
+      toast({
+        title: 'Conta Ativada!',
+        description: 'Sua conta foi ativada com sucesso. Bem-vindo!',
+      });
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Falha na Ativação',
+        description: error.message || 'Não foi possível ativar sua conta. Verifique o código e tente novamente.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+       <div className="absolute top-5 left-5">
+          <Logo className="h-8 w-8 text-primary" />
+        </div>
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl">Ativação de Conta</CardTitle>
+          <CardDescription>
+            Insira o código de ativação que você recebeu para liberar o acesso ao sistema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Input
+              id="token"
+              placeholder="Cole seu código aqui"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              disabled={isLoading}
+            />
+             <p className="text-xs text-muted-foreground">
+                Se você ainda não tem um código, entre em contato com o administrador do sistema.
+             </p>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleActivation} disabled={isLoading} className="w-full">
+            {isLoading ? 'Ativando...' : 'Ativar Conta'}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

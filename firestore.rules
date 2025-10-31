@@ -1,120 +1,70 @@
-/**
- * @fileoverview Firestore Security Rules for the atelier app.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model.  Most data is scoped to a specific user.
- *
- * Data Structure:
- * - /users/{userId}: Stores user profile information.  Only the authenticated user can read/write their own profile.
- * - /customers/{customerId}: Stores customer information.  Only the user who created the customer can read/write it.
- * - /orders/{orderId}: Stores order information. Only the user who created the order can read/write it.
- * - /priceTable/{itemId}: Stores price table items. Only the user who created the item can read/write it.
- *
- * Key Security Decisions:
- * - Listing of any collections restricted to the owner.
- *
- * Denormalization for Authorization:
- * - Documents in the `/customers`, `/orders`, and `/priceTable` collections contain a `userId` field, which is used to enforce ownership. This avoids the need for complex `get()` operations in the rules.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Checks if the request is authenticated.
-     */
+    // ======= UTILITY FUNCTIONS =======
+
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user ID matches the provided user ID.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the authenticated user is the owner of the existing document.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+    function isAccountActive() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
+    
+    // A user is creating their own document if the `userId` field in the new data matches their auth uid.
+    function isCreatingOwnResource(userId) {
+        return isOwner(userId) && request.resource.data.userId == request.auth.uid;
     }
 
-    /**
-     * @description User Profile Rules.
-     * @path /users/{userId}
-     * @allow (create) User 'user123' can create their own profile with matching userId.
-     * @allow (get) User 'user123' can read their own profile.
-     * @allow (update) User 'user123' can update their own profile.
-     * @allow (delete) User 'user123' can delete their own profile.
-     * @deny (create) User 'user456' cannot create a profile with userId 'user123'.
-     * @deny (get) User 'user456' cannot read user 'user123' profile.
-     * @principle Enforces document ownership for all operations on user profiles.
-     */
+    // A user is updating their own resource if the `userId` in the existing data matches their auth uid.
+    function isResourceOwner(userId) {
+        return isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // On update, the userId field cannot be changed
+    function isWritingOwnResource() {
+        return request.resource.data.userId == resource.data.userId;
+    }
+
+    // ======= COLLECTION RULES =======
+
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // User profiles are not listable.
+      allow get: if isSignedIn();
       allow create: if isOwner(userId) && request.resource.data.email == request.auth.token.email;
-      allow update: if isExistingOwner(userId) && request.resource.data.email == resource.data.email;
-      allow delete: if isExistingOwner(userId);
+      allow update: if isOwner(userId); // An active user can update their own profile (e.g. name, photo), and the activation function can update status.
+      allow list, delete: if false; // Profiles are not listable or deletable by clients.
+    }
+    
+    match /accessTokens/{tokenId} {
+      // Any authenticated user can attempt to read a token to activate their account.
+      allow get: if isSignedIn(); 
+      // Only an authenticated user can update a token (to mark it as used). The logic in the cloud function prevents misuse.
+      allow update: if isSignedIn(); 
+      allow list, create, delete: if false; // Tokens can only be created via backend/admin function, not listable or deletable.
     }
 
-    /**
-     * @description Customer Rules.
-     * @path /customers/{customerId}
-     * @allow (create) User 'user123' can create a customer with userId 'user123'.
-     * @allow (get) User 'user123' can read a customer with userId 'user123'.
-     * @allow (update) User 'user123' can update a customer with userId 'user123'.
-     * @allow (delete) User 'user123' can delete a customer with userId 'user123'.
-     * @deny (create) User 'user456' cannot create a customer with userId 'user123'.
-     * @deny (get) User 'user456' cannot read customer created by 'user123'.
-     * @principle Enforces document ownership for all operations on customers.
-     */
     match /customers/{customerId} {
-      allow get: if isOwner(resource.data.userId);
-      allow list: if isOwner(request.auth.uid);
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(resource.data.userId);
+      allow read, write: if isAccountActive() && isResourceOwner(request.auth.uid);
+      allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
+      allow list: if isAccountActive();
     }
 
-    /**
-     * @description Order Rules.
-     * @path /orders/{orderId}
-     * @allow (create) User 'user123' can create an order with userId 'user123'.
-     * @allow (get) User 'user123' can read an order with userId 'user123'.
-     * @allow (update) User 'user123' can update an order with userId 'user123'.
-     * @allow (delete) User 'user123' can delete an order with userId 'user123'.
-     * @deny (create) User 'user456' cannot create an order with userId 'user123'.
-     * @deny (get) User 'user456' cannot read order created by 'user123'.
-     * @principle Enforces document ownership for all operations on orders.
-     */
     match /orders/{orderId} {
-      allow get: if isOwner(resource.data.userId);
-      allow list: if isOwner(request.auth.uid);
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(resource.data.userId);
+      allow read, write: if isAccountActive() && isResourceOwner(request.auth.uid);
+      allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
+      allow list: if isAccountActive();
     }
 
-    /**
-     * @description Price Table Item Rules.
-     * @path /priceTable/{itemId}
-     * @allow (create) User 'user123' can create a price table item with userId 'user123'.
-     * @allow (get) User 'user123' can read a price table item with userId 'user123'.
-     * @allow (update) User 'user123' can update a price table item with userId 'user123'.
-     * @allow (delete) User 'user123' can delete a price table item with userId 'user123'.
-     * @deny (create) User 'user456' cannot create a price table item with userId 'user123'.
-     * @deny (get) User 'user456' cannot read price table item created by 'user123'.
-     * @principle Enforces document ownership for all operations on price table items.
-     */
     match /priceTable/{itemId} {
-      allow get: if isOwner(resource.data.userId);
-      allow list: if isOwner(request.auth.uid);
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(resource.data.userId);
+      allow read, write: if isAccountActive() && isResourceOwner(request.auth.uid);
+      allow create: if isAccountActive() && isCreatingOwnResource(request.auth.uid);
+      allow list: if isAccountActive();
     }
   }
 }

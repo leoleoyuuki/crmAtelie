@@ -1,5 +1,8 @@
 export type OrderStatus = 'Novo' | 'Em Processo' | 'Aguardando Retirada' | 'Concluído';
 export type ServiceType = 'Ajuste' | 'Design Personalizado' | 'Reparo' | 'Lavagem a Seco';
+export type UserStatus = 'active' | 'inactive';
+export type TokenDuration = 3 | 6 | 12;
+
 
 export interface Customer {
   id: string;
@@ -34,4 +37,23 @@ export interface PriceTableItem {
     serviceName: string;
     price: number;
     userId: string;
+}
+
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  email: string;
+  photoURL?: string;
+  status: UserStatus;
+  expiresAt?: Date;
+}
+
+export interface AccessToken {
+    id: string;
+    code: string;
+    duration: TokenDuration; // in months
+    isUsed: boolean;
+    usedBy?: string; // UID of user who used it
+    usedAt?: Date;
+    createdAt: Date;
 }

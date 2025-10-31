@@ -122,7 +122,7 @@
     },
     "UserProfile": {
         "title": "User Profile",
-        "description": "Represents a user's profile information.",
+        "description": "Represents a user's profile information, including their activation status.",
         "type": "object",
         "properties": {
             "displayName": {
@@ -138,9 +138,53 @@
                 "type": "string",
                 "format": "uri",
                 "description": "The URL of the user's profile picture."
+            },
+            "status": {
+                "type": "string",
+                "description": "The activation status of the user's account.",
+                "enum": ["active", "inactive"]
+            },
+            "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The date when the user's subscription expires."
             }
         },
-        "required": ["displayName", "email"]
+        "required": ["displayName", "email", "status"]
+    },
+    "AccessToken": {
+      "title": "Access Token",
+      "description": "Represents a one-time activation code for user subscriptions.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The unique activation code."
+        },
+        "duration": {
+          "type": "number",
+          "description": "The duration of the subscription in months (e.g., 3, 6, 12)."
+        },
+        "isUsed": {
+          "type": "boolean",
+          "description": "Flag indicating if the token has been used."
+        },
+        "usedBy": {
+          "type": "string",
+          "description": "The UID of the user who redeemed the token."
+        },
+        "usedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the token was used."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the token was created."
+        }
+      },
+      "required": ["code", "duration", "isUsed", "createdAt"]
     }
   },
   "auth": {
@@ -169,7 +213,13 @@
         "schema": {
             "$ref": "#/entities/UserProfile"
         },
-        "description": "Stores user profile information."
+        "description": "Stores user profile information, including activation status."
+    },
+    "/accessTokens/{tokenId}": {
+      "schema": {
+        "$ref": "#/entities/AccessToken"
+      },
+      "description": "Stores one-time use activation tokens."
     }
   }
 }
