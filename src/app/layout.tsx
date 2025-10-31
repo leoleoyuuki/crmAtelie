@@ -14,7 +14,7 @@ import AtivacaoPage from './ativacao/page';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
 import { PasswordProvider } from '@/contexts/password-context';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
 
@@ -37,9 +37,26 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user) {
       const userRef = doc(db, 'users', user.uid);
-      const unsub = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          setProfile(doc.data() as UserProfile);
+      const unsub = onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const userProfile = docSnap.data() as UserProfile;
+          
+          // Check for expiration if the user is currently active
+          if (userProfile.status === 'active' && userProfile.expiresAt) {
+            // Firestore timestamps can be objects, convert them
+            const expiresDate = (userProfile.expiresAt as any).toDate ? (userProfile.expiresAt as any).toDate() : userProfile.expiresAt;
+            if (new Date() > expiresDate) {
+              // Subscription has expired, update status to inactive
+              updateDoc(userRef, { status: 'inactive' }).catch(err => {
+                  console.error("Failed to update user status to inactive:", err);
+              });
+              // The onSnapshot will re-run with the updated profile, so we don't need to do anything else here.
+              return; 
+            }
+          }
+
+          setProfile(userProfile);
+
         } else {
           // Profile doesn't exist, this is a new user. Create it.
           const newUserProfile: Omit<UserProfile, 'id'> = {
