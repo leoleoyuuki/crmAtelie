@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import Logo from '@/components/icons/logo';
 import { useFirebase } from '@/firebase';
 import { activateAccount } from '@/lib/activation';
+import { MessageSquare, LogOut } from 'lucide-react';
 
 
 export default function AtivacaoPage() {
@@ -57,6 +58,13 @@ export default function AtivacaoPage() {
     }
   };
 
+  const handleWhatsAppClick = () => {
+    const phoneNumber = "5511957211546";
+    const message = "Olá! Gostaria de adquirir um código de ativação para o sistema AtelierFlow.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
        <div className="absolute top-5 left-5">
@@ -83,10 +91,25 @@ export default function AtivacaoPage() {
              </p>
           </div>
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleActivation} disabled={isLoading} className="w-full">
-            {isLoading ? 'Ativando...' : 'Ativar Conta'}
-          </Button>
+        <CardFooter className="flex flex-col gap-4">
+            <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button onClick={handleWhatsAppClick} variant="secondary">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Adquirir Código
+                </Button>
+                <Button onClick={handleActivation} disabled={isLoading} className="w-full">
+                    {isLoading ? 'Ativando...' : 'Ativar Conta'}
+                </Button>
+            </div>
+             <Button
+                variant="link"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => auth.signOut()}
+                >
+                <LogOut className="mr-2 h-4 w-4" />
+                Trocar de conta (Sair)
+            </Button>
         </CardFooter>
       </Card>
     </div>
