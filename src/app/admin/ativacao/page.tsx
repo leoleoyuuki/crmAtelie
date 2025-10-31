@@ -11,6 +11,7 @@ import { generateActivationCode } from './actions';
 import { KeyRound, Copy } from 'lucide-react';
 import type { TokenDuration } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 
 export default function GenerateActivationPage() {
   const [duration, setDuration] = useState<TokenDuration>(3);
