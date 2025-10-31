@@ -7,17 +7,50 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { generateActivationCode } from './actions';
 import { KeyRound, Copy } from 'lucide-react';
 import type { TokenDuration } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirebase } from '@/firebase';
+
+const generateRandomCode = (length: number): string => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 
 export default function GenerateActivationPage() {
   const [duration, setDuration] = useState<TokenDuration>(3);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { db } = useFirebase();
+
+  const generateActivationCode = async (duration: TokenDuration): Promise<string> => {
+      const code = `${generateRandomCode(4)}-${generateRandomCode(4)}-${generateRandomCode(4)}`;
+      const tokenRef = doc(db, 'accessTokens', code);
+
+      const tokenData = {
+        code,
+        duration,
+        isUsed: false,
+        createdAt: serverTimestamp(),
+      };
+
+      try {
+        await setDoc(tokenRef, tokenData);
+        return code;
+      } catch (error) {
+        console.error("Error creating activation code:", error);
+        throw new Error('Failed to save activation code to the database.');
+      }
+  };
+
 
   const handleGenerate = async () => {
     setIsLoading(true);
@@ -33,7 +66,7 @@ export default function GenerateActivationPage() {
       toast({
         variant: 'destructive',
         title: 'Erro ao Gerar Código',
-        description: error.message || 'Não foi possível gerar o código.',
+        description: error.message || 'Não foi possível gerar o código. Verifique suas permissões.',
       });
     } finally {
       setIsLoading(false);

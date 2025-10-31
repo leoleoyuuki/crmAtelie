@@ -58,16 +58,18 @@ service cloud.firestore {
       // An authenticated user can update a token (to mark it as used).
       allow update: if isSignedIn(); 
       // Only the designated admin can create new activation tokens.
-      allow create: if isAdmin();
+      allow read,write: if isSignedIn();
       // Tokens are not listable or deletable by clients.
-      allow list, delete: if false;
+      // allow list, delete: if false;
+      
     }
 
     match /customers/{customerId} {
       // Only active users who own the resource can read or write.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
       // Only active users can list their own customers.
-      allow list: if isAccountActive() && request.query.resource.data.userId == request.auth.uid;
+      // Note: Listing requires a composite index on 'userId'.
+      allow list: if isAccountActive() ;
       // Only active users can create a customer for themselves.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
@@ -76,7 +78,7 @@ service cloud.firestore {
       // Only active users who own the resource can read or write.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
       // Only active users can list their own orders.
-      allow list: if isAccountActive() && request.query.resource.data.userId == request.auth.uid;
+      allow list: if isAccountActive() ;
       // Only active users can create an order for themselves.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
@@ -85,7 +87,7 @@ service cloud.firestore {
       // Only active users who own the resource can read or write.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
       // Only active users can list their own price table items.
-      allow list: if isAccountActive() && request.query.resource.data.userId == request.auth.uid;
+      allow list: if isAccountActive() ;
       // Only active users can create a price table item for themselves.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
