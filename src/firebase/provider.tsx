@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
-import { Firestore, collection, onSnapshot, query } from 'firebase/firestore';
+import { Firestore, collection, onSnapshot, query, where } from 'firebase/firestore';
 import { app, auth, db } from './config';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from './errors';
@@ -61,13 +61,19 @@ export function useFirestore() {
 }
 
 export function useCollection<T>(path: string) {
-  const db = useFirestore();
+  const { db, auth } = useFirebase();
   const [data, setData] = React.useState<T[] | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
 
   React.useEffect(() => {
-    const q = query(collection(db, path));
+    if (!auth.currentUser) {
+        setLoading(false);
+        setData([]); // Clear data if user logs out
+        return;
+    }
+
+    const q = query(collection(db, path), where('userId', '==', auth.currentUser.uid));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -103,7 +109,7 @@ export function useCollection<T>(path: string) {
     );
 
     return () => unsubscribe();
-  }, [db, path]);
+  }, [db, path, auth.currentUser]);
 
   return { data, loading, error };
 }

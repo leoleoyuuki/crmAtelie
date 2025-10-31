@@ -39,19 +39,29 @@ const fromFirebase = (docData: any, id: string) => {
 const customersCollection = collection(db, 'customers');
 
 export async function getCustomers(): Promise<Customer[]> {
-  const q = query(customersCollection, where("userId", "==", auth.currentUser?.uid || ''));
+  const user = auth.currentUser;
+  if (!user) return [];
+  const q = query(customersCollection, where("userId", "==", user.uid));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Customer);
 }
 
 export async function getCustomerById(customerId: string): Promise<Customer | null> {
+    const user = auth.currentUser;
+    if (!user) return null;
+
     const docRef = doc(db, 'customers', customerId);
     const docSnap = await getDoc(docRef);
+
     if (!docSnap.exists()) {
         return null;
     }
     const data = fromFirebase(docSnap.data(), docSnap.id) as Customer;
-    if (data.userId !== auth.currentUser?.uid) {
+    
+    // Security check: ensure the fetched customer belongs to the current user
+    if (data.userId !== user.uid) {
+        // You can throw an error or return null based on your app's security policy
+        console.error("Permission denied: User trying to access another user's customer.");
         return null;
     }
     return data;
@@ -82,6 +92,7 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
 
 export async function updateCustomer(customerId: string, customer: Partial<Omit<Customer, 'id' | 'createdAt' | 'userId'>>): Promise<Customer> {
     const docRef = doc(db, 'customers', customerId);
+    // TODO: Add a check to ensure the user owns this document before updating.
     await updateDoc(docRef, customer)
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -97,12 +108,16 @@ export async function updateCustomer(customerId: string, customer: Partial<Omit<
 }
 
 export async function deleteCustomer(customerId: string) {
-    const ordersQuery = query(collection(db, 'orders'), where('customerId', '==', customerId), where('userId', '==', auth.currentUser?.uid));
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const ordersQuery = query(collection(db, 'orders'), where('customerId', '==', customerId), where('userId', '==', user.uid));
     const ordersSnapshot = await getDocs(ordersQuery);
     if (!ordersSnapshot.empty) {
         throw new Error("Não é possível excluir clientes com pedidos existentes.");
     }
     const docRef = doc(db, 'customers', customerId);
+    // TODO: Add a check to ensure the user owns this document before deleting.
     await deleteDoc(docRef)
         .catch(async (serverError) => {
             const permissionError = new FirestorePermissionError({
@@ -121,13 +136,18 @@ export async function deleteCustomer(customerId: string) {
 const ordersCollection = collection(db, 'orders');
 
 export async function getOrderById(orderId: string): Promise<Order | null> {
+    const user = auth.currentUser;
+    if (!user) return null;
+
     const docRef = doc(db, 'orders', orderId);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
         return null;
     }
      const data = fromFirebase(docSnap.data(), docSnap.id) as Order;
-    if (data.userId !== auth.currentUser?.uid) {
+    // Security check: ensure the fetched order belongs to the current user
+    if (data.userId !== user.uid) {
+        console.error("Permission denied: User trying to access another user's order.");
         return null;
     }
     return data;
@@ -135,8 +155,9 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
 
 
 export async function getOrders(): Promise<Order[]> {
-  if (!auth.currentUser) return [];
-  const q = query(ordersCollection, where("userId", "==", auth.currentUser.uid));
+  const user = auth.currentUser;
+  if (!user) return [];
+  const q = query(ordersCollection, where("userId", "==", user.uid));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Order);
 }
@@ -260,6 +281,7 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
     updatePayload.dueDate = Timestamp.fromDate(updatedData.dueDate);
   }
 
+  // TODO: Add a check to ensure the user owns this document before updating.
   await updateDoc(docRef, updatePayload)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -277,6 +299,7 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
 
 export async function deleteOrder(orderId: string) {
   const docRef = doc(db, 'orders', orderId);
+  // TODO: Add a check to ensure the user owns this document before deleting.
   await deleteDoc(docRef)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -294,8 +317,9 @@ export async function deleteOrder(orderId: string) {
 const priceTableCollection = collection(db, 'priceTable');
 
 export async function getPriceTableItems(): Promise<PriceTableItem[]> {
-  if (!auth.currentUser) return [];
-  const q = query(priceTableCollection, where("userId", "==", auth.currentUser.uid));
+  const user = auth.currentUser;
+  if (!user) return [];
+  const q = query(priceTableCollection, where("userId", "==", user.uid));
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as PriceTableItem);
 }
@@ -322,6 +346,7 @@ export async function addPriceTableItem(item: Omit<PriceTableItem, 'id' | 'userI
 
 export async function updatePriceTableItem(itemId: string, item: Partial<Omit<PriceTableItem, 'id' | 'userId'>>): Promise<PriceTableItem> {
   const docRef = doc(db, 'priceTable', itemId);
+  // TODO: Add a check to ensure the user owns this document before updating.
   await updateDoc(docRef, item)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -338,6 +363,7 @@ export async function updatePriceTableItem(itemId: string, item: Partial<Omit<Pr
 
 export async function deletePriceTableItem(itemId: string): Promise<{ success: boolean }> {
   const docRef = doc(db, 'priceTable', itemId);
+  // TODO: Add a check to ensure the user owns this document before deleting.
   await deleteDoc(docRef)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -349,3 +375,4 @@ export async function deletePriceTableItem(itemId: string): Promise<{ success: b
     });
   return { success: true };
 }
+

@@ -1,40 +1,28 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
 import { PriceTableShell } from '@/components/tabela-precos/price-table-shell';
 import { PriceTableItem } from '@/lib/types';
-import { getPriceTableItems } from '@/lib/data';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCollection } from '@/firebase';
 
 export default function PriceTablePage() {
-  const [items, setItems] = useState<PriceTableItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: items, loading, error } = useCollection<PriceTableItem>('priceTable');
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      const fetchedItems = await getPriceTableItems();
-      setItems(fetchedItems);
-      setLoading(false);
-    };
-    fetchItems();
-  }, []);
-  
   const handleItemCreated = (newItem: PriceTableItem) => {
-    setItems(current => [newItem, ...current]);
+    // Optimistic update handled by useCollection is tricky,
+    // so we'll just let the listener handle it for now.
   };
 
   const handleItemUpdated = (itemId: string, updatedItem: Partial<PriceTableItem>) => {
-    setItems(current =>
-      current.map(item => (item.id === itemId ? { ...item, ...updatedItem } : item))
-    );
+    // Optimistic update handled by useCollection is tricky,
+    // so we'll just let the listener handle it for now.
   };
   
   const handleItemDeleted = (itemId: string) => {
-    setItems(current => current.filter(item => item.id !== itemId));
+    // Optimistic update handled by useCollection is tricky,
+    // so we'll just let the listener handle it for now.
   };
-
 
   return (
     <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
@@ -47,7 +35,7 @@ export default function PriceTablePage() {
         <Skeleton className="h-[500px] w-full" />
       ) : (
         <PriceTableShell 
-          data={items}
+          data={items || []}
           onItemCreated={handleItemCreated}
           onItemUpdated={handleItemUpdated}
           onItemDeleted={handleItemDeleted}
