@@ -67,8 +67,7 @@ service cloud.firestore {
       // Only active users who own the resource can read or write.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
       // Only active users can list their own customers.
-      // Note: Listing requires a composite index on 'userId'.
-      allow list: if isAccountActive() && isOwner(request.query.resource.data.userId);
+      allow list: if isAccountActive() && request.query.resource.data.userId == request.auth.uid;
       // Only active users can create a customer for themselves.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
@@ -77,7 +76,7 @@ service cloud.firestore {
       // Only active users who own the resource can read or write.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
       // Only active users can list their own orders.
-      allow list: if isAccountActive() && isOwner(request.query.resource.data.userId);
+      allow list: if isAccountActive() && request.query.resource.data.userId == request.auth.uid;
       // Only active users can create an order for themselves.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
@@ -86,7 +85,7 @@ service cloud.firestore {
       // Only active users who own the resource can read or write.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
       // Only active users can list their own price table items.
-      allow list: if isAccountActive() && isOwner(request.query.resource.data.userId);
+      allow list: if isAccountActive() && request.query.resource.data.userId == request.auth.uid;
       // Only active users can create a price table item for themselves.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
