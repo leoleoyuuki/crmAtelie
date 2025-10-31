@@ -7,14 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { activateAccount } from './actions';
 import Logo from '@/components/icons/logo';
+import { useFirebase } from '@/firebase';
+import { activateAccount } from '@/lib/activation';
+
 
 export default function AtivacaoPage() {
   const [token, setToken] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { auth, db } = useFirebase();
 
   const handleActivation = async () => {
     if (!token.trim()) {
@@ -25,10 +28,19 @@ export default function AtivacaoPage() {
       });
       return;
     }
+    
+    if (!auth.currentUser) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro',
+            description: 'Usuário não autenticado. Faça login novamente.',
+        });
+        return;
+    }
 
     setIsLoading(true);
     try {
-      await activateAccount(token);
+      await activateAccount(db, auth.currentUser, token);
       toast({
         title: 'Conta Ativada!',
         description: 'Sua conta foi ativada com sucesso. Bem-vindo!',
