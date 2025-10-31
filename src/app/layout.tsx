@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Metadata } from 'next';
@@ -13,7 +14,7 @@ import AtivacaoPage from './ativacao/page';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
 import { PasswordProvider } from '@/contexts/password-context';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
 
@@ -35,12 +36,23 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      const unsub = onSnapshot(doc(db, 'users', user.uid), (doc) => {
+      const userRef = doc(db, 'users', user.uid);
+      const unsub = onSnapshot(userRef, (doc) => {
         if (doc.exists()) {
           setProfile(doc.data() as UserProfile);
         } else {
-          // Profile doesn't exist yet, might be a new user
-          setProfile(null);
+          // Profile doesn't exist, this is a new user. Create it.
+          const newUserProfile: Omit<UserProfile, 'id'> = {
+            displayName: user.displayName || '',
+            email: user.email || '',
+            photoURL: user.photoURL || '',
+            status: 'inactive',
+          };
+          // We don't await this, as the onSnapshot will pick up the change
+          setDoc(userRef, newUserProfile).catch(err => {
+              console.error("Failed to create user profile:", err);
+          });
+          setProfile(newUserProfile as UserProfile);
         }
         setProfileLoading(false);
       });
