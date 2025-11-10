@@ -64,7 +64,7 @@ export function HeroSection() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            <span className="text-sm font-medium text-primary">Novo: Modo offline disponível</span>
+            <span className="text-sm font-medium text-primary">Exclusivo: Sistema para Ateliês</span>
           </motion.div>
 
           {/* Heading */}
@@ -107,7 +107,7 @@ export function HeroSection() {
           >
             <Button size="lg" asChild className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <Link href="/login">
-                Comece grátis agora
+                Comece agora
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -131,7 +131,7 @@ export function HeroSection() {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="font-medium">Sem cartão de crédito</span>
+              <span className="font-medium">Contato direto com Criador</span>
             </div>
             
             <div className="hidden sm:block w-px h-8 bg-border" />
@@ -142,7 +142,7 @@ export function HeroSection() {
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="font-medium">Configuração em 2 minutos</span>
+              <span className="font-medium">Adaptação fácil e ágil</span>
             </div>
             
             <div className="hidden sm:block w-px h-8 bg-border" />
@@ -153,7 +153,7 @@ export function HeroSection() {
                   <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                 </svg>
               </div>
-              <span className="font-medium">+500 ateliês confiam</span>
+              <span className="font-medium">Baseado em processos reais</span>
             </div>
           </motion.div>
 
