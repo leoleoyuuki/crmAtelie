@@ -10,7 +10,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold font-headline text-primary">
+          <span className="text-xl font-bold font-headline text-foreground">
             AtelierFlow
           </span>
         </Link>
