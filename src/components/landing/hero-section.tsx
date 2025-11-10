@@ -1,6 +1,5 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 const containerVariants = {
@@ -72,21 +71,7 @@ export function HeroSection() {
             variants={itemVariants}
             className="text-5xl font-bold font-headline tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-8xl leading-tight"
           >
-            A gestão do seu ateliê,{' '}
-            <span className="text-primary inline-block relative">
-              elevada a outro nível
-              <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
-                <motion.path
-                  d="M2 10C60 5 120 2 180 5C240 8 280 10 298 10"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 0.3 }}
-                  transition={{ duration: 1.5, delay: 0.8, ease: "easeInOut" }}
-                />
-              </svg>
-            </span>
+            A gestão do seu <span className="text-primary">ateliê</span>, elevada a <span className="text-primary">outro nível</span>
           </motion.h1>
 
           {/* Description */}
@@ -106,17 +91,17 @@ export function HeroSection() {
             className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <Button size="lg" asChild className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105">
-              <Link href="/login">
+              <a href="/login">
                 Comece agora
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
-              </Link>
+              </a>
             </Button>
             <Button size="lg" variant="outline" asChild className="w-full sm:w-auto text-lg px-8 py-6 hover:bg-primary/5 transition-all">
-              <Link href="#recursos">
+              <a href="#recursos">
                 Ver recursos
-              </Link>
+              </a>
             </Button>
           </motion.div>
 
