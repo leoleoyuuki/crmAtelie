@@ -11,6 +11,7 @@ import AppShell from '@/components/app-shell';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import LoginPage from './login/page';
 import AtivacaoPage from './ativacao/page';
+import LandingPage from './landing/page';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
 import { PasswordProvider } from '@/contexts/password-context';
@@ -44,7 +45,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
           // Check for expiration if the user is currently active
           if (userProfile.status === 'active' && userProfile.expiresAt) {
             // Firestore timestamps can be objects, convert them
-            const expiresDate = (userProfile.expiresAt as any).toDate ? (userProfile.expiresAt as any).toDate() : userProfile.expiresAt;
+            const expiresDate = (userProfile.expiresAt as any).toDate ? (userProfile.expiresAt as any).toDate() : new Date(userProfile.expiresAt);
             if (new Date() > expiresDate) {
               // Subscription has expired, update status to inactive
               updateDoc(userRef, { status: 'inactive' }).catch(err => {
@@ -83,6 +84,15 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (userLoading || profileLoading) return;
 
+    if (!user) {
+      // If the user is not logged in and not on the landing or login page, show the landing page.
+      if (pathname !== '/landing' && pathname !== '/login') {
+          return; // Let the component render LandingPage
+      }
+      return; // Otherwise, render children (e.g., login page)
+    }
+
+    // User is logged in
     const isActivationPage = pathname === '/ativacao';
     const isAdminPage = pathname.startsWith('/admin');
 
@@ -93,7 +103,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
     } else {
       setShouldRedirect(null);
     }
-  }, [profile, profileLoading, userLoading, pathname]);
+  }, [user, profile, profileLoading, userLoading, pathname]);
 
   useEffect(() => {
     if (shouldRedirect) {
@@ -102,7 +112,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   }, [shouldRedirect, router]);
 
 
-  const loading = userLoading || profileLoading;
+  const loading = userLoading || (user && profileLoading); // Only show profile loading if a user is expected
 
   if (loading) {
     return (
@@ -127,14 +137,23 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    // Not logged in, show login page
-    return <LoginPage />;
+    // Not logged in, show landing page or login page
+    if (pathname === '/login') {
+        return <LoginPage />;
+    }
+    return <LandingPage />;
   }
 
   // Allow access to admin and activation pages regardless of status
   if (pathname === '/ativacao' || pathname.startsWith('/admin')) {
     return <>{children}</>;
   }
+
+  // Handle inactive users
+  if (profile?.status !== 'active') {
+    return <AtivacaoPage />;
+  }
+
 
   // Normal app flow for active users
   return (

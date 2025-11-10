@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext, useMemo } from 'react';
 import { useCollection } from '@/firebase';
 import { Order } from '@/lib/types';
 import { getOrdersLast6Months, getRevenueLast6Months, getServiceDistribution, getStatusMetrics } from '@/lib/data';
@@ -25,10 +26,10 @@ export default function DashboardPage() {
   useEffect(() => {
     if (orders) {
       const processData = async () => {
-        setStats(await getStatusMetrics(orders));
-        setRevenueData(await getRevenueLast6Months(orders));
+        setStats(getStatusMetrics(orders));
+        setRevenueData(getRevenueLast6Months(orders));
         setServiceDistributionData(await getServiceDistribution(orders));
-        setOrderVolumeData(await getOrdersLast6Months(orders));
+        setOrderVolumeData(getOrdersLast6Months(orders));
       };
       processData();
     }
