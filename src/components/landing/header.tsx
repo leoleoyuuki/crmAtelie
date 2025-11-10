@@ -15,7 +15,7 @@ export function Header() {
           </span>
         </Link>
         <nav className="flex items-center gap-2 sm:gap-4">
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" asChild className="hidden sm:inline-flex">
             <Link href="/login">Acessar o Sistema</Link>
           </Button>
           <Button asChild>
