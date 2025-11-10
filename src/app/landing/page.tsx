@@ -15,7 +15,9 @@ export default function LandingPage() {
       <main>
         <HeroSection />
         <FeatureHighlights />
-        <AllFeatures />
+        <div id="recursos">
+          <AllFeatures />
+        </div>
         <Cta />
       </main>
       <Footer />
