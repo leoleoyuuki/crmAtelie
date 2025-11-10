@@ -25,13 +25,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (orders) {
-      const processData = async () => {
         setStats(getStatusMetrics(orders));
         setRevenueData(getRevenueLast6Months(orders));
-        setServiceDistributionData(await getServiceDistribution(orders));
+        setServiceDistributionData(getServiceDistribution(orders));
         setOrderVolumeData(getOrdersLast6Months(orders));
-      };
-      processData();
     }
   }, [orders]);
 

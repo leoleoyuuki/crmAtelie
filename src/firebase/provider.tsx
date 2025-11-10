@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
-import { Firestore, collection, onSnapshot, query, where } from 'firebase/firestore';
+import { Firestore, collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
 import { app, auth, db } from './config';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from './errors';
@@ -80,19 +80,19 @@ export function useCollection<T>(path: string) {
         const result: T[] = [];
         snapshot.forEach((doc) => {
           const docData = doc.data();
-          const convertedData = {
-            ...docData,
+          
+          const convertedData = { ...docData };
+          for (const key in convertedData) {
+            const value = (convertedData as any)[key];
+            if (value instanceof Timestamp) {
+              (convertedData as any)[key] = value.toDate();
+            }
+          }
+
+          result.push({
+            ...convertedData,
             id: doc.id,
-            // Convert Firestore Timestamps to JS Dates
-            ...Object.fromEntries(
-                Object.entries(docData).map(([key, value]) => 
-                    value && typeof value === 'object' && 'seconds' in value 
-                    ? [key, new Date(value.seconds * 1000)] 
-                    : [key, value]
-                )
-            )
-          } as T;
-          result.push(convertedData);
+          } as T);
         });
         setData(result);
         setLoading(false);

@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { Order, ServiceType, Customer, OrderItem, PriceTableItem } from '@/lib/types';
-import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth } from 'date-fns';
+import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -162,7 +162,7 @@ export async function getOrders(): Promise<Order[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Order);
 }
 
-export async function getStatusMetrics(orders: Order[]) {
+export function getStatusMetrics(orders: Order[]) {
   const totalOrders = orders.length;
   const totalRevenue = orders
     .filter(o => o.status === 'Concluído')
@@ -181,7 +181,10 @@ const getMonthlyData = (orders: Order[], reducer: (acc: number, order: Order) =>
         const monthEnd = endOfMonth(monthDate);
         
         const value = orders
-            .filter(o => o.createdAt >= monthStart && o.createdAt <= monthEnd)
+            .filter(o => {
+                const createdAt = o.createdAt;
+                return createdAt && isValid(createdAt) && createdAt >= monthStart && createdAt <= monthEnd;
+            })
             .reduce(reducer, 0);
 
         data.push({
@@ -193,7 +196,7 @@ const getMonthlyData = (orders: Order[], reducer: (acc: number, order: Order) =>
 }
 
 
-export async function getRevenueLast6Months(orders: Order[]) {
+export function getRevenueLast6Months(orders: Order[]) {
   const revenueReducer = (sum: number, order: Order) => {
     if (order.status === 'Concluído') {
       return sum + order.totalValue;
@@ -204,16 +207,19 @@ export async function getRevenueLast6Months(orders: Order[]) {
   return data;
 }
 
-export async function getOrdersLast6Months(orders: Order[]) {
+export function getOrdersLast6Months(orders: Order[]) {
     const orderCountReducer = (count: number, order: Order) => count + 1;
     const data = getMonthlyData(orders, orderCountReducer).map(item => ({ month: item.month, orders: item.value }));
     return data;
 }
 
-export async function getServiceDistribution(orders: Order[]) {
+export function getServiceDistribution(orders: Order[]) {
   const now = new Date();
   const last30Days = subDays(now, 30);
-  const recentOrders = orders.filter(o => o.createdAt >= last30Days);
+  const recentOrders = orders.filter(o => {
+      const createdAt = o.createdAt;
+      return createdAt && isValid(createdAt) && createdAt >= last30Days
+  });
   
   const distribution = recentOrders.reduce((acc, order) => {
     if (order.items && Array.isArray(order.items)) {
@@ -375,4 +381,3 @@ export async function deletePriceTableItem(itemId: string): Promise<{ success: b
     });
   return { success: true };
 }
-
