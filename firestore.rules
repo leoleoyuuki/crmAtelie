@@ -91,5 +91,12 @@ service cloud.firestore {
       // Only active users can create a price table item for themselves.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
+    
+    match /suggestions/{suggestionId} {
+      // Any active, authenticated user can create a suggestion.
+      allow create: if isAccountActive() && isCreatingOwnResource();
+      // Only the admin can read/list all suggestions.
+      allow read, list, update, delete: if isAdmin();
+    }
   }
 }

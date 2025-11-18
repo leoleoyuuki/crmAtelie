@@ -185,6 +185,36 @@
         }
       },
       "required": ["code", "duration", "isUsed", "createdAt"]
+    },
+     "Suggestion": {
+      "title": "Suggestion",
+      "description": "Represents a user-submitted suggestion or feedback.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The content of the suggestion."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who submitted the suggestion."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the user who submitted the suggestion."
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the user who submitted the suggestion."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the suggestion was created."
+        }
+      },
+      "required": ["text", "userId", "userName", "userEmail", "createdAt"]
     }
   },
   "auth": {
@@ -220,6 +250,12 @@
         "$ref": "#/entities/AccessToken"
       },
       "description": "Stores one-time use activation tokens."
+    },
+    "/suggestions/{suggestionId}": {
+      "schema": {
+        "$ref": "#/entities/Suggestion"
+      },
+      "description": "Stores user-submitted suggestions and feedback."
     }
   }
 }

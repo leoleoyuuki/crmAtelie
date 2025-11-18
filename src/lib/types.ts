@@ -57,3 +57,12 @@ export interface AccessToken {
     usedAt?: Date;
     createdAt: Date;
 }
+
+export interface Suggestion {
+  id: string;
+  text: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  createdAt: Date;
+}

@@ -7,13 +7,26 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Lightbulb, Send } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
+import { useFirebase } from '@/firebase';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 
 export default function AjudaPage() {
   const [suggestion, setSuggestion] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { db, auth } = useFirebase();
+  const user = auth.currentUser;
 
-  const handleSendSuggestion = () => {
+  const handleSendSuggestion = async () => {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Usuário não autenticado',
+            description: 'Por favor, faça login para enviar uma sugestão.',
+        });
+        return;
+    }
+
     if (suggestion.trim().length < 10) {
         toast({
             variant: 'destructive',
@@ -22,13 +35,33 @@ export default function AjudaPage() {
         });
         return;
     }
-    // Here you would typically send the suggestion to a backend service
-    console.log('Sending suggestion:', suggestion);
-    toast({
-        title: 'Obrigado pela sua sugestão!',
-        description: 'Sua ideia foi enviada para nossa equipe. Agradecemos por ajudar a melhorar o AtelierFlow.',
-    });
-    setSuggestion('');
+
+    setIsLoading(true);
+    try {
+        const suggestionsCollection = collection(db, 'suggestions');
+        await addDoc(suggestionsCollection, {
+            text: suggestion,
+            userId: user.uid,
+            userName: user.displayName,
+            userEmail: user.email,
+            createdAt: serverTimestamp(),
+        });
+
+        toast({
+            title: 'Obrigado pela sua sugestão!',
+            description: 'Sua ideia foi enviada para nossa equipe. Agradecemos por ajudar a melhorar o AtelierFlow.',
+        });
+        setSuggestion('');
+    } catch (error) {
+        console.error("Error sending suggestion:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao Enviar',
+            description: 'Não foi possível enviar sua sugestão. Tente novamente mais tarde.',
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
@@ -101,13 +134,14 @@ export default function AjudaPage() {
                   value={suggestion}
                   onChange={(e) => setSuggestion(e.target.value)}
                   className="min-h-[150px]"
+                  disabled={isLoading}
                 />
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleSendSuggestion} className="w-full">
+              <Button onClick={handleSendSuggestion} className="w-full" disabled={isLoading}>
                 <Send className="mr-2 h-4 w-4" />
-                Enviar Sugestão
+                {isLoading ? 'Enviando...' : 'Enviar Sugestão'}
               </Button>
             </CardFooter>
           </Card>
