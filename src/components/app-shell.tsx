@@ -10,9 +10,10 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   useSidebar,
+  SidebarLogout
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -91,7 +92,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-        <Sidebar className="hidden md:block">
+        <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2">
               <Logo className="h-6 w-6 text-primary" />
@@ -138,12 +139,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               )}
             </SidebarMenu>
           </SidebarContent>
-           <SidebarHeader>
-              <Button variant="ghost" onClick={() => auth.signOut()} className="w-full justify-start">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sair
-              </Button>
-          </SidebarHeader>
+          <SidebarLogout onClick={() => auth.signOut()} />
         </Sidebar>
         <div className="flex flex-col">
             <AppHeader />
