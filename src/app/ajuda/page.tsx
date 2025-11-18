@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Lightbulb, Send } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function AjudaPage() {
   const [suggestion, setSuggestion] = useState('');
@@ -37,31 +39,40 @@ export default function AjudaPage() {
     }
 
     setIsLoading(true);
-    try {
-        const suggestionsCollection = collection(db, 'suggestions');
-        await addDoc(suggestionsCollection, {
-            text: suggestion,
-            userId: user.uid,
-            userName: user.displayName,
-            userEmail: user.email,
-            createdAt: serverTimestamp(),
-        });
 
+    const suggestionsCollection = collection(db, 'suggestions');
+    const suggestionData = {
+        text: suggestion,
+        userId: user.uid,
+        userName: user.displayName || 'Anônimo',
+        userEmail: user.email,
+        createdAt: serverTimestamp(),
+    };
+
+    addDoc(suggestionsCollection, suggestionData).then(() => {
         toast({
             title: 'Obrigado pela sua sugestão!',
             description: 'Sua ideia foi enviada para nossa equipe. Agradecemos por ajudar a melhorar o AtelierFlow.',
         });
         setSuggestion('');
-    } catch (error) {
-        console.error("Error sending suggestion:", error);
+    }).catch(async (serverError) => {
+        console.error("Original Firestore error:", serverError); // Keep original for reference if needed
+        const permissionError = new FirestorePermissionError({
+            path: suggestionsCollection.path,
+            operation: 'create',
+            requestResourceData: suggestionData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+
+        // Also show a generic error toast to the user
         toast({
             variant: 'destructive',
             title: 'Erro ao Enviar',
-            description: 'Não foi possível enviar sua sugestão. Tente novamente mais tarde.',
+            description: 'Não foi possível enviar sua sugestão. Verifique suas permissões e tente novamente.',
         });
-    } finally {
+    }).finally(() => {
         setIsLoading(false);
-    }
+    });
   };
 
   return (
