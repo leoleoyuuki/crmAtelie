@@ -93,8 +93,8 @@ service cloud.firestore {
     }
     
     match /suggestions/{suggestionId} {
-      // Any active, authenticated user can create a suggestion.
-      allow create: if isAccountActive() && isCreatingOwnResource();
+      // Any active, authenticated user can create a suggestion for themselves.
+      allow create: if isAccountActive() && request.resource.data.userId == request.auth.uid;
       // Only the admin can read/list all suggestions.
       allow read, list, update, delete: if isAdmin();
     }
