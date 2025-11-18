@@ -33,7 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2, ArrowLeft } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface SuggestionRowActionsProps {
   suggestion: Suggestion;
@@ -208,8 +209,16 @@ export default function SuggestionsAdminPage() {
         <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Sugestões dos Usuários</CardTitle>
-                    <CardDescription>
+                    <div className="flex items-center gap-4 mb-2">
+                        <Button asChild variant="outline" size="icon" className="h-7 w-7">
+                            <Link href="/">
+                                <ArrowLeft className="h-4 w-4" />
+                                <span className="sr-only">Voltar</span>
+                            </Link>
+                        </Button>
+                        <CardTitle className="font-headline text-3xl">Sugestões dos Usuários</CardTitle>
+                    </div>
+                    <CardDescription className="pl-11">
                         Visualize e gerencie o feedback e as ideias enviadas pelos usuários.
                     </CardDescription>
                 </CardHeader>

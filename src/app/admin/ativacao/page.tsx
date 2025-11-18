@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Copy } from 'lucide-react';
+import { KeyRound, Copy, ArrowLeft } from 'lucide-react';
 import type { TokenDuration } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirebase } from '@/firebase';
+import Link from 'next/link';
 
 const generateRandomCode = (length: number): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -85,7 +86,13 @@ export default function GenerateActivationPage() {
 
   return (
     <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
-       <div className="flex items-center justify-between space-y-2">
+       <div className="flex items-center gap-4">
+        <Button asChild variant="outline" size="icon" className="h-7 w-7">
+          <Link href="/">
+            <ArrowLeft className="h-4 w-4" />
+            <span className="sr-only">Voltar</span>
+          </Link>
+        </Button>
         <h2 className="text-3xl font-bold tracking-tight font-headline">
           Gerador de Códigos
         </h2>
