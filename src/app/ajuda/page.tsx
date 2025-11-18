@@ -49,27 +49,19 @@ export default function AjudaPage() {
         createdAt: serverTimestamp(),
     };
 
-    addDoc(suggestionsCollection, suggestionData).then(() => {
+    addDoc(suggestionsCollection, suggestionData).catch(async (serverError) => {
+      const permissionError = new FirestorePermissionError({
+          path: suggestionsCollection.path,
+          operation: 'create',
+          requestResourceData: suggestionData,
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    }).then(() => {
         toast({
             title: 'Obrigado pela sua sugestão!',
             description: 'Sua ideia foi enviada para nossa equipe. Agradecemos por ajudar a melhorar o AtelierFlow.',
         });
         setSuggestion('');
-    }).catch(async (serverError) => {
-        console.error("Original Firestore error:", serverError); // Keep original for reference if needed
-        const permissionError = new FirestorePermissionError({
-            path: suggestionsCollection.path,
-            operation: 'create',
-            requestResourceData: suggestionData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-
-        // Also show a generic error toast to the user
-        toast({
-            variant: 'destructive',
-            title: 'Erro ao Enviar',
-            description: 'Não foi possível enviar sua sugestão. Verifique suas permissões e tente novamente.',
-        });
     }).finally(() => {
         setIsLoading(false);
     });
@@ -94,12 +86,12 @@ export default function AjudaPage() {
                     <CardTitle className="font-headline text-2xl">Como "Instalar" o App no iPhone (iOS)</CardTitle>
                     <CardDescription>Aprenda a adicionar o AtelierFlow à tela de início do seu iPhone para uma experiência de app nativo.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="aspect-video w-full overflow-hidden rounded-lg border">
+                <CardContent className="flex justify-center p-4 md:p-6">
+                    <div className="w-full max-w-[280px] rounded-2xl border-4 border-gray-300 bg-gray-300 overflow-hidden shadow-xl">
                         <video 
                             src="https://mgvwmiwtvzxacw2r.public.blob.vercel-storage.com/AtelierFlowTutorial.mp4" 
                             controls 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full"
                         >
                             Seu navegador não suporta a tag de vídeo.
                         </video>
