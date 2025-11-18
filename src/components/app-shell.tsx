@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff, ListChecks, Tags, KeyRound } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -80,10 +80,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },
     { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
+    { href: "/ajuda", label: "Central de Ajuda", icon: BookOpen },
   ];
 
   if (isAdmin) {
-    menuItems.push({ href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound });
+    menuItems.splice(5,0, { href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound });
   }
 
   return (
