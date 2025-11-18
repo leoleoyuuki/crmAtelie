@@ -179,7 +179,7 @@ export default function RootLayout({
         <title>AtelierFlow</title>
         <meta name="description" content="Otimize seu fluxo de trabalho de alfaiataria e artesanato." />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
