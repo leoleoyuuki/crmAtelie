@@ -12,7 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, LogOut, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useUser } from "@/firebase/auth/use-user";
 import { PasswordContext } from "@/contexts/password-context";
 import { PasswordDialog } from "./password-dialog";
+import { Badge } from "./ui/badge";
 
 
 function AppHeader() {
@@ -83,9 +84,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/ajuda", label: "Central de Ajuda", icon: BookOpen },
   ];
 
-  if (isAdmin) {
-    menuItems.splice(5,0, { href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound });
-  }
+  const adminMenuItems = [
+    { href: "/admin/sugestoes", label: "Sugestões", icon: MessageSquare },
+    { href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound },
+  ]
 
   return (
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -112,6 +114,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 </SidebarMenuItem>
               ))}
+              {isAdmin && (
+                <>
+                <div className="px-3 py-2">
+                  <span className="text-xs font-semibold text-muted-foreground">Admin</span>
+                </div>
+                {adminMenuItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                    <Link href={item.href} passHref>
+                        <SidebarMenuButton asChild isActive={pathname === item.href}>
+                            <span className="flex items-center justify-between w-full">
+                                <span className="flex items-center gap-2">
+                                  <item.icon />
+                                  {item.label}
+                                </span>
+                                <Badge variant="destructive" className="text-xs">Admin</Badge>
+                            </span>
+                        </SidebarMenuButton>
+                    </Link>
+                    </SidebarMenuItem>
+                ))}
+                </>
+              )}
             </SidebarMenu>
           </SidebarContent>
            <SidebarHeader>

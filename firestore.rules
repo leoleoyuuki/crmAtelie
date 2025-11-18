@@ -58,7 +58,7 @@ service cloud.firestore {
       // An authenticated user can update a token (to mark it as used).
       allow update: if isSignedIn(); 
       // Only the designated admin can create new activation tokens.
-      allow read,write: if isSignedIn();
+      allow read,write: if isAdmin();
       // Tokens are not listable or deletable by clients.
       // allow list, delete: if false;
       
