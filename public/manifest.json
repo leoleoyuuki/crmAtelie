@@ -1,0 +1,22 @@
+{
+  "name": "AtelierFlow",
+  "short_name": "AtelierFlow",
+  "description": "Otimize seu fluxo de trabalho de alfaiataria e artesanato.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F5EF",
+  "theme_color": "#B55B3C",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/images/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
