@@ -73,6 +73,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const { auth } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const isAdmin = user?.uid === "3YuL6Ff7G9cHAV7xa81kyQF4bCw2";
 
@@ -90,6 +91,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound },
   ]
 
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+
   return (
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <Sidebar>
@@ -105,7 +113,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <Link href={item.href} passHref>
+                  <Link href={item.href} passHref onClick={handleLinkClick}>
                     <SidebarMenuButton asChild isActive={pathname === item.href}>
                         <span>
                             <item.icon />
@@ -122,7 +130,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </div>
                 {adminMenuItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
-                    <Link href={item.href} passHref>
+                    <Link href={item.href} passHref onClick={handleLinkClick}>
                         <SidebarMenuButton asChild isActive={pathname === item.href}>
                             <span className="flex items-center justify-between w-full">
                                 <span className="flex items-center gap-2">
@@ -137,9 +145,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 ))}
                 </>
               )}
+                 <SidebarLogout onClick={() => auth.signOut()} />
             </SidebarMenu>
           </SidebarContent>
-          <SidebarLogout onClick={() => auth.signOut()} />
         </Sidebar>
         <div className="flex flex-col">
             <AppHeader />

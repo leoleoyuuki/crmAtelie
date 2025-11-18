@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -740,12 +741,12 @@ const SidebarLogout = React.forwardRef<
     React.ComponentProps<typeof Button>
 >(({ className, ...props }, ref) => {
   return (
-    <div className="mt-auto p-2">
+    <li className="mt-auto p-2">
        <Button ref={ref} variant="ghost" className={cn("w-full justify-start", className)} {...props}>
           <LogOut />
           <span className="group-data-[collapsible=icon]:hidden">Sair</span>
        </Button>
-    </div>
+    </li>
   )
 })
 SidebarLogout.displayName = "SidebarLogout"
