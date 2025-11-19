@@ -14,6 +14,7 @@ import {
   SortingState,
   getSortedRowModel,
   FilterFn,
+  Row,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -32,6 +33,8 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { OrderCardMobile } from "./order-card-mobile";
 
 interface OrderTableShellProps {
   data: Order[];
@@ -67,6 +70,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     setOrders(data);
@@ -78,7 +82,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
 
   const updateOptimisticOrder = (orderId: string, updatedOrder: Partial<Order>) => {
     setOrders(currentOrders =>
-      currentOrders.map(o => o.id === orderId ? { ...o, ...updatedOrder } : o)
+      currentOrders.map(o => o.id === orderId ? { ...o, ...updatedOrder } as Order : o)
     );
   };
 
@@ -213,6 +217,27 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
     }
   });
 
+  const renderPagination = () => (
+     <div className="flex items-center justify-end space-x-2 py-4">
+        <Button
+        variant="outline"
+        size="sm"
+        onClick={() => table.previousPage()}
+        disabled={!table.getCanPreviousPage()}
+        >
+        Anterior
+        </Button>
+        <Button
+        variant="outline"
+        size="sm"
+        onClick={() => table.nextPage()}
+        disabled={!table.getCanNextPage()}
+        >
+        Próximo
+        </Button>
+    </div>
+  );
+
   return (
     <Card>
       <OrderTableToolbar 
@@ -221,77 +246,77 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
         isPage={isPage} 
       />
       <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+        {isMobile ? (
+          <div className="space-y-4">
+            {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map(row => (
+                    <OrderCardMobile 
+                        key={row.id}
+                        row={row as Row<Order>} // Cast row to Row<Order>
+                        onUpdate={updateOptimisticOrder}
+                        onDelete={removeOptimisticOrder}
+                    />
                 ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
+            ) : (
+                <div className="py-24 text-center text-muted-foreground">
                     Nenhum resultado.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Próximo
-          </Button>
-        </div>
+                </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      Nenhum resultado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        {renderPagination()}
       </CardContent>
     </Card>
   );
 }
-
-    
