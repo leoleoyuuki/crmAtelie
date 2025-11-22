@@ -24,7 +24,10 @@ export async function activateAccount(db: Firestore, user: User, token: string):
   
   // Calculate expiration date
   const now = new Date();
-  const expiresAt = add(now, { months: tokenData.duration });
+  const durationUnit = tokenData.duration < 1 ? 'days' : 'months';
+  const durationValue = tokenData.duration < 1 ? tokenData.duration * 28 : tokenData.duration; // Approximate for trial
+  
+  const expiresAt = add(now, { [durationUnit]: durationValue });
 
   try {
     const batch = writeBatch(db);
@@ -38,7 +41,7 @@ export async function activateAccount(db: Firestore, user: User, token: string):
     // Mark token as used
     batch.update(tokenRef, {
       isUsed: true,
-      usedBy: user.uid,
+      usedBy: user.email,
       usedAt: now,
     });
 
