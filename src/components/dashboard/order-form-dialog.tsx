@@ -38,7 +38,6 @@ import { Order, OrderStatus, ServiceType, Customer, OrderItem } from "@/lib/type
 import { addOrder, updateOrder, getCustomers } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
-import { Combobox } from "../ui/combobox";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
@@ -227,10 +226,12 @@ export function OrderFormDialog({
                                   {customerOptions.map((option) => (
                                     <CommandItem
                                       key={option.value}
-                                      value={option.label}
-                                      onSelect={() => {
-                                        field.onChange(option.value)
-                                        setIsCustomerComboboxOpen(false)
+                                      onSelect={(currentValue) => {
+                                        const selectedOption = customerOptions.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase());
+                                        if (selectedOption) {
+                                          field.onChange(selectedOption.value);
+                                        }
+                                        setIsCustomerComboboxOpen(false);
                                       }}
                                     >
                                       <Check
@@ -396,3 +397,5 @@ export function OrderFormDialog({
     </>
   );
 }
+
+    
