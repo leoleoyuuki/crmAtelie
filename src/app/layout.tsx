@@ -40,13 +40,17 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
       const userRef = doc(db, 'users', user.uid);
       const unsub = onSnapshot(userRef, (docSnap) => {
         if (docSnap.exists()) {
-          const userProfile = docSnap.data() as UserProfile;
+          const userProfileData = docSnap.data();
+          let userProfile = { ...userProfileData, id: docSnap.id } as UserProfile;
           
+          // Ensure expiresAt is a JS Date object
+          if (userProfile.expiresAt && (userProfile.expiresAt as any).toDate) {
+             userProfile.expiresAt = (userProfile.expiresAt as any).toDate();
+          }
+
           // Check for expiration if the user is currently active
           if (userProfile.status === 'active' && userProfile.expiresAt) {
-            // Firestore timestamps can be objects, convert them
-            const expiresDate = (userProfile.expiresAt as any).toDate ? (userProfile.expiresAt as any).toDate() : new Date(userProfile.expiresAt);
-            if (new Date() > expiresDate) {
+            if (new Date() > userProfile.expiresAt) {
               // Subscription has expired, update status to inactive
               updateDoc(userRef, { status: 'inactive' }).catch(err => {
                   console.error("Failed to update user status to inactive:", err);
