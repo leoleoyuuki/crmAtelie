@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -41,7 +42,7 @@ export function Combobox({
   const [open, setOpen] = React.useState(false)
 
   return (
-      <Popover open={open} onOpenChange={setOpen} modal={true}>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
             <Button
             variant="outline"
@@ -64,10 +65,8 @@ export function Combobox({
                     {options.map((option) => (
                     <CommandItem
                         key={option.value}
-                        value={option.label}
-                        onSelect={(currentValue) => {
-                           const selectedValue = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase())?.value || ""
-                           onChange(selectedValue === value ? "" : selectedValue);
+                        onSelect={() => {
+                           onChange(option.value === value ? "" : option.value);
                            setOpen(false)
                         }}
                     >
