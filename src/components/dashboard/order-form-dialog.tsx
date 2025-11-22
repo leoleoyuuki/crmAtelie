@@ -37,9 +37,10 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Order, OrderStatus, ServiceType, Customer, OrderItem } from "@/lib/types";
 import { addOrder, updateOrder, getCustomers } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, UserPlus, Trash2, Search } from "lucide-react";
+import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
+import { Combobox } from "../ui/combobox";
 
 
 const orderItemSchema = z.object({
@@ -79,7 +80,6 @@ export function OrderFormDialog({
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [customerSearch, setCustomerSearch] = useState('');
 
   const isEditing = !!order;
   const { toast } = useToast();
@@ -103,10 +103,7 @@ export function OrderFormDialog({
     }
   }, [isOpen, toast]);
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    customer.phone.includes(customerSearch)
-  );
+  const customerOptions = customers.map(c => ({ value: c.id, label: `${c.name} - ${c.phone}` }));
 
   const defaultValues: Partial<OrderFormValues> = {
     customerId: '',
@@ -198,47 +195,28 @@ export function OrderFormDialog({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <FormLabel>Cliente</FormLabel>
-                <div className="flex items-center gap-2">
-                    <div className="relative w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                            placeholder="Buscar cliente por nome ou telefone..."
-                            value={customerSearch}
-                            onChange={(e) => setCustomerSearch(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
+                 <div className="flex items-center gap-2">
+                    <FormField
+                        control={form.control}
+                        name="customerId"
+                        render={({ field }) => (
+                            <FormItem className="flex-1">
+                                 <Combobox
+                                    options={customerOptions}
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                    placeholder="Selecione ou busque um cliente..."
+                                    searchPlaceholder="Buscar cliente..."
+                                    notFoundText="Nenhum cliente encontrado."
+                                />
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}>
-                    <UserPlus className="h-4 w-4" />
+                        <UserPlus className="h-4 w-4" />
                     </Button>
                 </div>
-                <FormField
-                    control={form.control}
-                    name="customerId"
-                    render={({ field }) => (
-                    <FormItem>
-                        <Select onValueChange={field.onChange} value={field.value} >
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Selecione um cliente da lista..." />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {filteredCustomers.length > 0 ? (
-                                filteredCustomers.map(customer => (
-                                    <SelectItem key={customer.id} value={customer.id}>
-                                        {customer.name} - {customer.phone}
-                                    </SelectItem>
-                                ))
-                            ) : (
-                                <div className="p-4 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>
-                            )}
-                        </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
               </div>
 
               <Separator />
