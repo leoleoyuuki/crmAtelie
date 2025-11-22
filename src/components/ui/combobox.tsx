@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -41,48 +42,51 @@ export function Combobox({
   const [open, setOpen] = React.useState(false)
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
-        >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
-            <CommandEmpty>{notFoundText}</CommandEmpty>
-            <CommandGroup>
-                {options.map((option) => (
-                <CommandItem
-                    key={option.value}
-                    value={option.label}
-                    onSelect={() => {
-                      onChange(option.value === value ? "" : option.value)
-                      setOpen(false)
-                    }}
-                >
-                    <Check
-                    className={cn(
-                        "mr-2 h-4 w-4",
-                        value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                    />
-                    {option.label}
-                </CommandItem>
-                ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+            <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
+            >
+            {value
+                ? options.find((option) => option.value === value)?.label
+                : placeholder}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+            <Command>
+            <CommandInput placeholder={searchPlaceholder} />
+            <CommandList>
+                <CommandEmpty>{notFoundText}</CommandEmpty>
+                <CommandGroup>
+                    {options.map((option) => (
+                    <CommandItem
+                        key={option.value}
+                        value={option.label}
+                        onSelect={(currentValue) => {
+                            const selectedOption = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase());
+                            if (selectedOption) {
+                                onChange(selectedOption.value === value ? "" : selectedOption.value)
+                            }
+                            setOpen(false)
+                        }}
+                    >
+                        <Check
+                        className={cn(
+                            "mr-2 h-4 w-4",
+                            value === option.value ? "opacity-100" : "opacity-0"
+                        )}
+                        />
+                        {option.label}
+                    </CommandItem>
+                    ))}
+                </CommandGroup>
+            </CommandList>
+            </Command>
+        </PopoverContent>
     </Popover>
   )
 }
