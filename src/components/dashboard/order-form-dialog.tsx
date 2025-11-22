@@ -204,7 +204,7 @@ export function OrderFormDialog({
                   <FormItem className="flex flex-col">
                     <FormLabel>Cliente</FormLabel>
                     <div className="flex items-center gap-2">
-                       <Popover open={isCustomerComboboxOpen} onOpenChange={setIsCustomerComboboxOpen}>
+                       <Popover open={isCustomerComboboxOpen} onOpenChange={setIsCustomerComboboxOpen} modal={true}>
                         <PopoverTrigger asChild>
                            <Button
                               variant="outline"
