@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -34,14 +33,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Order, OrderStatus, ServiceType, Customer, OrderItem } from "@/lib/types";
+import { Order, OrderStatus, ServiceType, Customer } from "@/lib/types";
 import { addOrder, updateOrder, getCustomers } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
-import { Combobox } from "../ui/combobox";
-
 
 const orderItemSchema = z.object({
   serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
@@ -80,6 +77,8 @@ export function OrderFormDialog({
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
 
   const isEditing = !!order;
   const { toast } = useToast();
@@ -103,8 +102,11 @@ export function OrderFormDialog({
     }
   }, [isOpen, toast]);
 
-  const customerOptions = customers.map(c => ({ value: c.id, label: `${c.name} - ${c.phone}` }));
-
+  const filteredCustomers = customers.filter(c =>
+    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    c.phone.includes(customerSearch)
+  );
+  
   const defaultValues: Partial<OrderFormValues> = {
     customerId: '',
     items: [{ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' }],
@@ -124,6 +126,7 @@ export function OrderFormDialog({
   
   useEffect(() => {
     if (isOpen) {
+      setCustomerSearch(""); // Reset search on open
       if (order) {
           form.reset({
             ...order,
@@ -169,9 +172,17 @@ export function OrderFormDialog({
   };
 
   const handleCustomerCreated = (newCustomer: Customer) => {
-    setCustomers(prev => [...prev, newCustomer]);
+    setCustomers(prev => [newCustomer, ...prev]);
     form.setValue('customerId', newCustomer.id);
   };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomerSearch(e.target.value);
+    if (!isSelectOpen) {
+      setIsSelectOpen(true);
+    }
+  };
+
 
   return (
     <>
@@ -195,24 +206,46 @@ export function OrderFormDialog({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <FormLabel>Cliente</FormLabel>
-                 <div className="flex items-center gap-2">
-                    <FormField
+                <div className="flex items-center gap-2">
+                   <div className="flex-1 space-y-2">
+                      <Input
+                        placeholder="Buscar cliente por nome ou telefone..."
+                        value={customerSearch}
+                        onChange={handleSearchChange}
+                      />
+                       <FormField
                         control={form.control}
                         name="customerId"
                         render={({ field }) => (
-                            <FormItem className="flex-1">
-                                 <Combobox
-                                    options={customerOptions}
-                                    value={field.value}
-                                    onChange={field.onChange}
-                                    placeholder="Selecione ou busque um cliente..."
-                                    searchPlaceholder="Buscar cliente..."
-                                    notFoundText="Nenhum cliente encontrado."
-                                />
-                                <FormMessage />
-                            </FormItem>
+                          <FormItem>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              open={isSelectOpen}
+                              onOpenChange={setIsSelectOpen}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione um cliente da lista" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {filteredCustomers.length > 0 ? (
+                                  filteredCustomers.map(c => (
+                                    <SelectItem key={c.id} value={c.id}>
+                                      {c.name} - {c.phone}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <div className="p-4 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                    />
+                      />
+                   </div>
                     <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}>
                         <UserPlus className="h-4 w-4" />
                     </Button>
