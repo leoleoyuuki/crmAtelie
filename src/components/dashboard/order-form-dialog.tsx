@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -109,7 +108,7 @@ export function OrderFormDialog({
       if (customerSearch) {
         setIsSelectOpen(true);
       }
-    }, 300); // 300ms delay
+    }, 500); // 500ms delay
 
     return () => {
       clearTimeout(handler);
