@@ -60,7 +60,7 @@ export default function AtivacaoPage() {
 
   const handleWhatsAppClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    const phoneNumber = "5511957211546";
+    const phoneNumber = "5511921494313";
     const message = "Olá! Gostaria de adquirir um código de ativação para o sistema AtelierFlow.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
