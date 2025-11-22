@@ -78,6 +78,7 @@ export function OrderFormDialog({
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customerSearch, setCustomerSearch] = useState("");
+  const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [isSelectOpen, setIsSelectOpen] = useState(false);
 
   const isEditing = !!order;
@@ -102,9 +103,23 @@ export function OrderFormDialog({
     }
   }, [isOpen, toast]);
 
+   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCustomerSearch(customerSearch);
+      if (customerSearch) {
+        setIsSelectOpen(true);
+      }
+    }, 300); // 300ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [customerSearch]);
+
+
   const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    c.phone.includes(customerSearch)
+    c.name.toLowerCase().includes(debouncedCustomerSearch.toLowerCase()) ||
+    c.phone.includes(debouncedCustomerSearch)
   );
   
   const defaultValues: Partial<OrderFormValues> = {
@@ -175,14 +190,6 @@ export function OrderFormDialog({
     setCustomers(prev => [newCustomer, ...prev]);
     form.setValue('customerId', newCustomer.id);
   };
-  
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCustomerSearch(e.target.value);
-    if (!isSelectOpen) {
-      setIsSelectOpen(true);
-    }
-  };
-
 
   return (
     <>
@@ -211,7 +218,7 @@ export function OrderFormDialog({
                       <Input
                         placeholder="Buscar cliente por nome ou telefone..."
                         value={customerSearch}
-                        onChange={handleSearchChange}
+                        onChange={(e) => setCustomerSearch(e.target.value)}
                       />
                        <FormField
                         control={form.control}
