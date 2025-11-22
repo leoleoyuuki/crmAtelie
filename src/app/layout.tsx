@@ -159,7 +159,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <PasswordProvider>
-        <AppShell>
+        <AppShell profile={profile}>
           {children}
         </AppShell>
       </PasswordProvider>

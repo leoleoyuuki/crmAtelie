@@ -13,7 +13,7 @@ import {
   SidebarLogout
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -24,9 +24,42 @@ import { useUser } from "@/firebase/auth/use-user";
 import { PasswordContext } from "@/contexts/password-context";
 import { PasswordDialog } from "./password-dialog";
 import { Badge } from "./ui/badge";
+import type { UserProfile } from "@/lib/types";
+import { differenceInDays, formatDistanceToNowStrict } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from "@/lib/utils";
+
+function SubscriptionBadge({ expiresAt }: { expiresAt?: Date }) {
+    if (!expiresAt) {
+        return null;
+    }
+    const daysLeft = differenceInDays(expiresAt, new Date());
+
+    const getBadgeContent = () => {
+        if (daysLeft < 0) {
+            return { text: "Expirada", icon: <ShieldAlert className="h-3 w-3" />, className: "bg-red-500/20 text-red-700 border-red-500/50" };
+        }
+        if (daysLeft <= 7) {
+            return { text: `${daysLeft}d restantes`, icon: <ShieldAlert className="h-3 w-3" />, className: "bg-red-500/20 text-red-700 border-red-500/50" };
+        }
+        if (daysLeft <= 15) {
+            return { text: `${daysLeft}d restantes`, icon: <Shield className="h-3 w-3" />, className: "bg-yellow-500/20 text-yellow-700 border-yellow-500/50" };
+        }
+        return { text: `${daysLeft}d restantes`, icon: <ShieldCheck className="h-3 w-3" />, className: "bg-green-500/20 text-green-700 border-green-500/50" };
+    }
+
+    const { text, icon, className } = getBadgeContent();
+
+    return (
+        <Badge variant="outline" className={cn("text-xs gap-1.5 pl-1.5 pr-2", className)}>
+            {icon}
+            {text}
+        </Badge>
+    );
+}
 
 
-function AppHeader() {
+function AppHeader({ profile }: { profile: UserProfile | null }) {
     const { isMobile } = useSidebar();
     const { user } = useUser();
     const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
@@ -54,14 +87,14 @@ function AppHeader() {
 
             {user && (
                 <div className="flex items-center gap-4">
+                     <div className="flex flex-col items-end">
+                        <span className="font-semibold text-sm hidden md:block">{user.displayName}</span>
+                        <SubscriptionBadge expiresAt={profile?.expiresAt} />
+                    </div>
                     <Avatar className="h-9 w-9">
                         <AvatarImage src={user.photoURL ?? ''} alt="Avatar" />
                         <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="hidden md:flex flex-col">
-                        <span className="font-semibold text-sm">{user.displayName}</span>
-                        <span className="text-xs text-muted-foreground">{user.email}</span>
-                    </div>
                 </div>
             )}
             
@@ -69,7 +102,7 @@ function AppHeader() {
     );
 }
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children, profile }: { children: React.ReactNode, profile: UserProfile | null }) {
   const { auth } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
@@ -150,7 +183,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </SidebarContent>
         </Sidebar>
         <div className="flex flex-col">
-            <AppHeader />
+            <AppHeader profile={profile} />
             {children}
         </div>
       </div>
