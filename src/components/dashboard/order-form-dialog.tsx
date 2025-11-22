@@ -80,6 +80,7 @@ export function OrderFormDialog({
   const [customerSearch, setCustomerSearch] = useState("");
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditing = !!order;
   const { toast } = useToast();
@@ -141,6 +142,7 @@ export function OrderFormDialog({
   
   useEffect(() => {
     if (isOpen) {
+      setIsSubmitting(false); // Reset submitting state on open
       setCustomerSearch(""); // Reset search on open
       if (order) {
           form.reset({
@@ -156,9 +158,11 @@ export function OrderFormDialog({
   }, [order, form, isOpen]);
 
   const onSubmit = async (data: OrderFormValues) => {
+    setIsSubmitting(true);
     const selectedCustomer = customers.find(c => c.id === data.customerId);
     if (!selectedCustomer) {
         toast({ variant: "destructive", title: "Erro", description: "Cliente selecionado não encontrado." });
+        setIsSubmitting(false);
         return;
     }
     
@@ -183,6 +187,8 @@ export function OrderFormDialog({
       form.reset(defaultValues);
     } catch (error) {
       toast({ variant: "destructive", title: "Erro", description: "Algo deu errado." });
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -382,11 +388,13 @@ export function OrderFormDialog({
               
               <DialogFooter className="pt-4 border-t">
                   <DialogClose asChild>
-                      <Button type="button" variant="outline">
+                      <Button type="button" variant="outline" disabled={isSubmitting}>
                           Cancelar
                       </Button>
                   </DialogClose>
-                  <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Criar Pedido'}</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Pedido')}
+                  </Button>
               </DialogFooter>
             </form>
           </Form>
