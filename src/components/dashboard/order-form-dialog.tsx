@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -40,10 +39,8 @@ import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
-import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Combobox } from "../ui/combobox";
+
 
 const orderItemSchema = z.object({
   serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
@@ -81,7 +78,6 @@ export function OrderFormDialog({
 }: OrderFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
-  const [isCustomerComboboxOpen, setIsCustomerComboboxOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   
   const isEditing = !!order;
@@ -203,51 +199,14 @@ export function OrderFormDialog({
                   <FormItem className="flex flex-col">
                     <FormLabel>Cliente</FormLabel>
                     <div className="flex items-center gap-2">
-                       <Popover open={isCustomerComboboxOpen} onOpenChange={setIsCustomerComboboxOpen} modal={true}>
-                        <PopoverTrigger asChild>
-                           <Button
-                              variant="outline"
-                              role="combobox"
-                              aria-expanded={isCustomerComboboxOpen}
-                              className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
-                            >
-                              {field.value
-                                ? customerOptions.find((option) => option.value === field.value)?.label
-                                : "Selecione um cliente..."}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                           <Command>
-                              <CommandInput placeholder="Buscar cliente..." />
-                              <CommandList>
-                                <CommandEmpty>Nenhum cliente encontrado.</CommandEmpty>
-                                <CommandGroup>
-                                  {customerOptions.map((option) => (
-                                    <CommandItem
-                                      key={option.value}
-                                      onSelect={(currentValue) => {
-                                        const selectedOption = customerOptions.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase());
-                                        if (selectedOption) {
-                                          field.onChange(selectedOption.value);
-                                        }
-                                        setIsCustomerComboboxOpen(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          field.value === option.value ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      {option.label}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                        </PopoverContent>
-                      </Popover>
+                       <Combobox
+                          options={customerOptions}
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Selecione um cliente..."
+                          searchPlaceholder="Buscar cliente..."
+                          notFoundText="Nenhum cliente encontrado."
+                       />
                       <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}>
                         <UserPlus className="h-4 w-4" />
                       </Button>
@@ -397,5 +356,3 @@ export function OrderFormDialog({
     </>
   );
 }
-
-    
