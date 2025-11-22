@@ -76,8 +76,9 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
     setOrders(data);
   }, [data]);
 
-  const addOptimisticOrder = (order: Order) => {
-    setOrders(currentOrders => [{...order, createdAt: new Date()}, ...currentOrders]);
+  const handleOrderCreated = () => {
+    // No longer doing optimistic updates here.
+    // The useCollection hook will update the data from Firestore.
   };
 
   const updateOptimisticOrder = (orderId: string, updatedOrder: Partial<Order>) => {
@@ -242,7 +243,7 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
     <Card>
       <OrderTableToolbar 
         table={table} 
-        onOrderCreated={addOptimisticOrder} 
+        onOrderCreated={handleOrderCreated} 
         isPage={isPage} 
       />
       <CardContent>

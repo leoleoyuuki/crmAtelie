@@ -17,7 +17,7 @@ import { getMonths } from "@/lib/data"
 
 interface OrderTableToolbarProps<TData> {
   table: Table<TData>
-  onOrderCreated: (order: Order) => void
+  onOrderCreated: () => void
   isPage?: boolean;
 }
 
@@ -106,7 +106,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
             <SelectContent>
                 <SelectItem value="all">Todos os Meses</SelectItem>
                  {months.map(month => (
-                    <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                    <SelectItem key={month.value} value={month.value}>{month.value}</SelectItem>
                 ))}
             </SelectContent>
           </Select>
