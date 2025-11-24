@@ -258,7 +258,7 @@ export function OrderFormDialog({
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1">
               <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4">
                 <div className="space-y-2">
                   <FormLabel>Cliente</FormLabel>
@@ -494,3 +494,4 @@ export function OrderFormDialog({
     
 
     
+
