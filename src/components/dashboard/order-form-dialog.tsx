@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -131,7 +130,7 @@ export function OrderFormDialog({
         if (serviceSearch) {
             setIsServiceSelectOpen(true);
         }
-    }, 300); // Shorter delay for services
+    }, 500);
     return () => clearTimeout(handler);
   }, [serviceSearch]);
 
@@ -200,11 +199,15 @@ export function OrderFormDialog({
 
       if (isEditing && order) {
         const updated = await updateOrder(order.id, orderData);
-        onOrderUpdated?.(order.id, updated);
+        if (onOrderUpdated) {
+          onOrderUpdated(order.id, updated);
+        }
         toast({ title: "Pedido Atualizado", description: `O pedido foi atualizado.` });
       } else {
         await addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'userId'>);
-        onOrderCreated?.();
+        if (onOrderCreated) {
+          onOrderCreated();
+        }
         toast({ title: "Pedido Criado", description: `Novo pedido foi criado.` });
       }
       setIsOpen(false);
@@ -258,7 +261,7 @@ export function OrderFormDialog({
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
               <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4">
                 <div className="space-y-2">
                   <FormLabel>Cliente</FormLabel>
@@ -467,7 +470,7 @@ export function OrderFormDialog({
                 </div>
               </div>
               
-              <DialogFooter className="pt-4 border-t mt-4">
+              <DialogFooter className="pt-4 mt-4 border-t">
                   <DialogClose asChild>
                       <Button type="button" variant="outline" disabled={isSubmitting}>
                           Cancelar
@@ -490,8 +493,3 @@ export function OrderFormDialog({
     </>
   );
 }
-
-    
-
-    
-
