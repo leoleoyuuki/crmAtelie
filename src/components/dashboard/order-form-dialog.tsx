@@ -64,7 +64,7 @@ interface OrderFormDialogProps {
   order?: Order;
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
-  onOrderCreated?: (order: Order) => void;
+  onOrderCreated?: () => void;
   onOrderUpdated?: (orderId: string, updatedOrder: Partial<Order>) => void;
 }
 
@@ -204,8 +204,8 @@ export function OrderFormDialog({
         onOrderUpdated?.(order.id, updated);
         toast({ title: "Pedido Atualizado", description: `O pedido foi atualizado.` });
       } else {
-        const newOrder = await addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'userId'>);
-        onOrderCreated?.(newOrder as Order);
+        await addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'userId'>);
+        onOrderCreated?.();
         toast({ title: "Pedido Criado", description: `Novo pedido foi criado.` });
       }
       setIsOpen(false);
@@ -470,7 +470,7 @@ export function OrderFormDialog({
               </div>
               </ScrollArea>
               
-              <DialogFooter className="pt-4 border-t -mb-2">
+              <DialogFooter className="pt-4 border-t">
                   <DialogClose asChild>
                       <Button type="button" variant="outline" disabled={isSubmitting}>
                           Cancelar
@@ -493,5 +493,7 @@ export function OrderFormDialog({
     </>
   );
 }
+
+    
 
     
