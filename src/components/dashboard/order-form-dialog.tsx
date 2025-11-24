@@ -39,7 +39,6 @@ import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
-import { ScrollArea } from "../ui/scroll-area";
 
 const orderItemSchema = z.object({
   serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
@@ -259,9 +258,8 @@ export function OrderFormDialog({
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex-1 flex flex-col overflow-hidden">
-             <ScrollArea className="flex-1 pr-6 -mr-6">
-              <div className="space-y-4 pr-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4">
                 <div className="space-y-2">
                   <FormLabel>Cliente</FormLabel>
                   <div className="flex items-start gap-2">
@@ -468,9 +466,8 @@ export function OrderFormDialog({
                   />
                 </div>
               </div>
-              </ScrollArea>
               
-              <DialogFooter className="pt-4 border-t">
+              <DialogFooter className="pt-4 border-t mt-4">
                   <DialogClose asChild>
                       <Button type="button" variant="outline" disabled={isSubmitting}>
                           Cancelar
