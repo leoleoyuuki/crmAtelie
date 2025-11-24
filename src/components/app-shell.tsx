@@ -99,6 +99,7 @@ function AppHeader({ profile }: { profile: UserProfile | null }) {
             )}
             
         </header>
+        
     );
 }
 
