@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -58,6 +59,153 @@ type OrderFormValues = z.infer<typeof orderFormSchema>;
 const serviceTypes: ServiceType[] = ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"];
 const statuses: OrderStatus[] = ['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído'];
 
+// A new component for each item to manage its own state
+function OrderItemForm({ index, control, remove, priceTableItems, setValue }: any) {
+    const [serviceSearch, setServiceSearch] = useState("");
+    const [debouncedServiceSearch, setDebouncedServiceSearch] = useState("");
+    const [isServiceSelectOpen, setIsServiceSelectOpen] = useState(false);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedServiceSearch(serviceSearch);
+            if (serviceSearch) {
+                setIsServiceSelectOpen(true);
+            }
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [serviceSearch]);
+
+    const filteredServices = priceTableItems.filter((s: PriceTableItem) =>
+        s.serviceName.toLowerCase().includes(debouncedServiceSearch.toLowerCase())
+    );
+
+    const handlePriceItemSelect = (itemId: string) => {
+        if (!itemId) return;
+        const selectedItem = priceTableItems.find((item: PriceTableItem) => item.id === itemId);
+        if (selectedItem) {
+            const serviceNameLower = selectedItem.serviceName.toLowerCase();
+            let matchedServiceType: ServiceType = 'Ajuste';
+            if (serviceNameLower.includes('design')) matchedServiceType = 'Design Personalizado';
+            else if (serviceNameLower.includes('reparo') || serviceNameLower.includes('conserto')) matchedServiceType = 'Reparo';
+            else if (serviceNameLower.includes('lavagem')) matchedServiceType = 'Lavagem a Seco';
+            
+            setValue(`items.${index}.serviceType`, matchedServiceType);
+            setValue(`items.${index}.description`, selectedItem.description || selectedItem.serviceName);
+            setValue(`items.${index}.value`, selectedItem.price);
+        }
+    };
+
+    return (
+        <div className="p-4 border rounded-lg space-y-4 relative">
+            <div className="flex justify-between items-center">
+                <FormLabel className="font-semibold">Item {index + 1}</FormLabel>
+                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => remove(index)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+            </div>
+            
+            <div className="space-y-2">
+                <FormLabel className="text-xs">Buscar Serviço na Tabela</FormLabel>
+                <Input
+                    placeholder="Buscar serviço por nome..."
+                    onChange={(e) => setServiceSearch(e.target.value)}
+                    className="h-9"
+                />
+                <Select
+                    onValueChange={(value) => handlePriceItemSelect(value)}
+                    open={isServiceSelectOpen}
+                    onOpenChange={setIsServiceSelectOpen}
+                >
+                    <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Ou selecione um serviço da lista..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {filteredServices.length > 0 ? (
+                            filteredServices.map((s: PriceTableItem) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                    {s.serviceName} - R${s.price.toFixed(2)}
+                                </SelectItem>
+                            ))
+                        ) : (
+                            <div className="p-4 text-sm text-muted-foreground">Nenhum serviço encontrado.</div>
+                        )}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <Separator className="flex-1" />
+                <span className="text-xs text-muted-foreground">OU PREENCHA MANUALMENTE</span>
+                <Separator className="flex-1" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                    control={control}
+                    name={`items.${index}.serviceType`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Tipo de Serviço</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione..." />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {serviceTypes.map(type => (
+                                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={control}
+                    name={`items.${index}.value`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Valor (R$)</FormLabel>
+                            <FormControl>
+                                <Input type="number" placeholder="50,00" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            <FormField
+                control={control}
+                name={`items.${index}.description`}
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Descrição</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Detalhes do serviço..." {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={control}
+                name={`items.${index}.assignedTo`}
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Atribuído a</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Nome do profissional" {...field} value={field.value ?? ''} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
+    );
+}
+
 interface OrderFormDialogProps {
   order?: Order;
   isOpen?: boolean;
@@ -81,10 +229,6 @@ export function OrderFormDialog({
   const [customerSearch, setCustomerSearch] = useState("");
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [isCustomerSelectOpen, setIsCustomerSelectOpen] = useState(false);
-
-  const [serviceSearch, setServiceSearch] = useState("");
-  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState("");
-  const [isServiceSelectOpen, setIsServiceSelectOpen] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -124,24 +268,9 @@ export function OrderFormDialog({
     return () => clearTimeout(handler);
   }, [customerSearch]);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-        setDebouncedServiceSearch(serviceSearch);
-        if (serviceSearch) {
-            setIsServiceSelectOpen(true);
-        }
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [serviceSearch]);
-
-
   const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(debouncedCustomerSearch.toLowerCase()) ||
     c.phone.includes(debouncedCustomerSearch)
-  );
-
-  const filteredServices = priceTableItems.filter(s =>
-    s.serviceName.toLowerCase().includes(debouncedServiceSearch.toLowerCase())
   );
   
   const defaultValues: Partial<OrderFormValues> = {
@@ -156,10 +285,10 @@ export function OrderFormDialog({
     defaultValues,
   });
 
-  const { setValue } = form;
+  const { control, setValue } = form;
 
   const { fields, append, remove } = useFieldArray({
-    control: form.control,
+    control,
     name: "items",
   });
   
@@ -224,23 +353,6 @@ export function OrderFormDialog({
     form.setValue('customerId', newCustomer.id);
     setIsCustomerSelectOpen(true);
   };
-
-  const handlePriceItemSelect = (itemId: string, itemIndex: number) => {
-    if (!itemId) return;
-    const selectedItem = priceTableItems.find(item => item.id === itemId);
-    if (selectedItem) {
-      const serviceNameLower = selectedItem.serviceName.toLowerCase();
-      let matchedServiceType: ServiceType = 'Ajuste';
-      if (serviceNameLower.includes('design')) matchedServiceType = 'Design Personalizado';
-      else if (serviceNameLower.includes('reparo') || serviceNameLower.includes('conserto')) matchedServiceType = 'Reparo';
-      else if (serviceNameLower.includes('lavagem')) matchedServiceType = 'Lavagem a Seco';
-      
-      setValue(`items.${itemIndex}.serviceType`, matchedServiceType);
-      setValue(`items.${itemIndex}.description`, selectedItem.description || selectedItem.serviceName);
-      setValue(`items.${itemIndex}.value`, selectedItem.price);
-    }
-  };
-
 
   return (
     <>
@@ -315,116 +427,14 @@ export function OrderFormDialog({
                 
                 <div className="space-y-4">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
-                      <div className="flex justify-between items-center">
-                        <FormLabel className="font-semibold">Item {index + 1}</FormLabel>
-                        {fields.length > 1 && (
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => remove(index)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                        )}
-                      </div>
-                       
-                        <div className="space-y-2">
-                            <FormLabel className="text-xs">Buscar Serviço na Tabela</FormLabel>
-                             <Input
-                                placeholder="Buscar serviço por nome..."
-                                onChange={(e) => setServiceSearch(e.target.value)}
-                                className="h-9"
-                            />
-                            <Select
-                                onValueChange={(value) => handlePriceItemSelect(value, index)}
-                                open={isServiceSelectOpen}
-                                onOpenChange={setIsServiceSelectOpen}
-                            >
-                                <SelectTrigger className="h-9">
-                                    <SelectValue placeholder="Ou selecione um serviço da lista..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {filteredServices.length > 0 ? (
-                                        filteredServices.map(s => (
-                                            <SelectItem key={s.id} value={s.id}>
-                                                {s.serviceName} - R${s.price.toFixed(2)}
-                                            </SelectItem>
-                                        ))
-                                    ) : (
-                                        <div className="p-4 text-sm text-muted-foreground">Nenhum serviço encontrado.</div>
-                                    )}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-
-                        <div className="flex items-center gap-2">
-                            <Separator className="flex-1" />
-                            <span className="text-xs text-muted-foreground">OU PREENCHA MANUALMENTE</span>
-                            <Separator className="flex-1" />
-                        </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                              control={form.control}
-                              name={`items.${index}.serviceType`}
-                              render={({ field }) => (
-                              <FormItem>
-                                  <FormLabel>Tipo de Serviço</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
-                                  <FormControl>
-                                      <SelectTrigger>
-                                      <SelectValue placeholder="Selecione..." />
-                                      </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                      {serviceTypes.map(type => (
-                                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                                      ))}
-                                  </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                              </FormItem>
-                              )}
-                          />
-                          <FormField
-                              control={form.control}
-                              name={`items.${index}.value`}
-                              render={({ field }) => (
-                                  <FormItem>
-                                  <FormLabel>Valor (R$)</FormLabel>
-                                  <FormControl>
-                                      <Input type="number" placeholder="50,00" {...field} />
-                                  </FormControl>
-                                  <FormMessage />
-                                  </FormItem>
-                              )}
-                          />
-                      </div>
-                        <FormField
-                          control={form.control}
-                          name={`items.${index}.description`}
-                          render={({ field }) => (
-                          <FormItem>
-                              <FormLabel>Descrição</FormLabel>
-                              <FormControl>
-                              <Input placeholder="Detalhes do serviço..." {...field} value={field.value ?? ''} />
-                              </FormControl>
-                              <FormMessage />
-                          </FormItem>
-                          )}
-                      />
-                      <FormField
-                          control={form.control}
-                          name={`items.${index}.assignedTo`}
-                          render={({ field }) => (
-                          <FormItem>
-                              <FormLabel>Atribuído a</FormLabel>
-                              <FormControl>
-                              <Input placeholder="Nome do profissional" {...field} value={field.value ?? ''} />
-                              </FormControl>
-                              <FormMessage />
-                          </FormItem>
-                          )}
-                      />
-                    </div>
+                    <OrderItemForm
+                        key={field.id}
+                        index={index}
+                        control={control}
+                        remove={remove}
+                        priceTableItems={priceTableItems}
+                        setValue={setValue}
+                    />
                   ))}
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' })}>
@@ -493,3 +503,5 @@ export function OrderFormDialog({
     </>
   );
 }
+
+    
