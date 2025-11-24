@@ -236,7 +236,7 @@ export function OrderFormDialog({
       else if (serviceNameLower.includes('lavagem')) matchedServiceType = 'Lavagem a Seco';
       
       setValue(`items.${itemIndex}.serviceType`, matchedServiceType);
-      setValue(`items.${itemIndex}.description`, selectedItem.serviceName);
+      setValue(`items.${itemIndex}.description`, selectedItem.description || selectedItem.serviceName);
       setValue(`items.${itemIndex}.value`, selectedItem.price);
     }
   };

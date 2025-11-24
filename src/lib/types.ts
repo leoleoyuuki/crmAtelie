@@ -35,6 +35,7 @@ export interface Order {
 export interface PriceTableItem {
     id: string;
     serviceName: string;
+    description?: string;
     price: number;
     userId: string;
 }

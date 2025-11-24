@@ -29,9 +29,11 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { addPriceTableItem, updatePriceTableItem } from "@/lib/data";
 import { PriceTableItem } from "@/lib/types";
+import { Textarea } from "../ui/textarea";
 
 const priceFormSchema = z.object({
   serviceName: z.string().min(2, "O nome do serviço deve ter pelo menos 2 caracteres."),
+  description: z.string().optional(),
   price: z.coerce.number().min(0, "O preço deve ser um valor positivo."),
 });
 
@@ -63,6 +65,7 @@ export function PriceFormDialog({
 
   const defaultValues: Partial<PriceFormValues> = {
     serviceName: "",
+    description: "",
     price: 0,
   };
 
@@ -76,6 +79,7 @@ export function PriceFormDialog({
         if (isEditing && item) {
             form.reset({
                 serviceName: item.serviceName,
+                description: item.description || "",
                 price: item.price,
             });
         } else {
@@ -94,7 +98,7 @@ export function PriceFormDialog({
           description: `O serviço ${updatedItem.serviceName} foi atualizado.`,
         });
       } else {
-        const newItem = await addPriceTableItem(data);
+        const newItem = await addPriceTableItem(data as Omit<PriceTableItem, 'id' | 'userId'>);
         onItemCreated(newItem);
         toast({
           title: "Serviço Criado",
@@ -135,6 +139,19 @@ export function PriceFormDialog({
               </FormItem>
             )}
           />
+           <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descrição (Opcional)</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="ex: Bainha invisível feita à mão." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="price"
@@ -142,7 +159,7 @@ export function PriceFormDialog({
               <FormItem>
                 <FormLabel>Preço (R$)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="25,00" {...field} />
+                  <Input type="number" step="0.01" placeholder="25,00" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
