@@ -158,7 +158,9 @@ export function OrderFormDialog({
     defaultValues,
   });
 
-  const { fields, append, remove, setValue } = useFieldArray({
+  const { setValue } = form;
+
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "items",
   });
@@ -326,7 +328,6 @@ export function OrderFormDialog({
                             <FormLabel className="text-xs">Buscar Serviço na Tabela</FormLabel>
                              <Input
                                 placeholder="Buscar serviço por nome..."
-                                value={serviceSearch}
                                 onChange={(e) => setServiceSearch(e.target.value)}
                                 className="h-9"
                             />
