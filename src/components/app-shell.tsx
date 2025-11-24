@@ -97,9 +97,8 @@ function AppHeader({ profile }: { profile: UserProfile | null }) {
                     </Avatar>
                 </div>
             )}
-            
         </header>
-        
+
     );
 }
 
