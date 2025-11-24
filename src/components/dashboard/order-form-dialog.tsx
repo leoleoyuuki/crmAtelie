@@ -32,9 +32,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Order, OrderStatus, ServiceType, Customer } from "@/lib/types";
-import { addOrder, updateOrder, getCustomers } from "@/lib/data";
+import { Order, OrderStatus, ServiceType, Customer, PriceTableItem } from "@/lib/types";
+import { addOrder, updateOrder, getCustomers, getPriceTableItems } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
@@ -77,6 +78,7 @@ export function OrderFormDialog({
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [priceTableItems, setPriceTableItems] = useState<PriceTableItem[]>([]);
   const [customerSearch, setCustomerSearch] = useState("");
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [isSelectOpen, setIsSelectOpen] = useState(false);
@@ -89,18 +91,22 @@ export function OrderFormDialog({
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
   useEffect(() => {
-    const fetchAndSetCustomers = async () => {
+    const fetchData = async () => {
       try {
-        const fetchedCustomers = await getCustomers();
+        const [fetchedCustomers, fetchedPriceItems] = await Promise.all([
+          getCustomers(),
+          getPriceTableItems(),
+        ]);
         setCustomers(fetchedCustomers);
+        setPriceTableItems(fetchedPriceItems);
       } catch (error) {
-        console.error("Failed to fetch customers", error);
-        toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os clientes." });
+        console.error("Failed to fetch data", error);
+        toast({ variant: "destructive", title: "Erro", description: "Não foi possível carregar os clientes ou a tabela de preços." });
       }
     };
 
     if (isOpen) {
-      fetchAndSetCustomers();
+      fetchData();
     }
   }, [isOpen, toast]);
 
@@ -135,7 +141,7 @@ export function OrderFormDialog({
     defaultValues,
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, setValue } = useFieldArray({
     control: form.control,
     name: "items",
   });
@@ -196,6 +202,23 @@ export function OrderFormDialog({
     setCustomers(prev => [newCustomer, ...prev]);
     form.setValue('customerId', newCustomer.id);
   };
+
+  const handlePriceItemSelect = (itemId: string, itemIndex: number) => {
+    const selectedItem = priceTableItems.find(item => item.id === itemId);
+    if (selectedItem) {
+      // Find the closest matching ServiceType or default to 'Ajuste'
+      const serviceNameLower = selectedItem.serviceName.toLowerCase();
+      let matchedServiceType: ServiceType = 'Ajuste'; // Default
+      if (serviceNameLower.includes('design')) matchedServiceType = 'Design Personalizado';
+      else if (serviceNameLower.includes('reparo') || serviceNameLower.includes('conserto')) matchedServiceType = 'Reparo';
+      else if (serviceNameLower.includes('lavagem')) matchedServiceType = 'Lavagem a Seco';
+      
+      setValue(`items.${itemIndex}.serviceType`, matchedServiceType);
+      setValue(`items.${itemIndex}.description`, selectedItem.serviceName);
+      setValue(`items.${itemIndex}.value`, selectedItem.price);
+    }
+  };
+
 
   return (
     <>
@@ -272,6 +295,21 @@ export function OrderFormDialog({
                   {fields.map((field, index) => (
                     <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
                       <FormLabel className="font-semibold">Item {index + 1}</FormLabel>
+                       
+                       <Combobox
+                          options={priceTableItems.map(item => ({ label: `${item.serviceName} - R$${item.price.toFixed(2)}`, value: item.id }))}
+                          onChange={(value) => handlePriceItemSelect(value, index)}
+                          placeholder="Ou selecione um serviço da tabela..."
+                          searchPlaceholder="Buscar serviço..."
+                          notFoundText="Nenhum serviço encontrado."
+                        />
+
+                        <div className="flex items-center gap-2">
+                            <Separator className="flex-1" />
+                            <span className="text-xs text-muted-foreground">OU</span>
+                            <Separator className="flex-1" />
+                        </div>
+                      
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <FormField
                               control={form.control}
