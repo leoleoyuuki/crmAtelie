@@ -32,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Combobox } from "@/components/ui/combobox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Order, OrderStatus, ServiceType, Customer, PriceTableItem } from "@/lib/types";
 import { addOrder, updateOrder, getCustomers, getPriceTableItems } from "@/lib/data";
@@ -40,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
+import { ScrollArea } from "../ui/scroll-area";
 
 const orderItemSchema = z.object({
   serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
@@ -79,9 +79,15 @@ export function OrderFormDialog({
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [priceTableItems, setPriceTableItems] = useState<PriceTableItem[]>([]);
+  
   const [customerSearch, setCustomerSearch] = useState("");
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
-  const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const [isCustomerSelectOpen, setIsCustomerSelectOpen] = useState(false);
+
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [debouncedServiceSearch, setDebouncedServiceSearch] = useState("");
+  const [isServiceSelectOpen, setIsServiceSelectOpen] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isEditing = !!order;
@@ -114,19 +120,30 @@ export function OrderFormDialog({
     const handler = setTimeout(() => {
       setDebouncedCustomerSearch(customerSearch);
       if (customerSearch) {
-        setIsSelectOpen(true);
+        setIsCustomerSelectOpen(true);
       }
-    }, 500); // 500ms delay
-
-    return () => {
-      clearTimeout(handler);
-    };
+    }, 500);
+    return () => clearTimeout(handler);
   }, [customerSearch]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+        setDebouncedServiceSearch(serviceSearch);
+        if (serviceSearch) {
+            setIsServiceSelectOpen(true);
+        }
+    }, 300); // Shorter delay for services
+    return () => clearTimeout(handler);
+  }, [serviceSearch]);
 
 
   const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(debouncedCustomerSearch.toLowerCase()) ||
     c.phone.includes(debouncedCustomerSearch)
+  );
+
+  const filteredServices = priceTableItems.filter(s =>
+    s.serviceName.toLowerCase().includes(debouncedServiceSearch.toLowerCase())
   );
   
   const defaultValues: Partial<OrderFormValues> = {
@@ -201,14 +218,15 @@ export function OrderFormDialog({
   const handleCustomerCreated = (newCustomer: Customer) => {
     setCustomers(prev => [newCustomer, ...prev]);
     form.setValue('customerId', newCustomer.id);
+    setIsCustomerSelectOpen(true);
   };
 
   const handlePriceItemSelect = (itemId: string, itemIndex: number) => {
+    if (!itemId) return;
     const selectedItem = priceTableItems.find(item => item.id === itemId);
     if (selectedItem) {
-      // Find the closest matching ServiceType or default to 'Ajuste'
       const serviceNameLower = selectedItem.serviceName.toLowerCase();
-      let matchedServiceType: ServiceType = 'Ajuste'; // Default
+      let matchedServiceType: ServiceType = 'Ajuste';
       if (serviceNameLower.includes('design')) matchedServiceType = 'Design Personalizado';
       else if (serviceNameLower.includes('reparo') || serviceNameLower.includes('conserto')) matchedServiceType = 'Reparo';
       else if (serviceNameLower.includes('lavagem')) matchedServiceType = 'Lavagem a Seco';
@@ -231,7 +249,7 @@ export function OrderFormDialog({
             </Button>
           </DialogTrigger>
         )}
-        <DialogContent className="sm:max-w-3xl flex flex-col max-h-[95vh] h-full sm:h-auto sm:max-h-[90vh]">
+        <DialogContent className="sm:max-w-3xl flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="font-headline">{isEditing ? "Editar Pedido" : "Criar Novo Pedido"}</DialogTitle>
             <DialogDescription>
@@ -240,10 +258,11 @@ export function OrderFormDialog({
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto pr-6 space-y-4">
+             <ScrollArea className="flex-1 pr-6 -mr-6">
+              <div className="space-y-4 pr-6">
                 <div className="space-y-2">
                   <FormLabel>Cliente</FormLabel>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2">
                     <div className="flex-1 space-y-2">
                         <Input
                           placeholder="Buscar cliente por nome ou telefone..."
@@ -258,8 +277,8 @@ export function OrderFormDialog({
                               <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
-                                open={isSelectOpen}
-                                onOpenChange={setIsSelectOpen}
+                                open={isCustomerSelectOpen}
+                                onOpenChange={setIsCustomerSelectOpen}
                               >
                                 <FormControl>
                                   <SelectTrigger>
@@ -294,19 +313,49 @@ export function OrderFormDialog({
                 <div className="space-y-4">
                   {fields.map((field, index) => (
                     <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
-                      <FormLabel className="font-semibold">Item {index + 1}</FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel className="font-semibold">Item {index + 1}</FormLabel>
+                        {fields.length > 1 && (
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        )}
+                      </div>
                        
-                       <Combobox
-                          options={priceTableItems.map(item => ({ label: `${item.serviceName} - R$${item.price.toFixed(2)}`, value: item.id }))}
-                          onChange={(value) => handlePriceItemSelect(value, index)}
-                          placeholder="Ou selecione um serviço da tabela..."
-                          searchPlaceholder="Buscar serviço..."
-                          notFoundText="Nenhum serviço encontrado."
-                        />
+                        <div className="space-y-2">
+                            <FormLabel className="text-xs">Buscar Serviço na Tabela</FormLabel>
+                             <Input
+                                placeholder="Buscar serviço por nome..."
+                                value={serviceSearch}
+                                onChange={(e) => setServiceSearch(e.target.value)}
+                                className="h-9"
+                            />
+                            <Select
+                                onValueChange={(value) => handlePriceItemSelect(value, index)}
+                                open={isServiceSelectOpen}
+                                onOpenChange={setIsServiceSelectOpen}
+                            >
+                                <SelectTrigger className="h-9">
+                                    <SelectValue placeholder="Ou selecione um serviço da lista..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {filteredServices.length > 0 ? (
+                                        filteredServices.map(s => (
+                                            <SelectItem key={s.id} value={s.id}>
+                                                {s.serviceName} - R${s.price.toFixed(2)}
+                                            </SelectItem>
+                                        ))
+                                    ) : (
+                                        <div className="p-4 text-sm text-muted-foreground">Nenhum serviço encontrado.</div>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
 
                         <div className="flex items-center gap-2">
                             <Separator className="flex-1" />
-                            <span className="text-xs text-muted-foreground">OU</span>
+                            <span className="text-xs text-muted-foreground">OU PREENCHA MANUALMENTE</span>
                             <Separator className="flex-1" />
                         </div>
                       
@@ -373,11 +422,6 @@ export function OrderFormDialog({
                           </FormItem>
                           )}
                       />
-                      {fields.length > 1 && (
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => remove(index)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -423,8 +467,9 @@ export function OrderFormDialog({
                   />
                 </div>
               </div>
+              </ScrollArea>
               
-              <DialogFooter className="pt-4 border-t">
+              <DialogFooter className="pt-4 border-t -mb-2">
                   <DialogClose asChild>
                       <Button type="button" variant="outline" disabled={isSubmitting}>
                           Cancelar

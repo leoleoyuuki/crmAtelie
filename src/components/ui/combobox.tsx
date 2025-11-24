@@ -58,11 +58,7 @@ export function Combobox({
         </PopoverTrigger>
         <PopoverContent 
             className="w-[--radix-popover-trigger-width] p-0"
-            onInteractOutside={(e) => {
-                // Previne que o popover feche ao clicar dentro do Command,
-                // que pode ser renderizado fora do popover no DOM.
-                e.preventDefault();
-            }}
+            onInteractOutside={(e) => e.preventDefault()}
         >
             <Command>
             <CommandInput placeholder={searchPlaceholder} />
@@ -72,12 +68,8 @@ export function Combobox({
                     {options.map((option) => (
                     <CommandItem
                         key={option.value}
-                        value={option.label}
-                        onSelect={(currentValue) => {
-                           const selectedOption = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase());
-                           if (selectedOption) {
-                               onChange(selectedOption.value === value ? "" : selectedOption.value);
-                           }
+                        onSelect={() => {
+                           onChange(option.value === value ? "" : option.value);
                            setOpen(false)
                         }}
                     >
