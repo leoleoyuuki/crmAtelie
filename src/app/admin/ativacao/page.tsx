@@ -47,6 +47,8 @@ const generateRandomCode = (length: number): string => {
 
 export default function GenerateActivationPage() {
   const [duration, setDuration] = useState<TokenDuration>(3);
+  const [customDuration, setCustomDuration] = useState<number>(1);
+  const [selectedDurationOption, setSelectedDurationOption] = useState('3');
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [tokens, setTokens] = useState<AccessToken[]>([]);
@@ -75,13 +77,13 @@ export default function GenerateActivationPage() {
     return () => unsubscribe();
   }, [db, toast]);
 
-  const generateActivationCode = async (duration: TokenDuration): Promise<string> => {
+  const generateActivationCode = async (finalDuration: TokenDuration): Promise<string> => {
       const code = `${generateRandomCode(4)}-${generateRandomCode(4)}-${generateRandomCode(4)}`;
       const tokenRef = doc(db, 'accessTokens', code);
 
       const tokenData = {
         code,
-        duration,
+        duration: finalDuration,
         isUsed: false,
         createdAt: serverTimestamp(),
         usedBy: null,
@@ -101,7 +103,13 @@ export default function GenerateActivationPage() {
     setIsLoading(true);
     setGeneratedCode(null);
     try {
-      const code = await generateActivationCode(duration);
+      const finalDuration = selectedDurationOption === 'custom' ? customDuration : duration;
+      if (finalDuration <= 0) {
+        toast({ variant: 'destructive', title: 'Duração Inválida', description: 'A duração personalizada deve ser maior que zero.' });
+        setIsLoading(false);
+        return;
+      }
+      const code = await generateActivationCode(finalDuration);
       setGeneratedCode(code);
       toast({
         title: 'Código Gerado!',
@@ -126,11 +134,18 @@ export default function GenerateActivationPage() {
     });
   };
 
-  const formatDuration = (duration: TokenDuration) => {
-    if (duration === 0.25) return '7 Dias (Trial)';
-    if (duration === 1) return '1 Mês';
-    return `${duration} Meses`;
+  const formatDuration = (d: TokenDuration) => {
+    if (d === 0.25) return '7 Dias (Trial)';
+    if (d === 1) return '1 Mês';
+    return `${d} Meses`;
   }
+
+  const handleDurationChange = (value: string) => {
+    setSelectedDurationOption(value);
+    if (value !== 'custom') {
+      setDuration(Number(value) as TokenDuration);
+    }
+  };
 
   const columns: ColumnDef<AccessToken>[] = useMemo(
     () => [
@@ -210,9 +225,9 @@ export default function GenerateActivationPage() {
           <div>
             <Label className="font-semibold">Duração da Assinatura</Label>
             <RadioGroup
-              defaultValue="3"
-              className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-4"
-              onValueChange={(value) => setDuration(Number(value) as TokenDuration)}
+              value={selectedDurationOption}
+              className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-4"
+              onValueChange={handleDurationChange}
               disabled={isLoading}
             >
                <div>
@@ -239,8 +254,31 @@ export default function GenerateActivationPage() {
                   12 Meses
                 </Label>
               </div>
+              <div>
+                <RadioGroupItem value="custom" id="d-custom" className="peer sr-only" />
+                <Label htmlFor="d-custom" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                  Personalizado
+                </Label>
+              </div>
             </RadioGroup>
           </div>
+
+          {selectedDurationOption === 'custom' && (
+            <div className="space-y-2 pt-4">
+              <Label htmlFor="custom-duration-input" className="font-semibold">Meses (1-999)</Label>
+              <Input
+                id="custom-duration-input"
+                type="number"
+                min="1"
+                max="999"
+                value={customDuration}
+                onChange={(e) => setCustomDuration(Number(e.target.value))}
+                className="w-full"
+                disabled={isLoading}
+                placeholder="Ex: 1"
+              />
+            </div>
+          )}
 
           {isLoading && (
              <div className="space-y-2 pt-4">
