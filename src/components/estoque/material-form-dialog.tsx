@@ -78,7 +78,7 @@ export function MaterialFormDialog({
                 name: material.name,
                 unit: material.unit,
                 stock: material.stock,
-                costPerUnit: material.costPerUnit,
+                costPerUnit: material.costPerUnit * 100, // Convert to cents for display
             });
         } else {
             form.reset(defaultValues);
@@ -88,14 +88,19 @@ export function MaterialFormDialog({
 
   const onSubmit = async (data: MaterialFormValues) => {
     try {
+      const dataToSave = {
+        ...data,
+        costPerUnit: data.costPerUnit / 100, // Convert from cents to currency unit
+      };
+
       if (isEditing && material) {
-        await updateMaterial(material.id, data);
+        await updateMaterial(material.id, dataToSave);
         toast({
           title: "Material Atualizado",
           description: `O material ${data.name} foi atualizado.`,
         });
       } else {
-        await addMaterial(data);
+        await addMaterial(dataToSave);
         toast({
           title: "Material Adicionado",
           description: `O material ${data.name} foi adicionado ao estoque.`,
@@ -167,9 +172,9 @@ export function MaterialFormDialog({
                 name="costPerUnit"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Custo/Unidade</FormLabel>
+                    <FormLabel>Custo/Un. (em centavos)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.01" placeholder="R$ 1,50" {...field} />
+                    <Input type="number" placeholder="150 para R$1,50" {...field} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
