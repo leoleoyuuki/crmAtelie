@@ -7,8 +7,8 @@ import { useMemo, useState } from 'react';
 import { isAfter, isBefore, addDays, compareAsc, compareDesc } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ListChecks, AlertTriangle } from 'lucide-react';
-import { TaskItemCard } from '@/components/tarefas/task-item-card';
+import { ListChecks } from 'lucide-react';
+import { EditableTaskItemCard } from '@/components/tarefas/task-item-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
@@ -75,6 +75,10 @@ export default function TarefasPage() {
     tasks.sort((a, b) => compareDesc(a.dueDate, b.dueDate)); // Show most recent overdue first
     return tasks;
   }, [orders]);
+
+  const findOrderForTask = (taskId: string) => {
+    return orders?.find(o => o.id === taskId);
+  }
   
   const renderTaskList = (tasks: TaskItem[], type: 'upcoming' | 'overdue') => {
     if (loading) {
@@ -113,9 +117,12 @@ export default function TarefasPage() {
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {tasks.map((task, index) => (
-          <TaskItemCard key={`${task.orderId}-${index}`} task={task} />
-        ))}
+        {tasks.map((task, index) => {
+          const order = findOrderForTask(task.orderId);
+          return order ? (
+            <EditableTaskItemCard key={`${task.orderId}-${index}`} task={task} order={order} />
+          ) : null;
+        })}
       </div>
     );
   }

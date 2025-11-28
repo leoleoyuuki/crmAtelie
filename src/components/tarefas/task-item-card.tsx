@@ -1,14 +1,18 @@
 
 'use client';
 
+import { useState } from 'react';
 import { TaskItem } from '@/app/tarefas/page';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Calendar, Tag, Hash, Package } from 'lucide-react';
+import { User, Calendar, Package } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
+import { Order } from '@/lib/types';
+import { Tag } from 'lucide-react';
 
 interface TaskItemCardProps {
   task: TaskItem;
@@ -23,7 +27,7 @@ const getDueDateLabel = (dueDate: Date): { text: string, className: string } => 
     }
     if (isPast(dueDate)) {
         return { 
-            text: `Atrasado ${formatDistanceToNow(dueDate, { locale: ptBR })}`,
+            text: `Atrasado há ${formatDistanceToNow(dueDate, { locale: ptBR })}`,
             className: 'text-destructive font-bold' 
         };
     }
@@ -51,7 +55,7 @@ export function TaskItemCard({ task }: TaskItemCardProps) {
         <div className="flex items-center">
           <Package className="h-4 w-4 mr-2 text-muted-foreground" />
           Pedido{' '}
-          <Link href={`/print/${task.orderId}`} passHref target="_blank">
+          <Link href={`/print/${task.orderId}`} passHref target="_blank" onClick={(e) => e.stopPropagation()}>
              <span className="font-semibold text-primary hover:underline ml-1">#{task.orderId.substring(0, 5)}</span>
           </Link>
         </div>
@@ -80,3 +84,27 @@ export function TaskItemCard({ task }: TaskItemCardProps) {
     </Card>
   );
 }
+
+
+interface EditableTaskItemCardProps {
+    task: TaskItem;
+    order: Order;
+}
+
+export function EditableTaskItemCard({ task, order }: EditableTaskItemCardProps) {
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+    return (
+        <>
+            <div className="cursor-pointer" onClick={() => setIsEditDialogOpen(true)}>
+                <TaskItemCard task={task} />
+            </div>
+            <OrderFormDialog
+                order={order}
+                isOpen={isEditDialogOpen}
+                setIsOpen={setIsEditDialogOpen}
+            />
+        </>
+    );
+}
+
