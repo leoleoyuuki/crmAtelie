@@ -5,7 +5,7 @@ import { TaskItem } from '@/app/tarefas/page';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Calendar, Tag, Hash, Package } from 'lucide-react';
-import { format, formatDistanceToNow, isToday, isTomorrow } from 'date-fns';
+import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -20,6 +20,12 @@ const getDueDateLabel = (dueDate: Date): { text: string, className: string } => 
     }
     if (isTomorrow(dueDate)) {
         return { text: 'Amanhã', className: 'text-orange-600 font-semibold' };
+    }
+    if (isPast(dueDate)) {
+        return { 
+            text: `Atrasado ${formatDistanceToNow(dueDate, { locale: ptBR })}`,
+            className: 'text-destructive font-bold' 
+        };
     }
     return { 
         text: `em ${formatDistanceToNow(dueDate, { locale: ptBR })}`,
