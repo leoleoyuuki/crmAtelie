@@ -13,7 +13,7 @@ import {
   SidebarLogout
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield, Archive } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -116,6 +116,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },
     { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
+    { href: "/estoque", label: "Estoque", icon: Archive },
     { href: "/ajuda", label: "Central de Ajuda", icon: BookOpen },
   ];
 

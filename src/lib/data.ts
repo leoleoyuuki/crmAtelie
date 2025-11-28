@@ -15,7 +15,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, ServiceType, Customer, OrderItem, PriceTableItem } from '@/lib/types';
+import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -370,6 +370,68 @@ export async function updatePriceTableItem(itemId: string, item: Partial<Omit<Pr
 export async function deletePriceTableItem(itemId: string): Promise<{ success: boolean }> {
   const docRef = doc(db, 'priceTable', itemId);
   // TODO: Add a check to ensure the user owns this document before deleting.
+  await deleteDoc(docRef)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+  return { success: true };
+}
+
+
+// Material Functions
+const materialsCollection = collection(db, 'materials');
+
+export async function getMaterials(): Promise<Material[]> {
+  const user = auth.currentUser;
+  if (!user) return [];
+  const q = query(materialsCollection, where("userId", "==", user.uid));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Material);
+}
+
+export async function addMaterial(material: Omit<Material, 'id' | 'userId'>): Promise<Material> {
+  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+  const newMaterialData = {
+    ...material,
+    userId: auth.currentUser.uid,
+  };
+  const docRef = await addDoc(materialsCollection, newMaterialData)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: materialsCollection.path,
+            operation: 'create',
+            requestResourceData: newMaterialData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+  const newDoc = await getDoc(docRef);
+  return fromFirebase(newDoc.data(), newDoc.id) as Material;
+}
+
+export async function updateMaterial(materialId: string, material: Partial<Omit<Material, 'id' | 'userId'>>): Promise<Material> {
+    const docRef = doc(db, 'materials', materialId);
+    await updateDoc(docRef, material)
+      .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'update',
+            requestResourceData: material,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+      });
+    const updatedDoc = await getDoc(docRef);
+    return fromFirebase(updatedDoc.data(), updatedDoc.id) as Material;
+}
+
+export async function deleteMaterial(materialId: string): Promise<{ success: boolean }> {
+  const docRef = doc(db, 'materials', materialId);
   await deleteDoc(docRef)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({

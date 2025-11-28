@@ -98,5 +98,14 @@ service cloud.firestore {
       // Only the admin can read/list all suggestions.
       allow read, list, update, delete: if isAdmin();
     }
+
+    match /materials/{materialId} {
+        // Only active users who own the resource can read or write.
+        allow get, update, delete: if isAccountActive() && isResourceOwner();
+        // Only active users can list their own materials.
+        allow list: if isAccountActive() ;
+        // Only active users can create a material for themselves.
+        allow create: if isAccountActive() && isCreatingOwnResource();
+    }
   }
 }

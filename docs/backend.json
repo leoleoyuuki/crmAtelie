@@ -219,6 +219,34 @@
         }
       },
       "required": ["text", "userId", "userName", "userEmail", "createdAt"]
+    },
+    "Material": {
+      "title": "Material",
+      "description": "Represents a single material in the inventory.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the material."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement (e.g., 'm', 'un', 'cm')."
+        },
+        "stock": {
+          "type": "number",
+          "description": "The current quantity in stock."
+        },
+        "costPerUnit": {
+          "type": "number",
+          "description": "The cost per unit of the material."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this material."
+        }
+      },
+      "required": ["name", "unit", "stock", "costPerUnit", "userId"]
     }
   },
   "auth": {
@@ -260,6 +288,12 @@
         "$ref": "#/entities/Suggestion"
       },
       "description": "Stores user-submitted suggestions and feedback."
+    },
+    "/materials/{materialId}": {
+      "schema": {
+        "$ref": "#/entities/Material"
+      },
+      "description": "Stores inventory materials."
     }
   }
 }

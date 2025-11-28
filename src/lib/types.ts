@@ -68,3 +68,12 @@ export interface Suggestion {
   userEmail: string;
   createdAt: Date;
 }
+
+export interface Material {
+    id: string;
+    name: string;
+    unit: string;
+    stock: number;
+    costPerUnit: number;
+    userId: string;
+}
