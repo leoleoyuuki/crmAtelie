@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { addMaterial, updateMaterial } from "@/lib/data";
 import { Material } from "@/lib/types";
+import { CurrencyInput } from "../ui/currency-input";
 
 const materialFormSchema = z.object({
   name: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
@@ -63,7 +64,7 @@ export function MaterialFormDialog({
     name: "",
     unit: "",
     stock: 0,
-    costPerUnit: 0,
+    costPerUnit: 0, // This will be in cents now
   };
 
   const form = useForm<MaterialFormValues>({
@@ -78,7 +79,7 @@ export function MaterialFormDialog({
                 name: material.name,
                 unit: material.unit,
                 stock: material.stock,
-                costPerUnit: material.costPerUnit * 100, // Convert to cents for display
+                costPerUnit: material.costPerUnit * 100, // Convert to cents for the input
             });
         } else {
             form.reset(defaultValues);
@@ -88,9 +89,10 @@ export function MaterialFormDialog({
 
   const onSubmit = async (data: MaterialFormValues) => {
     try {
+      // The value from CurrencyInput is already in cents, so we convert to float for saving
       const dataToSave = {
         ...data,
-        costPerUnit: data.costPerUnit / 100, // Convert from cents to currency unit
+        costPerUnit: data.costPerUnit / 100, 
       };
 
       if (isEditing && material) {
@@ -172,9 +174,13 @@ export function MaterialFormDialog({
                 name="costPerUnit"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Custo/Un. (em centavos)</FormLabel>
-                    <FormControl>
-                    <Input type="number" placeholder="150 para R$1,50" {...field} />
+                    <FormLabel>Custo por Unidade</FormLabel>
+                     <FormControl>
+                        <CurrencyInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="R$ 0,00"
+                        />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
