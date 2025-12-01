@@ -27,7 +27,7 @@ import { Button } from "../ui/button";
 import { PurchaseTableToolbar } from "./purchase-table-toolbar";
 import { PurchaseTableRowActions } from "./purchase-table-row-actions";
 import { Badge } from "../ui/badge";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface PurchaseTableShellProps {
@@ -45,7 +45,12 @@ export function PurchaseTableShell({ data }: PurchaseTableShellProps) {
       {
         accessorKey: "createdAt",
         header: "Data da Compra",
-        cell: ({ row }) => format(row.original.createdAt, "dd/MM/yyyy", { locale: ptBR }),
+        cell: ({ row }) => {
+          const createdAt = row.original.createdAt;
+          return isValid(createdAt)
+            ? format(createdAt, "dd/MM/yyyy", { locale: ptBR })
+            : "Calculando...";
+        },
       },
       {
         accessorKey: "materialName",
