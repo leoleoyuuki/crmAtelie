@@ -17,7 +17,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial } from '@/lib/types';
+import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -396,46 +396,32 @@ export async function getMaterials(): Promise<Material[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Material);
 }
 
-export async function addMaterial(material: Omit<Material, 'id' | 'userId' | 'createdAt' | 'initialStock'>): Promise<Material> {
+// Purchase Functions
+const purchasesCollection = collection(db, 'purchases');
+
+export async function addPurchase(purchase: Omit<Purchase, 'id' | 'userId' | 'createdAt'>): Promise<Purchase> {
   if (!auth.currentUser) throw new Error("Usuário não autenticado.");
-  const newMaterialData = {
-    ...material,
-    initialStock: material.stock, // Set initialStock at creation
+  const newPurchaseData = {
+    ...purchase,
     userId: auth.currentUser.uid,
     createdAt: serverTimestamp(),
   };
-  const docRef = await addDoc(materialsCollection, newMaterialData)
+  const docRef = await addDoc(purchasesCollection, newPurchaseData)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
-            path: materialsCollection.path,
+            path: purchasesCollection.path,
             operation: 'create',
-            requestResourceData: newMaterialData,
+            requestResourceData: newPurchaseData,
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
         throw serverError;
     });
   const newDoc = await getDoc(docRef);
-  return fromFirebase(newDoc.data(), newDoc.id) as Material;
+  return fromFirebase(newDoc.data(), newDoc.id) as Purchase;
 }
 
-export async function updateMaterial(materialId: string, material: Partial<Omit<Material, 'id' | 'userId' | 'initialStock'>>): Promise<Material> {
-    const docRef = doc(db, 'materials', materialId);
-    await updateDoc(docRef, material)
-      .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'update',
-            requestResourceData: material,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
-      });
-    const updatedDoc = await getDoc(docRef);
-    return fromFirebase(updatedDoc.data(), updatedDoc.id) as Material;
-}
-
-export async function deleteMaterial(materialId: string): Promise<{ success: boolean }> {
-  const docRef = doc(db, 'materials', materialId);
+export async function deletePurchase(purchaseId: string): Promise<{ success: boolean }> {
+  const docRef = doc(db, 'purchases', purchaseId);
   await deleteDoc(docRef)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -448,27 +434,19 @@ export async function deleteMaterial(materialId: string): Promise<{ success: boo
   return { success: true };
 }
 
-
-// Inventory Analytics
-export function getTotalStockCost(materials: Material[]) {
-    return materials.reduce((total, material) => {
-        return total + (material.stock * material.costPerUnit);
-    }, 0);
-}
-
-export function getMonthlyCostByCategory(materials: Material[], month: number, year: number) {
-    const monthlyMaterials = materials.filter(m => {
-        const createdAt = m.createdAt;
+// Cost Analytics
+export function getMonthlyCostByCategory(purchases: Purchase[], month: number, year: number) {
+    const monthlyPurchases = purchases.filter(p => {
+        const createdAt = p.createdAt;
         return createdAt && isValid(createdAt) && getMonth(createdAt) === month && getYear(createdAt) === year;
     });
 
-    const costs = monthlyMaterials.reduce((acc, material) => {
-        if (material.category) {
-            if (!acc[material.category]) {
-                acc[material.category] = 0;
+    const costs = monthlyPurchases.reduce((acc, purchase) => {
+        if (purchase.category) {
+            if (!acc[purchase.category]) {
+                acc[purchase.category] = 0;
             }
-            // Corrected: Use initialStock for acquisition cost calculation
-            acc[material.category] += material.initialStock * material.costPerUnit;
+            acc[purchase.category] += purchase.cost;
         }
         return acc;
     }, {} as Record<string, number>);

@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { addMaterial, updateMaterial } from "@/lib/data";
-import { Material } from "@/lib/types";
+import { addPurchase } from "@/lib/data";
+import { Purchase } from "@/lib/types";
 import { useCollection } from "@/firebase";
 import {
   Select,
@@ -39,11 +39,11 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "../ui/separator";
 
-const materialFormSchema = z.object({
-  name: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
+const purchaseFormSchema = z.object({
+  materialName: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
   unit: z.string().min(1, "A unidade é obrigatória (ex: m, cm, un)."),
-  stock: z.coerce.number().min(0, "O estoque não pode ser negativo."),
-  costPerUnit: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
+  quantity: z.coerce.number().min(0.01, "A quantidade deve ser maior que zero."),
+  cost: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
   category: z.string().optional(),
   newCategory: z.string().optional(),
 }).refine(data => data.category || data.newCategory, {
@@ -51,71 +51,61 @@ const materialFormSchema = z.object({
     path: ["category"],
 });
 
-type MaterialFormValues = z.infer<typeof materialFormSchema>;
+type PurchaseFormValues = z.infer<typeof purchaseFormSchema>;
 
-interface MaterialFormDialogProps {
-  material?: Material;
+interface PurchaseFormDialogProps {
+  purchase?: Purchase;
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
   trigger?: React.ReactNode;
 }
 
-export function MaterialFormDialog({
-  material,
+export function PurchaseFormDialog({
+  purchase,
   isOpen: controlledIsOpen,
   setIsOpen: setControlledIsOpen,
   trigger,
-}: MaterialFormDialogProps) {
+}: PurchaseFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const { toast } = useToast();
-  const isEditing = !!material;
+  const isEditing = !!purchase; // This form is for creation only for now.
 
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
-  const { data: allMaterials } = useCollection<Material>('materials');
+  const { data: allPurchases } = useCollection<Purchase>('purchases');
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
-    if (allMaterials) {
-        const uniqueCategories = [...new Set(allMaterials.map(m => m.category).filter(Boolean) as string[])].sort();
+    if (allPurchases) {
+        const uniqueCategories = [...new Set(allPurchases.map(p => p.category).filter(Boolean) as string[])].sort();
         const categoryOptions = uniqueCategories.map(c => ({ value: c, label: c }));
         setCategories(categoryOptions);
     }
-  }, [allMaterials]);
+  }, [allPurchases]);
 
-  const defaultValues: Partial<MaterialFormValues> = {
-    name: "",
+  const defaultValues: Partial<PurchaseFormValues> = {
+    materialName: "",
     unit: "",
-    stock: 0,
-    costPerUnit: 0,
+    quantity: 0,
+    cost: 0,
     category: "",
     newCategory: "",
   };
 
-  const form = useForm<MaterialFormValues>({
-    resolver: zodResolver(materialFormSchema),
+  const form = useForm<PurchaseFormValues>({
+    resolver: zodResolver(purchaseFormSchema),
     defaultValues,
   });
 
   useEffect(() => {
     if (isOpen) {
-        if (isEditing && material) {
-            form.reset({
-                name: material.name,
-                unit: material.unit,
-                stock: material.stock,
-                costPerUnit: material.costPerUnit,
-                category: material.category || "",
-                newCategory: "",
-            });
-        } else {
-            form.reset(defaultValues);
-        }
+      // For now, this dialog only supports creating new purchases.
+      form.reset(defaultValues);
     }
-  }, [material, form, isEditing, isOpen]);
+  }, [form, isOpen]);
 
-  const onSubmit = async (data: MaterialFormValues) => {
+  const onSubmit = async (data: PurchaseFormValues) => {
     try {
       const finalCategory = data.newCategory?.trim() || data.category;
       if (!finalCategory) {
@@ -123,39 +113,27 @@ export function MaterialFormDialog({
           return;
       }
 
-      const dataToSave: Partial<Material> = {
-        name: data.name,
+      const dataToSave: Omit<Purchase, 'id' | 'userId' | 'createdAt'> = {
+        materialName: data.materialName,
         unit: data.unit,
-        stock: data.stock,
-        costPerUnit: data.costPerUnit,
+        quantity: data.quantity,
+        cost: data.cost,
         category: finalCategory,
       };
 
-      if (isEditing && material) {
-        await updateMaterial(material.id, dataToSave);
-        toast({
-          title: "Material Atualizado",
-          description: `O material ${data.name} foi atualizado.`,
-        });
-      } else {
-        // When creating, we also set the initialStock
-        const createData = {
-          ...dataToSave,
-          initialStock: data.stock, // Set initial stock on creation
-        } as Omit<Material, 'id' | 'userId' | 'createdAt'>;
-        await addMaterial(createData);
-        toast({
-          title: "Material Adicionado",
-          description: `O material ${data.name} foi adicionado ao estoque.`,
-        });
-      }
+      await addPurchase(dataToSave);
+      toast({
+        title: "Compra Registrada",
+        description: `A compra de ${data.materialName} foi adicionada.`,
+      });
+      
       setIsOpen(false);
       form.reset(defaultValues);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: isEditing ? "Não foi possível atualizar o material." : "Não foi possível adicionar o material.",
+        description: "Não foi possível registrar a compra.",
       });
     }
   };
@@ -163,16 +141,16 @@ export function MaterialFormDialog({
   const dialogContent = (
     <DialogContent className="sm:max-w-[480px]">
       <DialogHeader>
-        <DialogTitle className="font-headline">{isEditing ? 'Editar Material' : 'Novo Material'}</DialogTitle>
+        <DialogTitle className="font-headline">Registrar Nova Compra</DialogTitle>
         <DialogDescription>
-          {isEditing ? 'Atualize os detalhes deste material.' : 'Adicione um novo material ao seu inventário.'}
+          Adicione uma nova compra de material para o seu controle de custos.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="name"
+            name="materialName"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Nome do Material</FormLabel>
@@ -231,10 +209,10 @@ export function MaterialFormDialog({
           <div className="grid grid-cols-3 gap-4">
             <FormField
                 control={form.control}
-                name="stock"
+                name="quantity"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Estoque Inicial</FormLabel>
+                    <FormLabel>Quantidade</FormLabel>
                     <FormControl>
                     <Input type="number" step="0.1" placeholder="10" {...field} />
                     </FormControl>
@@ -257,12 +235,12 @@ export function MaterialFormDialog({
             />
              <FormField
                 control={form.control}
-                name="costPerUnit"
+                name="cost"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Custo por Unidade</FormLabel>
+                    <FormLabel>Custo Total (R$)</FormLabel>
                      <FormControl>
-                        <Input type="number" step="0.01" placeholder="1.50" {...field} />
+                        <Input type="number" step="0.01" placeholder="15.50" {...field} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -276,7 +254,7 @@ export function MaterialFormDialog({
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Adicionar ao Estoque'}</Button>
+            <Button type="submit">Registrar Compra</Button>
           </DialogFooter>
         </form>
       </Form>

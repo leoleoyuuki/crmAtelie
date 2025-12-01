@@ -2,38 +2,31 @@
 'use client';
 
 import { useCollection } from '@/firebase';
-import { Material } from '@/lib/types';
+import { Purchase } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MaterialTableShell } from '@/components/estoque/material-table-shell';
+import { PurchaseTableShell } from '@/components/compras/purchase-table-shell';
 import { useState, useMemo } from 'react';
-import { getMonths, getTotalStockCost, getMonthlyCostByCategory } from '@/lib/data';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { getMonths, getMonthlyCostByCategory } from '@/lib/data';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export default function EstoquePage() {
-  const { data: materials, loading } = useCollection<Material>('materials');
+export default function ComprasPage() {
+  const { data: purchases, loading } = useCollection<Purchase>('purchases');
   const [selectedMonth, setSelectedMonth] = useState<string>(`${new Date().getMonth()}-${new Date().getFullYear()}`);
   
   const months = useMemo(() => getMonths(), []);
 
-  const { totalStockCost, monthlyCostData, totalMonthlyCost } = useMemo(() => {
-    if (!materials) return { totalStockCost: 0, monthlyCostData: [], totalMonthlyCost: 0 };
-
-    const totalStockCost = getTotalStockCost(materials);
+  const { monthlyCostData, totalMonthlyCost } = useMemo(() => {
+    if (!purchases) return { monthlyCostData: [], totalMonthlyCost: 0 };
     
     const [month, year] = selectedMonth.split('-').map(Number);
-    const monthlyCostData = getMonthlyCostByCategory(materials, month, year);
+    const monthlyCostData = getMonthlyCostByCategory(purchases, month, year);
 
     const totalMonthlyCost = monthlyCostData.reduce((acc, item) => acc + item.cost, 0);
 
-    return { totalStockCost, monthlyCostData, totalMonthlyCost };
-  }, [materials, selectedMonth]);
-
-  const formattedTotalStockCost = useMemo(() => new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(totalStockCost), [totalStockCost]);
+    return { monthlyCostData, totalMonthlyCost };
+  }, [purchases, selectedMonth]);
 
   const formattedTotalMonthlyCost = useMemo(() => new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -44,7 +37,7 @@ export default function EstoquePage() {
     <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Controle de Estoque
+          Controle de Compras
         </h2>
       </div>
 
@@ -52,9 +45,9 @@ export default function EstoquePage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle>Visão Geral do Estoque</CardTitle>
+                <CardTitle>Visão Geral de Custos</CardTitle>
                 <CardDescription>
-                  Analise o custo total do seu estoque e os gastos mensais por categoria.
+                  Analise os custos de aquisição de materiais por categoria.
                 </CardDescription>
               </div>
               <div className="flex items-center gap-4">
@@ -109,21 +102,13 @@ export default function EstoquePage() {
             </div>
           )}
         </CardContent>
-         <CardFooter className="border-t pt-4 text-sm text-muted-foreground">
-          <div className="flex w-full justify-end">
-            <div className="text-right">
-              <span>Custo Total do Estoque (geral): </span>
-              <span className="font-bold text-base text-foreground">{formattedTotalStockCost}</span>
-            </div>
-          </div>
-        </CardFooter>
       </Card>
 
        {loading ? (
         <Skeleton className="h-[500px] w-full" />
       ) : (
-        <MaterialTableShell 
-          data={materials || []}
+        <PurchaseTableShell 
+          data={purchases || []}
         />
       )}
     </div>

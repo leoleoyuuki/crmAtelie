@@ -246,21 +246,9 @@
           "type": "string",
           "description": "The unit of measurement (e.g., 'm', 'un', 'cm')."
         },
-        "initialStock": {
-            "type": "number",
-            "description": "The quantity of the material when it was first added."
-        },
         "stock": {
           "type": "number",
           "description": "The current quantity in stock."
-        },
-        "costPerUnit": {
-          "type": "number",
-          "description": "The cost per unit of the material."
-        },
-        "category": {
-          "type": "string",
-          "description": "The category of the material (e.g., 'Tecidos', 'Linhas')."
         },
         "userId": {
           "type": "string",
@@ -271,7 +259,44 @@
           "description": "Counter for how many orders this material has been used in."
         }
       },
-      "required": ["name", "unit", "initialStock", "stock", "costPerUnit", "userId"]
+      "required": ["name", "unit", "stock", "userId"]
+    },
+    "Purchase": {
+      "title": "Purchase",
+      "description": "Represents a record of a material purchase.",
+      "type": "object",
+      "properties": {
+        "materialName": {
+          "type": "string",
+          "description": "The name of the material purchased."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity purchased."
+        },
+        "cost": {
+          "type": "number",
+          "description": "The total cost of the purchase."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the quantity."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the material."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the purchase."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who made the purchase."
+        }
+      },
+      "required": ["materialName", "quantity", "cost", "unit", "category", "createdAt", "userId"]
     }
   },
   "auth": {
@@ -319,6 +344,12 @@
         "$ref": "#/entities/Material"
       },
       "description": "Stores inventory materials."
+    },
+    "/purchases/{purchaseId}": {
+      "schema": {
+        "$ref": "#/entities/Purchase"
+      },
+      "description": "Stores records of material purchases for cost analysis."
     }
   }
 }

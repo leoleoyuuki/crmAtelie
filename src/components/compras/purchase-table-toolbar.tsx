@@ -4,39 +4,39 @@
 import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import { CardHeader, CardTitle, CardDescription } from "../ui/card"
-import { Archive } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 import { Button } from "../ui/button"
-import { MaterialFormDialog } from "./material-form-dialog"
+import { PurchaseFormDialog } from "./purchase-form-dialog"
 
-interface MaterialTableToolbarProps<TData> {
+interface PurchaseTableToolbarProps<TData> {
   table: Table<TData>
 }
 
-export function MaterialTableToolbar<TData>({ table }: MaterialTableToolbarProps<TData>) {
+export function PurchaseTableToolbar<TData>({ table }: PurchaseTableToolbarProps<TData>) {
   return (
     <>
       <CardHeader>
-        <CardTitle className="font-headline">Materiais em Estoque</CardTitle>
+        <CardTitle className="font-headline">Histórico de Compras</CardTitle>
         <CardDescription>
-          Adicione e gerencie os materiais usados no seu ateliê.
+          Registre e gerencie as compras de materiais do seu ateliê.
         </CardDescription>
       </CardHeader>
       <div className="flex items-center justify-between p-6 pt-0">
         <div className="flex flex-1 items-center space-x-2">
           <Input
             placeholder="Filtrar por nome do material..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            value={(table.getColumn("materialName")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
+              table.getColumn("materialName")?.setFilterValue(event.target.value)
             }
             className="h-10 w-[200px] lg:w-[300px]"
           />
         </div>
-        <MaterialFormDialog
+        <PurchaseFormDialog
             trigger={
                 <Button>
-                    <Archive className="mr-2 h-4 w-4" />
-                    Novo Material
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Nova Compra
                 </Button>
             }
         />

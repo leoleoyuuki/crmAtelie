@@ -116,7 +116,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },
     { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
-    { href: "/estoque", label: "Estoque", icon: Archive },
+    { href: "/compras", label: "Compras", icon: ShoppingCart },
     { href: "/ajuda", label: "Central de Ajuda", icon: BookOpen },
   ];
 

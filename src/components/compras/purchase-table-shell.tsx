@@ -2,7 +2,7 @@
 "use client"
 
 import React, { useState, useMemo } from "react";
-import { Material } from "@/lib/types";
+import { Purchase } from "@/lib/types";
 import {
   ColumnDef,
   flexRender,
@@ -24,28 +24,34 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { MaterialTableToolbar } from "./material-table-toolbar";
-import { MaterialTableRowActions } from "./material-table-row-actions";
-import { cn } from "@/lib/utils";
+import { PurchaseTableToolbar } from "./purchase-table-toolbar";
+import { PurchaseTableRowActions } from "./purchase-table-row-actions";
 import { Badge } from "../ui/badge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
-interface MaterialTableShellProps {
-  data: Material[];
+interface PurchaseTableShellProps {
+  data: Purchase[];
 }
 
-export function MaterialTableShell({ data }: MaterialTableShellProps) {
+export function PurchaseTableShell({ data }: PurchaseTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'name', desc: false },
+    { id: 'createdAt', desc: true },
   ]);
   
-  const columns: ColumnDef<Material>[] = useMemo(
+  const columns: ColumnDef<Purchase>[] = useMemo(
     () => [
       {
-        accessorKey: "name",
+        accessorKey: "createdAt",
+        header: "Data da Compra",
+        cell: ({ row }) => format(row.original.createdAt, "dd/MM/yyyy", { locale: ptBR }),
+      },
+      {
+        accessorKey: "materialName",
         header: "Material",
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.name}</div>
+          <div className="font-medium">{row.original.materialName}</div>
         ),
       },
       {
@@ -57,20 +63,19 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
         }
       },
       {
-        accessorKey: "stock",
-        header: "Estoque",
+        accessorKey: "quantity",
+        header: "Quantidade Comprada",
         cell: ({ row }) => {
-            const stock = row.original.stock;
+            const quantity = row.original.quantity;
             const unit = row.original.unit;
-            const lowStock = stock <= 10; // Define your low stock threshold
-            return <div className={cn(lowStock && "text-destructive font-bold")}>{`${stock} ${unit}`}</div>
+            return <div>{`${quantity} ${unit}`}</div>
         }
       },
       {
-        accessorKey: "costPerUnit",
-        header: () => <div className="text-right">Custo por Unidade</div>,
+        accessorKey: "cost",
+        header: () => <div className="text-right">Custo Total</div>,
         cell: ({ row }) => {
-          const amount = parseFloat(row.getValue("costPerUnit"));
+          const amount = parseFloat(row.getValue("cost"));
           const formatted = new Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
@@ -82,8 +87,8 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
         id: "actions",
         cell: ({ row }) => (
           <div className="text-right">
-            <MaterialTableRowActions 
-              material={row.original} 
+            <PurchaseTableRowActions 
+              purchase={row.original} 
             />
           </div>
         ),
@@ -114,7 +119,7 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
 
   return (
     <Card>
-      <MaterialTableToolbar table={table} />
+      <PurchaseTableToolbar table={table} />
       <CardContent>
         <div className="rounded-md border">
           <Table>
@@ -159,7 +164,7 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    Nenhum material encontrado.
+                    Nenhum registro de compra encontrado.
                   </TableCell>
                 </TableRow>
               )}

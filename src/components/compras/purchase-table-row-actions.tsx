@@ -2,17 +2,16 @@
 "use client"
 
 import { useState } from "react";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Material } from "@/lib/types";
+import { Purchase } from "@/lib/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,32 +22,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteMaterial } from "@/lib/data";
+import { deletePurchase } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { MaterialFormDialog } from "./material-form-dialog";
 
-interface MaterialTableRowActionsProps {
-  material: Material;
+interface PurchaseTableRowActionsProps {
+  purchase: Purchase;
 }
 
-export function MaterialTableRowActions({ material }: MaterialTableRowActionsProps) {
+export function PurchaseTableRowActions({ purchase }: PurchaseTableRowActionsProps) {
   const { toast } = useToast();
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const handleDelete = async () => {
     try {
-      await deleteMaterial(material.id);
+      await deletePurchase(purchase.id);
       toast({
-        title: "Material Excluído",
-        description: `O material ${material.name} foi excluído do estoque.`,
+        title: "Registro Excluído",
+        description: `A compra de ${purchase.materialName} foi excluída.`,
       });
       setIsDeleteDialogOpen(false);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Falha ao excluir o material.",
+        description: "Falha ao excluir o registro de compra.",
       });
     }
   };
@@ -65,11 +62,6 @@ export function MaterialTableRowActions({ material }: MaterialTableRowActionsPro
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem className="text-red-600" onSelect={() => setIsDeleteDialogOpen(true)}>
                 <Trash2 className="mr-2 h-4 w-4" />
                 Excluir
@@ -81,7 +73,7 @@ export function MaterialTableRowActions({ material }: MaterialTableRowActionsPro
             <AlertDialogHeader>
                 <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
                 <AlertDialogDescription>
-                Essa ação não pode ser desfeita. Isso excluirá permanentemente o material {material.name}.
+                Essa ação não pode ser desfeita. Isso excluirá permanentemente o registro da compra de {purchase.materialName}.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -90,12 +82,6 @@ export function MaterialTableRowActions({ material }: MaterialTableRowActionsPro
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <MaterialFormDialog
-        material={material}
-        isOpen={isEditDialogOpen}
-        setIsOpen={setIsEditDialogOpen}
-      />
     </>
   );
 }
