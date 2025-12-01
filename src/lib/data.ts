@@ -459,13 +459,11 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
             where('userId', '==', user.uid)
         );
         
-        // Firestore transactions require reads to be performed before writes.
-        // However, getDocs() cannot be used inside a transaction.
-        // We will perform the read outside, and re-read with transaction.get() inside for safety.
+        // This query needs to be outside the transaction.
         const materialSnapshot = await getDocs(materialQuery);
 
         if (materialSnapshot.empty) {
-            // Material doesn't exist, create it
+            // Material doesn't exist, create it within the transaction
             const newMaterialRef = doc(collection(db, 'materials'));
             const costPerUnit = standardizedPurchaseData.quantity > 0 ? standardizedPurchaseData.cost / standardizedPurchaseData.quantity : 0;
             transaction.set(newMaterialRef, {
@@ -473,23 +471,19 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
                 unit: standardizedPurchaseData.unit,
                 stock: standardizedPurchaseData.quantity,
                 costPerUnit: costPerUnit,
+                createdAt: serverTimestamp(),
                 userId: user.uid,
                 usedInOrders: 0,
             });
         } else {
-            // Material exists, update its stock
+            // Material exists, update its stock within the transaction
             const materialDocRef = materialSnapshot.docs[0].ref;
             transaction.update(materialDocRef, {
                 stock: increment(standardizedPurchaseData.quantity),
-                // Optionally update costPerUnit if needed, e.g., to an average
             });
         }
     }).catch(error => {
-        // This will catch transaction-specific errors.
-        // We can re-throw a more generic error or handle it.
         console.error("Transaction failed: ", error);
-        // Emitting a permission error here might be complex as it could be a transaction failure, not just permissions.
-        // For simplicity, we just re-throw.
         throw new Error("Falha ao registrar compra e atualizar estoque.");
     });
 }

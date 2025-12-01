@@ -27,8 +27,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { addPurchase } from "@/lib/data";
-import { Purchase } from "@/lib/types";
+import { addPurchase, getMaterials } from "@/lib/data";
+import { Purchase, Material } from "@/lib/types";
 import { useCollection } from "@/firebase";
 import {
   Select,
@@ -40,13 +40,19 @@ import {
 import { Separator } from "../ui/separator";
 
 const purchaseFormSchema = z.object({
-  materialName: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
+  materialName: z.string().optional(),
+  newMaterialName: z.string().optional(),
   unit: z.string().min(1, "A unidade é obrigatória (ex: m, cm, un)."),
   quantity: z.coerce.number().min(0.01, "A quantidade deve ser maior que zero."),
   cost: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
   category: z.string().optional(),
   newCategory: z.string().optional(),
-}).refine(data => data.category || data.newCategory, {
+})
+.refine(data => data.materialName || data.newMaterialName, {
+    message: "Selecione um material ou crie um novo.",
+    path: ["materialName"],
+})
+.refine(data => data.category || data.newCategory, {
     message: "Selecione uma categoria ou crie uma nova.",
     path: ["category"],
 });
@@ -68,24 +74,32 @@ export function PurchaseFormDialog({
 }: PurchaseFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const { toast } = useToast();
-  const isEditing = !!purchase; // This form is for creation only for now.
+  const isEditing = !!purchase;
 
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
   const { data: allPurchases } = useCollection<Purchase>('purchases');
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
-    if (allPurchases) {
-        const uniqueCategories = [...new Set(allPurchases.map(p => p.category).filter(Boolean) as string[])].sort();
-        const categoryOptions = uniqueCategories.map(c => ({ value: c, label: c }));
-        setCategories(categoryOptions);
+    async function fetchData() {
+        if (allPurchases) {
+            const uniqueCategories = [...new Set(allPurchases.map(p => p.category).filter(Boolean) as string[])].sort();
+            setCategories(uniqueCategories.map(c => ({ value: c, label: c })));
+        }
+        const fetchedMaterials = await getMaterials();
+        setMaterials(fetchedMaterials);
     }
-  }, [allPurchases]);
+    if (isOpen) {
+        fetchData();
+    }
+  }, [allPurchases, isOpen]);
 
   const defaultValues: Partial<PurchaseFormValues> = {
     materialName: "",
+    newMaterialName: "",
     unit: "",
     quantity: 0,
     cost: 0,
@@ -100,21 +114,26 @@ export function PurchaseFormDialog({
 
   useEffect(() => {
     if (isOpen) {
-      // For now, this dialog only supports creating new purchases.
       form.reset(defaultValues);
     }
   }, [form, isOpen]);
 
   const onSubmit = async (data: PurchaseFormValues) => {
     try {
+      const finalMaterialName = data.newMaterialName?.trim() || data.materialName;
       const finalCategory = data.newCategory?.trim() || data.category;
+      
+      if (!finalMaterialName) {
+          form.setError("materialName", { message: "O nome do material é obrigatório." });
+          return;
+      }
       if (!finalCategory) {
           form.setError("category", { message: "A categoria é obrigatória." });
           return;
       }
 
       const dataToSave: Omit<Purchase, 'id' | 'userId' | 'createdAt'> = {
-        materialName: data.materialName,
+        materialName: finalMaterialName,
         unit: data.unit,
         quantity: data.quantity,
         cost: data.cost,
@@ -124,7 +143,7 @@ export function PurchaseFormDialog({
       await addPurchase(dataToSave);
       toast({
         title: "Compra Registrada",
-        description: `A compra de ${data.materialName} foi adicionada.`,
+        description: `A compra de ${finalMaterialName} foi adicionada.`,
       });
       
       setIsOpen(false);
@@ -139,30 +158,61 @@ export function PurchaseFormDialog({
   };
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-[480px]">
+    <DialogContent className="sm:max-w-[520px]">
       <DialogHeader>
         <DialogTitle className="font-headline">Registrar Nova Compra</DialogTitle>
         <DialogDescription>
-          Adicione uma nova compra de material para o seu controle de custos.
+          Adicione uma nova compra de material para o seu controle de custos e estoque.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="materialName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nome do Material</FormLabel>
-                <FormControl>
-                  <Input placeholder="ex: Linha de Costura Branca" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-           <div className="space-y-2">
+            <div className="space-y-2 p-4 border rounded-md">
+                <FormLabel className="font-semibold">Material</FormLabel>
+                <FormField
+                    control={form.control}
+                    name="materialName"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Material Existente</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um material do estoque..." />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {materials.map(mat => (
+                                    <SelectItem key={mat.id} value={mat.name}>{mat.name} ({mat.unit})</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <div className="flex items-center gap-2">
+                    <Separator className="flex-1" />
+                    <span className="text-xs text-muted-foreground">OU</span>
+                    <Separator className="flex-1" />
+                </div>
+                <FormField
+                    control={form.control}
+                    name="newMaterialName"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Criar Novo Material</FormLabel>
+                            <FormControl>
+                                <Input placeholder="ex: Zíper Invisível 20cm" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
+            
+           <div className="space-y-2 p-4 border rounded-md">
+                 <FormLabel className="font-semibold">Categoria</FormLabel>
                 <FormField
                     control={form.control}
                     name="category"
@@ -197,7 +247,7 @@ export function PurchaseFormDialog({
                         <FormItem>
                             <FormLabel>Criar Nova Categoria</FormLabel>
                             <FormControl>
-                                <Input placeholder="ex: Tecidos Finos" {...field} />
+                                <Input placeholder="ex: Aviamentos" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
