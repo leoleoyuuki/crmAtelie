@@ -31,7 +31,14 @@ import { addMaterial, updateMaterial } from "@/lib/data";
 import { Material } from "@/lib/types";
 import { CurrencyInput } from "../ui/currency-input";
 import { useCollection } from "@/firebase";
-import { Combobox } from "../ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "../ui/separator";
 
 const materialFormSchema = z.object({
   name: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
@@ -39,6 +46,7 @@ const materialFormSchema = z.object({
   stock: z.coerce.number().min(0, "O estoque não pode ser negativo."),
   costPerUnit: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
   category: z.string().min(1, "A categoria é obrigatória."),
+  newCategory: z.string().optional(),
 });
 
 type MaterialFormValues = z.infer<typeof materialFormSchema>;
@@ -63,34 +71,16 @@ export function MaterialFormDialog({
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
-  // Fetch existing categories from all materials
   const { data: allMaterials } = useCollection<Material>('materials');
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
-  const [newCategory, setNewCategory] = useState('');
-
 
   useEffect(() => {
     if (allMaterials) {
-        const uniqueCategories = [...new Set(allMaterials.map(m => m.category).filter(Boolean))];
+        const uniqueCategories = [...new Set(allMaterials.map(m => m.category).filter(Boolean))].sort();
         const categoryOptions = uniqueCategories.map(c => ({ value: c, label: c }));
-
-        // If editing and the material's category isn't in the list, add it
-        if (isEditing && material?.category && !uniqueCategories.includes(material.category)) {
-            categoryOptions.push({ value: material.category, label: material.category });
-        }
-        
         setCategories(categoryOptions);
     }
-  }, [allMaterials, isEditing, material]);
-
-  const categoryOptionsWithCreate = useMemo(() => {
-    if (newCategory && !categories.some(c => c.value.toLowerCase() === newCategory.toLowerCase())) {
-        return [{ value: newCategory, label: `Criar "${newCategory}"` }, ...categories];
-    }
-    return categories;
-  }, [newCategory, categories]);
-
-
+  }, [allMaterials]);
 
   const defaultValues: Partial<MaterialFormValues> = {
     name: "",
@@ -98,23 +88,27 @@ export function MaterialFormDialog({
     stock: 0,
     costPerUnit: 0, 
     category: "",
+    newCategory: "",
   };
 
   const form = useForm<MaterialFormValues>({
-    resolver: zodResolver(materialFormSchema),
+    resolver: zodResolver(materialFormSchema.refine(data => data.newCategory || data.category, {
+        message: "A categoria é obrigatória.",
+        path: ["category"],
+    })),
     defaultValues,
   });
 
   useEffect(() => {
     if (isOpen) {
-        setNewCategory(''); // Reset new category input on open
         if (isEditing && material) {
             form.reset({
                 name: material.name,
                 unit: material.unit,
                 stock: material.stock,
-                costPerUnit: material.costPerUnit * 100, // Convert to cents
+                costPerUnit: material.costPerUnit,
                 category: material.category || "",
+                newCategory: "",
             });
         } else {
             form.reset(defaultValues);
@@ -124,9 +118,18 @@ export function MaterialFormDialog({
 
   const onSubmit = async (data: MaterialFormValues) => {
     try {
+      const finalCategory = data.newCategory?.trim() || data.category;
+      if (!finalCategory) {
+          form.setError("category", { message: "A categoria é obrigatória." });
+          return;
+      }
+      
       const dataToSave = {
-        ...data,
-        costPerUnit: data.costPerUnit / 100, 
+        name: data.name,
+        unit: data.unit,
+        stock: data.stock,
+        costPerUnit: data.costPerUnit,
+        category: finalCategory,
       };
 
       if (isEditing && material) {
@@ -136,7 +139,7 @@ export function MaterialFormDialog({
           description: `O material ${data.name} foi atualizado.`,
         });
       } else {
-        await addMaterial(dataToSave);
+        await addMaterial(dataToSave as Omit<Material, 'id' | 'userId'>);
         toast({
           title: "Material Adicionado",
           description: `O material ${data.name} foi adicionado ao estoque.`,
@@ -177,36 +180,49 @@ export function MaterialFormDialog({
             )}
           />
 
-           <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-                <FormItem className="flex flex-col">
-                    <FormLabel>Categoria</FormLabel>
-                    <Combobox
-                        options={categoryOptionsWithCreate}
-                        value={field.value}
-                        onChange={(value) => {
-                            if (value === newCategory) {
-                                // Handle creation of new category
-                                if (!categories.some(c => c.value.toLowerCase() === newCategory.toLowerCase())) {
-                                    setCategories(prev => [...prev, { value: newCategory, label: newCategory }]);
-                                }
-                                field.onChange(newCategory);
-                            } else {
-                                field.onChange(value);
-                            }
-                            setNewCategory('');
-                        }}
-                        placeholder="Selecione ou crie uma categoria"
-                        searchPlaceholder="Buscar categoria..."
-                        notFoundText="Nenhuma categoria encontrada."
-                        onInputChange={setNewCategory}
-                    />
-                    <FormMessage />
-                </FormItem>
-            )}
-            />
+           <div className="space-y-2">
+                <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Categoria Existente</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione uma categoria" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <div className="flex items-center gap-2">
+                    <Separator className="flex-1" />
+                    <span className="text-xs text-muted-foreground">OU</span>
+                    <Separator className="flex-1" />
+                </div>
+                 <FormField
+                    control={form.control}
+                    name="newCategory"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Criar Nova Categoria</FormLabel>
+                            <FormControl>
+                                <Input placeholder="ex: Tecidos Finos" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+           </div>
+
 
           <div className="grid grid-cols-3 gap-4">
             <FormField
