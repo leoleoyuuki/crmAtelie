@@ -68,7 +68,6 @@ export function Combobox({
         </PopoverTrigger>
         <PopoverContent 
             className="w-[--radix-popover-trigger-width] p-0"
-            onInteractOutside={(e) => e.preventDefault()}
         >
             <Command>
             <CommandInput 
