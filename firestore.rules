@@ -105,7 +105,16 @@ service cloud.firestore {
         // Only active users can list their own materials.
         allow list: if isAccountActive() ;
         // Only active users can create a material for themselves.
-        allow create: if isAccountActive() && isCreatingOwnResource() && request.resource.data.category is string;
+        allow create: if isAccountActive() && isCreatingOwnResource();
+    }
+
+    match /purchases/{purchaseId} {
+      // Only active users who own the resource can read or write.
+      allow get, update, delete: if isAccountActive() && isResourceOwner();
+      // Only active users can list their own purchases.
+      allow list: if isAccountActive();
+      // Only active users can create a purchase record for themselves.
+      allow create: if isAccountActive() && isCreatingOwnResource();
     }
   }
 }
