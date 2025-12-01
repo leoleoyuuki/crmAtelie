@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -29,7 +29,6 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { addMaterial, updateMaterial } from "@/lib/data";
 import { Material } from "@/lib/types";
-import { CurrencyInput } from "../ui/currency-input";
 import { useCollection } from "@/firebase";
 import {
   Select,
@@ -49,7 +48,7 @@ const materialFormSchema = z.object({
   newCategory: z.string().optional(),
 }).refine(data => data.category || data.newCategory, {
     message: "Selecione uma categoria ou crie uma nova.",
-    path: ["category"], // O erro aparecerá sob o primeiro campo de categoria
+    path: ["category"],
 });
 
 type MaterialFormValues = z.infer<typeof materialFormSchema>;
@@ -258,11 +257,7 @@ export function MaterialFormDialog({
                 <FormItem>
                     <FormLabel>Custo por Unidade</FormLabel>
                      <FormControl>
-                        <CurrencyInput
-                            value={field.value || 0}
-                            onChange={field.onChange}
-                            placeholder="R$ 0,00"
-                        />
+                        <Input type="number" step="0.01" placeholder="1.50" {...field} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>

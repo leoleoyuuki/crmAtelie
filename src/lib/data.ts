@@ -399,6 +399,7 @@ export async function addMaterial(material: Omit<Material, 'id' | 'userId'>): Pr
   const newMaterialData = {
     ...material,
     userId: auth.currentUser.uid,
+    createdAt: serverTimestamp(), // Add timestamp for monthly filtering
   };
   const docRef = await addDoc(materialsCollection, newMaterialData)
     .catch(async (serverError) => {
@@ -442,4 +443,34 @@ export async function deleteMaterial(materialId: string): Promise<{ success: boo
         throw serverError;
     });
   return { success: true };
+}
+
+
+// Inventory Analytics
+export function getTotalStockCost(materials: Material[]) {
+    return materials.reduce((total, material) => {
+        return total + (material.stock * material.costPerUnit);
+    }, 0);
+}
+
+export function getMonthlyCostByCategory(materials: Material[], month: number, year: number) {
+    const monthlyMaterials = materials.filter(m => {
+        const createdAt = (m as any).createdAt; // Assume createdAt is on the material now
+        return createdAt && isValid(createdAt) && getMonth(createdAt) === month && getYear(createdAt) === year;
+    });
+
+    const costs = monthlyMaterials.reduce((acc, material) => {
+        if (material.category) {
+            if (!acc[material.category]) {
+                acc[material.category] = 0;
+            }
+            acc[material.category] += material.stock * material.costPerUnit;
+        }
+        return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(costs).map(([name, cost]) => ({
+        name,
+        cost
+    }));
 }

@@ -78,4 +78,5 @@ export interface Material {
     costPerUnit: number;
     category?: string;
     userId: string;
+    createdAt: Date;
 }
