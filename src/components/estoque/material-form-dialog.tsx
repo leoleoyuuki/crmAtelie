@@ -45,8 +45,11 @@ const materialFormSchema = z.object({
   unit: z.string().min(1, "A unidade é obrigatória (ex: m, cm, un)."),
   stock: z.coerce.number().min(0, "O estoque não pode ser negativo."),
   costPerUnit: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
-  category: z.string().min(1, "A categoria é obrigatória."),
+  category: z.string().optional(),
   newCategory: z.string().optional(),
+}).refine(data => data.category || data.newCategory, {
+    message: "Selecione uma categoria ou crie uma nova.",
+    path: ["category"], // O erro aparecerá sob o primeiro campo de categoria
 });
 
 type MaterialFormValues = z.infer<typeof materialFormSchema>;
@@ -86,16 +89,13 @@ export function MaterialFormDialog({
     name: "",
     unit: "",
     stock: 0,
-    costPerUnit: 0, 
+    costPerUnit: 0,
     category: "",
     newCategory: "",
   };
 
   const form = useForm<MaterialFormValues>({
-    resolver: zodResolver(materialFormSchema.refine(data => data.newCategory || data.category, {
-        message: "A categoria é obrigatória.",
-        path: ["category"],
-    })),
+    resolver: zodResolver(materialFormSchema),
     defaultValues,
   });
 
@@ -123,7 +123,7 @@ export function MaterialFormDialog({
           form.setError("category", { message: "A categoria é obrigatória." });
           return;
       }
-      
+
       const dataToSave = {
         name: data.name,
         unit: data.unit,
@@ -259,7 +259,7 @@ export function MaterialFormDialog({
                     <FormLabel>Custo por Unidade</FormLabel>
                      <FormControl>
                         <CurrencyInput
-                            value={field.value}
+                            value={field.value || 0}
                             onChange={field.onChange}
                             placeholder="R$ 0,00"
                         />
