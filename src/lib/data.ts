@@ -485,22 +485,18 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
     try {
         await runTransaction(db, async (transaction) => {
             const orderRef = doc(db, 'orders', orderId);
+            
+            const materialRefs = usedMaterials.map(used => doc(db, 'materials', used.materialId));
+            const materialDocs = await Promise.all(materialRefs.map(ref => transaction.get(ref)));
 
-            // 1. Update the order status and materials used
-            transaction.update(orderRef, {
-                status: 'Concluído',
-                materialsUsed: usedMaterials,
-            });
+            for (let i = 0; i < usedMaterials.length; i++) {
+                const materialDoc = materialDocs[i];
+                const used = usedMaterials[i];
 
-            // 2. Decrement stock for each material
-            for (const used of usedMaterials) {
-                const materialRef = doc(db, 'materials', used.materialId);
-                const materialDoc = await transaction.get(materialRef);
-                
                 if (!materialDoc.exists()) {
                     throw new Error(`Material com ID ${used.materialId} não encontrado.`);
                 }
-                
+
                 const currentStock = materialDoc.data().stock;
                 const newStock = currentStock - used.quantityUsed;
 
@@ -508,16 +504,19 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
                     throw new Error(`Estoque insuficiente para ${materialDoc.data().name}.`);
                 }
 
-                transaction.update(materialRef, { 
+                transaction.update(materialRefs[i], {
                     stock: newStock,
-                    usedInOrders: increment(1) 
+                    usedInOrders: increment(1)
                 });
             }
+
+            transaction.update(orderRef, {
+                status: 'Concluído',
+                materialsUsed: usedMaterials,
+            });
         });
     } catch (error: any) {
         console.error("Transaction failed: ", error);
-        // Let's not emit a generic permission error here, as the transaction might fail for other reasons
-        // like insufficient stock. We'll let the component's catch block handle the UI toast.
-        throw error; // Re-throw the specific error to be caught by the UI
+        throw error;
     }
 }
