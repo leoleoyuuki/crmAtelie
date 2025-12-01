@@ -13,7 +13,7 @@ import {
   SidebarLogout
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield, Archive } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -28,6 +28,7 @@ import type { UserProfile } from "@/lib/types";
 import { differenceInDays, formatDistanceToNowStrict } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
+import { Separator } from "./ui/separator";
 
 function SubscriptionBadge({ expiresAt }: { expiresAt?: Date }) {
     if (!expiresAt) {
@@ -116,10 +117,13 @@ export default function AppShell({ children, profile }: { children: React.ReactN
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },
     { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
-    { href: "/estoque", label: "Estoque", icon: Archive },
-    { href: "/compras", label: "Compras", icon: ShoppingCart },
     { href: "/ajuda", label: "Central de Ajuda", icon: BookOpen },
   ];
+  
+  const inventoryMenuItems = [
+      { href: "/estoque", label: "Inventário", icon: Archive },
+      { href: "/compras", label: "Registro de Compras", icon: DollarSign },
+  ]
 
   const adminMenuItems = [
     { href: "/admin/sugestoes", label: "Sugestões", icon: MessageSquare },
@@ -158,10 +162,31 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                   </Link>
                 </SidebarMenuItem>
               ))}
+
+              <Separator className="my-2" />
+
+               <div className="px-3 py-2">
+                  <span className="text-xs font-semibold text-muted-foreground group-data-[collapsible=icon]:hidden">Estoque & Custos</span>
+                </div>
+               {inventoryMenuItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={item.href} passHref onClick={handleLinkClick}>
+                    <SidebarMenuButton asChild isActive={pathname === item.href}>
+                        <span>
+                            <item.icon />
+                            {item.label}
+                        </span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              ))}
+
+
               {isAdmin && (
                 <>
+                <Separator className="my-2" />
                 <div className="px-3 py-2">
-                  <span className="text-xs font-semibold text-muted-foreground">Admin</span>
+                  <span className="text-xs font-semibold text-muted-foreground group-data-[collapsible=icon]:hidden">Admin</span>
                 </div>
                 {adminMenuItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
