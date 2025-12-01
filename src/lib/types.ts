@@ -88,3 +88,4 @@ export interface Material {
     createdAt: Date;
     usedInOrders?: number;
 }
+

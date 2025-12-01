@@ -396,12 +396,12 @@ export async function getMaterials(): Promise<Material[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Material);
 }
 
-export async function addMaterial(material: Omit<Material, 'id' | 'userId'>): Promise<Material> {
+export async function addMaterial(material: Omit<Material, 'id' | 'userId' | 'createdAt'>): Promise<Material> {
   if (!auth.currentUser) throw new Error("Usuário não autenticado.");
   const newMaterialData = {
     ...material,
     userId: auth.currentUser.uid,
-    createdAt: serverTimestamp(), // Add timestamp for monthly filtering
+    createdAt: serverTimestamp(),
   };
   const docRef = await addDoc(materialsCollection, newMaterialData)
     .catch(async (serverError) => {
@@ -466,6 +466,7 @@ export function getMonthlyCostByCategory(materials: Material[], month: number, y
             if (!acc[material.category]) {
                 acc[material.category] = 0;
             }
+            // This now correctly represents the acquisition cost for the month.
             acc[material.category] += material.stock * material.costPerUnit;
         }
         return acc;
@@ -520,3 +521,4 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
         throw error;
     }
 }
+

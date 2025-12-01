@@ -78,7 +78,7 @@ export function MaterialFormDialog({
 
   useEffect(() => {
     if (allMaterials) {
-        const uniqueCategories = [...new Set(allMaterials.map(m => m.category).filter(Boolean))].sort();
+        const uniqueCategories = [...new Set(allMaterials.map(m => m.category).filter(Boolean) as string[])].sort();
         const categoryOptions = uniqueCategories.map(c => ({ value: c, label: c }));
         setCategories(categoryOptions);
     }
@@ -138,7 +138,7 @@ export function MaterialFormDialog({
           description: `O material ${data.name} foi atualizado.`,
         });
       } else {
-        await addMaterial(dataToSave as Omit<Material, 'id' | 'userId'>);
+        await addMaterial(dataToSave as Omit<Material, 'id' | 'userId' | 'createdAt'>);
         toast({
           title: "Material Adicionado",
           description: `O material ${data.name} foi adicionado ao estoque.`,
@@ -229,7 +229,7 @@ export function MaterialFormDialog({
                 name="stock"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Estoque Atual</FormLabel>
+                    <FormLabel>Estoque Inicial</FormLabel>
                     <FormControl>
                     <Input type="number" step="0.1" placeholder="10" {...field} />
                     </FormControl>
@@ -293,3 +293,4 @@ export function MaterialFormDialog({
     </Dialog>
   );
 }
+
