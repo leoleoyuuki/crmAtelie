@@ -27,14 +27,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { addMaterial, updateMaterial } from "@/lib/data";
+import { updateMaterial } from "@/lib/data";
 import { Material } from "@/lib/types";
-import { Textarea } from "../ui/textarea";
 
 const materialFormSchema = z.object({
   name: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
   unit: z.string().min(1, "A unidade é obrigatória (ex: m, cm, un)."),
-  stock: z.coerce.number().min(0, "O estoque inicial deve ser positivo."),
+  stock: z.coerce.number().min(0, "O estoque deve ser positivo."),
   costPerUnit: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
 });
 
@@ -88,27 +87,19 @@ export function MaterialFormDialog({
   }, [material, form, isEditing, isOpen]);
 
   const onSubmit = async (data: MaterialFormValues) => {
+    if (!isEditing || !material) return;
     try {
-      if (isEditing && material) {
-        await updateMaterial(material.id, data);
-        toast({
-          title: "Material Atualizado",
-          description: `O material ${data.name} foi atualizado.`,
-        });
-      } else {
-        await addMaterial(data);
-        toast({
-          title: "Material Adicionado",
-          description: `O material ${data.name} foi adicionado ao estoque.`,
-        });
-      }
+      await updateMaterial(material.id, data);
+      toast({
+        title: "Material Atualizado",
+        description: `O material ${data.name} foi atualizado.`,
+      });
       setIsOpen(false);
-      form.reset(defaultValues);
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível salvar o material.",
+        description: "Não foi possível atualizar o material.",
       });
     }
   };
@@ -116,9 +107,9 @@ export function MaterialFormDialog({
   const dialogContent = (
     <DialogContent className="sm:max-w-[480px]">
       <DialogHeader>
-        <DialogTitle className="font-headline">{isEditing ? "Editar Material" : "Novo Material no Estoque"}</DialogTitle>
+        <DialogTitle className="font-headline">Editar Material</DialogTitle>
         <DialogDescription>
-          {isEditing ? "Atualize os detalhes deste item do seu estoque." : "Adicione um novo item ao seu inventário."}
+          Atualize os detalhes deste item do seu estoque. A quantidade é alterada ao registrar compras ou concluir pedidos.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -143,7 +134,7 @@ export function MaterialFormDialog({
               name="stock"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Estoque Inicial</FormLabel>
+                  <FormLabel>Estoque Atual</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.1" placeholder="10" {...field} />
                   </FormControl>
@@ -186,7 +177,7 @@ export function MaterialFormDialog({
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">{isEditing ? "Salvar Alterações" : "Adicionar ao Estoque"}</Button>
+            <Button type="submit">Salvar Alterações</Button>
           </DialogFooter>
         </form>
       </Form>

@@ -18,7 +18,7 @@ export function MaterialTableToolbar<TData>({ table }: MaterialTableToolbarProps
       <CardHeader>
         <CardTitle className="font-headline">Inventário de Materiais</CardTitle>
         <CardDescription>
-          Adicione e gerencie os materiais do seu ateliê.
+          Visualize e gerencie os materiais do seu ateliê. A entrada de novos itens é feita através da página de Compras.
         </CardDescription>
       </CardHeader>
       <div className="flex items-center justify-between p-6 pt-0">
@@ -32,14 +32,6 @@ export function MaterialTableToolbar<TData>({ table }: MaterialTableToolbarProps
             className="h-10 w-[200px] lg:w-[300px]"
           />
         </div>
-        <MaterialFormDialog
-            trigger={
-                <Button>
-                    <Archive className="mr-2 h-4 w-4" />
-                    Novo Material
-                </Button>
-            }
-        />
       </div>
     </>
   )

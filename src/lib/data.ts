@@ -396,28 +396,6 @@ export async function getMaterials(): Promise<Material[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Material);
 }
 
-export async function addMaterial(material: Omit<Material, 'id' | 'userId' | 'createdAt'>): Promise<Material> {
-    if (!auth.currentUser) throw new Error("Usuário não autenticado.");
-    const newMaterialData = {
-        ...material,
-        userId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-        usedInOrders: 0,
-    };
-    const docRef = await addDoc(materialsCollection, newMaterialData)
-        .catch(async (serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: materialsCollection.path,
-                operation: 'create',
-                requestResourceData: newMaterialData,
-            } satisfies SecurityRuleContext);
-            errorEmitter.emit('permission-error', permissionError);
-            throw serverError;
-        });
-    const newDoc = await getDoc(docRef);
-    return fromFirebase(newDoc.data(), newDoc.id) as Material;
-}
-
 export async function updateMaterial(materialId: string, material: Partial<Omit<Material, 'id' | 'userId' | 'createdAt'>>): Promise<Material> {
     const docRef = doc(db, 'materials', materialId);
     await updateDoc(docRef, material)
@@ -452,26 +430,60 @@ export async function deleteMaterial(materialId: string): Promise<{ success: boo
 // Purchase Functions
 const purchasesCollection = collection(db, 'purchases');
 
-export async function addPurchase(purchase: Omit<Purchase, 'id' | 'userId' | 'createdAt'>): Promise<Purchase> {
-  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
-  const newPurchaseData = {
-    ...purchase,
-    userId: auth.currentUser.uid,
-    createdAt: serverTimestamp(),
-  };
-  const docRef = await addDoc(purchasesCollection, newPurchaseData)
-    .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: purchasesCollection.path,
-            operation: 'create',
-            requestResourceData: newPurchaseData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
+export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' | 'createdAt'>) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    await runTransaction(db, async (transaction) => {
+        // 1. Create the immutable purchase record
+        const newPurchaseData = {
+            ...purchaseData,
+            userId: user.uid,
+            createdAt: serverTimestamp(),
+        };
+        const purchaseRef = doc(collection(db, 'purchases'));
+        transaction.set(purchaseRef, newPurchaseData);
+
+        // 2. Find and update the corresponding material in the inventory
+        const materialQuery = query(
+            collection(db, 'materials'),
+            where('name', '==', purchaseData.materialName),
+            where('userId', '==', user.uid)
+        );
+        
+        const materialSnapshot = await getDocs(materialQuery); // Execute query outside transaction if possible, but for consistency we do it inside.
+
+        if (materialSnapshot.empty) {
+            // Material doesn't exist, create it
+            const newMaterialRef = doc(collection(db, 'materials'));
+            const costPerUnit = purchaseData.quantity > 0 ? purchaseData.cost / purchaseData.quantity : 0;
+            transaction.set(newMaterialRef, {
+                name: purchaseData.materialName,
+                unit: purchaseData.unit,
+                stock: purchaseData.quantity,
+                costPerUnit: costPerUnit,
+                userId: user.uid,
+                createdAt: serverTimestamp(),
+                usedInOrders: 0,
+            });
+        } else {
+            // Material exists, update its stock
+            const materialDocRef = materialSnapshot.docs[0].ref;
+            transaction.update(materialDocRef, {
+                stock: increment(purchaseData.quantity),
+                // Optionally update costPerUnit if needed, e.g., to an average
+            });
+        }
+    }).catch(error => {
+        // This will catch transaction-specific errors.
+        // We can re-throw a more generic error or handle it.
+        console.error("Transaction failed: ", error);
+        // Emitting a permission error here might be complex as it could be a transaction failure, not just permissions.
+        // For simplicity, we just re-throw.
+        throw new Error("Falha ao registrar compra e atualizar estoque.");
     });
-  const newDoc = await getDoc(docRef);
-  return fromFirebase(newDoc.data(), newDoc.id) as Purchase;
 }
+
 
 export async function deletePurchase(purchaseId: string): Promise<{ success: boolean }> {
   const docRef = doc(db, 'purchases', purchaseId);
@@ -512,7 +524,7 @@ export function getMonthlyCostByCategory(purchases: Purchase[], month: number, y
 
 export function getInventoryValue(materials: Material[]) {
   if (!materials) return 0;
-  return materials.reduce((acc, material) => acc + (material.stock * material.costPerUnit), 0);
+  return materials.reduce((acc, material) => acc + (material.stock * (material.costPerUnit || 0)), 0);
 }
 
 export function getMonthlyCostOfGoodsSold(orders: Order[], month: number, year: number) {
