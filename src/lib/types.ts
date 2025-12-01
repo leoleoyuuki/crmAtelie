@@ -1,4 +1,5 @@
 
+
 export type OrderStatus = 'Novo' | 'Em Processo' | 'Aguardando Retirada' | 'Concluído';
 export type ServiceType = 'Ajuste' | 'Design Personalizado' | 'Reparo' | 'Lavagem a Seco';
 export type UserStatus = 'active' | 'inactive';
@@ -75,5 +76,6 @@ export interface Material {
     unit: string;
     stock: number;
     costPerUnit: number;
+    category?: string;
     userId: string;
 }

@@ -27,6 +27,7 @@ type ComboboxProps = {
   placeholder?: string;
   searchPlaceholder?: string;
   notFoundText?: string;
+  onInputChange?: (value: string) => void;
   className?: string;
 };
 
@@ -37,9 +38,18 @@ export function Combobox({
   placeholder = "Selecione uma opção...",
   searchPlaceholder = "Buscar opção...",
   notFoundText = "Nenhuma opção encontrada.",
+  onInputChange,
   className,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState("");
+
+  const handleInputChange = (search: string) => {
+    setInputValue(search);
+    if (onInputChange) {
+        onInputChange(search);
+    }
+  }
 
   return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -51,7 +61,7 @@ export function Combobox({
             className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
             >
             {value
-                ? options.find((option) => option.value === value)?.label
+                ? options.find((option) => option.value === value)?.label ?? value
                 : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
@@ -61,7 +71,11 @@ export function Combobox({
             onInteractOutside={(e) => e.preventDefault()}
         >
             <Command>
-            <CommandInput placeholder={searchPlaceholder} />
+            <CommandInput 
+                placeholder={searchPlaceholder} 
+                value={inputValue}
+                onValueChange={handleInputChange}
+            />
             <CommandList>
                 <CommandEmpty>{notFoundText}</CommandEmpty>
                 <CommandGroup>
@@ -69,8 +83,10 @@ export function Combobox({
                     <CommandItem
                         key={option.value}
                         onSelect={() => {
-                           onChange(option.value === value ? "" : option.value);
+                           onChange(option.value);
                            setOpen(false)
+                           setInputValue("")
+                           if (onInputChange) onInputChange("");
                         }}
                     >
                         <Check

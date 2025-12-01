@@ -241,6 +241,10 @@
           "type": "number",
           "description": "The cost per unit of the material."
         },
+        "category": {
+          "type": "string",
+          "description": "The category of the material (e.g., 'Tecidos', 'Linhas')."
+        },
         "userId": {
           "type": "string",
           "description": "The ID of the user who owns this material."

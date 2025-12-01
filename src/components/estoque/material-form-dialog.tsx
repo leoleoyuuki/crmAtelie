@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -30,12 +30,15 @@ import { useToast } from "@/hooks/use-toast";
 import { addMaterial, updateMaterial } from "@/lib/data";
 import { Material } from "@/lib/types";
 import { CurrencyInput } from "../ui/currency-input";
+import { useCollection } from "@/firebase";
+import { Combobox } from "../ui/combobox";
 
 const materialFormSchema = z.object({
   name: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
   unit: z.string().min(1, "A unidade é obrigatória (ex: m, cm, un)."),
   stock: z.coerce.number().min(0, "O estoque não pode ser negativo."),
   costPerUnit: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
+  category: z.string().min(1, "A categoria é obrigatória."),
 });
 
 type MaterialFormValues = z.infer<typeof materialFormSchema>;
@@ -60,11 +63,41 @@ export function MaterialFormDialog({
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
+  // Fetch existing categories from all materials
+  const { data: allMaterials } = useCollection<Material>('materials');
+  const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
+  const [newCategory, setNewCategory] = useState('');
+
+
+  useEffect(() => {
+    if (allMaterials) {
+        const uniqueCategories = [...new Set(allMaterials.map(m => m.category).filter(Boolean))];
+        const categoryOptions = uniqueCategories.map(c => ({ value: c, label: c }));
+
+        // If editing and the material's category isn't in the list, add it
+        if (isEditing && material?.category && !uniqueCategories.includes(material.category)) {
+            categoryOptions.push({ value: material.category, label: material.category });
+        }
+        
+        setCategories(categoryOptions);
+    }
+  }, [allMaterials, isEditing, material]);
+
+  const categoryOptionsWithCreate = useMemo(() => {
+    if (newCategory && !categories.some(c => c.value.toLowerCase() === newCategory.toLowerCase())) {
+        return [{ value: newCategory, label: `Criar "${newCategory}"` }, ...categories];
+    }
+    return categories;
+  }, [newCategory, categories]);
+
+
+
   const defaultValues: Partial<MaterialFormValues> = {
     name: "",
     unit: "",
     stock: 0,
-    costPerUnit: 0, // This will be in cents now
+    costPerUnit: 0, 
+    category: "",
   };
 
   const form = useForm<MaterialFormValues>({
@@ -74,12 +107,14 @@ export function MaterialFormDialog({
 
   useEffect(() => {
     if (isOpen) {
+        setNewCategory(''); // Reset new category input on open
         if (isEditing && material) {
             form.reset({
                 name: material.name,
                 unit: material.unit,
                 stock: material.stock,
-                costPerUnit: material.costPerUnit * 100, // Convert to cents for the input
+                costPerUnit: material.costPerUnit * 100, // Convert to cents
+                category: material.category || "",
             });
         } else {
             form.reset(defaultValues);
@@ -89,7 +124,6 @@ export function MaterialFormDialog({
 
   const onSubmit = async (data: MaterialFormValues) => {
     try {
-      // The value from CurrencyInput is already in cents, so we convert to float for saving
       const dataToSave = {
         ...data,
         costPerUnit: data.costPerUnit / 100, 
@@ -142,6 +176,38 @@ export function MaterialFormDialog({
               </FormItem>
             )}
           />
+
+           <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>Categoria</FormLabel>
+                    <Combobox
+                        options={categoryOptionsWithCreate}
+                        value={field.value}
+                        onChange={(value) => {
+                            if (value === newCategory) {
+                                // Handle creation of new category
+                                if (!categories.some(c => c.value.toLowerCase() === newCategory.toLowerCase())) {
+                                    setCategories(prev => [...prev, { value: newCategory, label: newCategory }]);
+                                }
+                                field.onChange(newCategory);
+                            } else {
+                                field.onChange(value);
+                            }
+                            setNewCategory('');
+                        }}
+                        placeholder="Selecione ou crie uma categoria"
+                        searchPlaceholder="Buscar categoria..."
+                        notFoundText="Nenhuma categoria encontrada."
+                        onInputChange={setNewCategory}
+                    />
+                    <FormMessage />
+                </FormItem>
+            )}
+            />
+
           <div className="grid grid-cols-3 gap-4">
             <FormField
                 control={form.control}

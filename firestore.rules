@@ -105,7 +105,7 @@ service cloud.firestore {
         // Only active users can list their own materials.
         allow list: if isAccountActive() ;
         // Only active users can create a material for themselves.
-        allow create: if isAccountActive() && isCreatingOwnResource();
+        allow create: if isAccountActive() && isCreatingOwnResource() && request.resource.data.category is string;
     }
   }
 }

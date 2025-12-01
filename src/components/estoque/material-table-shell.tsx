@@ -27,6 +27,7 @@ import { Button } from "../ui/button";
 import { MaterialTableToolbar } from "./material-table-toolbar";
 import { MaterialTableRowActions } from "./material-table-row-actions";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
 
 interface MaterialTableShellProps {
   data: Material[];
@@ -46,6 +47,14 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
         cell: ({ row }) => (
           <div className="font-medium">{row.original.name}</div>
         ),
+      },
+      {
+        accessorKey: "category",
+        header: "Categoria",
+        cell: ({ row }) => {
+            const category = row.original.category;
+            return category ? <Badge variant="secondary">{category}</Badge> : <span className="text-muted-foreground">-</span>;
+        }
       },
       {
         accessorKey: "stock",
