@@ -101,6 +101,12 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
                 <span className="sr-only">Imprimir Comprovante</span>
               </Link>
             </Button>
+            {order.status !== 'Concluído' && (
+                 <Button variant="ghost" size="icon" className="h-8 w-8 p-0" onClick={() => setIsConcludeDialogOpen(true)}>
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="sr-only">Concluir Pedido</span>
+                </Button>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
@@ -110,12 +116,6 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                {order.status !== 'Concluído' && (
-                  <DropdownMenuItem onClick={() => setIsConcludeDialogOpen(true)}>
-                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                    Concluir Pedido
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Editar
