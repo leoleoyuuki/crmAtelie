@@ -123,7 +123,7 @@ export function MaterialFormDialog({
           return;
       }
 
-      const dataToSave = {
+      const dataToSave: Partial<Material> = {
         name: data.name,
         unit: data.unit,
         stock: data.stock,
@@ -138,7 +138,12 @@ export function MaterialFormDialog({
           description: `O material ${data.name} foi atualizado.`,
         });
       } else {
-        await addMaterial(dataToSave as Omit<Material, 'id' | 'userId' | 'createdAt'>);
+        // When creating, we also set the initialStock
+        const createData = {
+          ...dataToSave,
+          initialStock: data.stock, // Set initial stock on creation
+        } as Omit<Material, 'id' | 'userId' | 'createdAt'>;
+        await addMaterial(createData);
         toast({
           title: "Material Adicionado",
           description: `O material ${data.name} foi adicionado ao estoque.`,
@@ -293,4 +298,3 @@ export function MaterialFormDialog({
     </Dialog>
   );
 }
-

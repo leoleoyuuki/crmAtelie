@@ -246,6 +246,10 @@
           "type": "string",
           "description": "The unit of measurement (e.g., 'm', 'un', 'cm')."
         },
+        "initialStock": {
+            "type": "number",
+            "description": "The quantity of the material when it was first added."
+        },
         "stock": {
           "type": "number",
           "description": "The current quantity in stock."
@@ -267,7 +271,7 @@
           "description": "Counter for how many orders this material has been used in."
         }
       },
-      "required": ["name", "unit", "stock", "costPerUnit", "userId"]
+      "required": ["name", "unit", "initialStock", "stock", "costPerUnit", "userId"]
     }
   },
   "auth": {

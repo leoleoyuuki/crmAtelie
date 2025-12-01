@@ -396,10 +396,11 @@ export async function getMaterials(): Promise<Material[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Material);
 }
 
-export async function addMaterial(material: Omit<Material, 'id' | 'userId' | 'createdAt'>): Promise<Material> {
+export async function addMaterial(material: Omit<Material, 'id' | 'userId' | 'createdAt' | 'initialStock'>): Promise<Material> {
   if (!auth.currentUser) throw new Error("Usuário não autenticado.");
   const newMaterialData = {
     ...material,
+    initialStock: material.stock, // Set initialStock at creation
     userId: auth.currentUser.uid,
     createdAt: serverTimestamp(),
   };
@@ -417,7 +418,7 @@ export async function addMaterial(material: Omit<Material, 'id' | 'userId' | 'cr
   return fromFirebase(newDoc.data(), newDoc.id) as Material;
 }
 
-export async function updateMaterial(materialId: string, material: Partial<Omit<Material, 'id' | 'userId'>>): Promise<Material> {
+export async function updateMaterial(materialId: string, material: Partial<Omit<Material, 'id' | 'userId' | 'initialStock'>>): Promise<Material> {
     const docRef = doc(db, 'materials', materialId);
     await updateDoc(docRef, material)
       .catch(async (serverError) => {
@@ -457,7 +458,7 @@ export function getTotalStockCost(materials: Material[]) {
 
 export function getMonthlyCostByCategory(materials: Material[], month: number, year: number) {
     const monthlyMaterials = materials.filter(m => {
-        const createdAt = (m as any).createdAt; // Assume createdAt is on the material now
+        const createdAt = m.createdAt;
         return createdAt && isValid(createdAt) && getMonth(createdAt) === month && getYear(createdAt) === year;
     });
 
@@ -466,8 +467,8 @@ export function getMonthlyCostByCategory(materials: Material[], month: number, y
             if (!acc[material.category]) {
                 acc[material.category] = 0;
             }
-            // This now correctly represents the acquisition cost for the month.
-            acc[material.category] += material.stock * material.costPerUnit;
+            // Corrected: Use initialStock for acquisition cost calculation
+            acc[material.category] += material.initialStock * material.costPerUnit;
         }
         return acc;
     }, {} as Record<string, number>);
@@ -487,9 +488,11 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
         await runTransaction(db, async (transaction) => {
             const orderRef = doc(db, 'orders', orderId);
             
+            // 1. All reads first
             const materialRefs = usedMaterials.map(used => doc(db, 'materials', used.materialId));
             const materialDocs = await Promise.all(materialRefs.map(ref => transaction.get(ref)));
 
+            // 2. All writes last
             for (let i = 0; i < usedMaterials.length; i++) {
                 const materialDoc = materialDocs[i];
                 const used = usedMaterials[i];
@@ -511,6 +514,7 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
                 });
             }
 
+            // Update the order after all material updates are staged
             transaction.update(orderRef, {
                 status: 'Concluído',
                 materialsUsed: usedMaterials,
@@ -521,4 +525,3 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
         throw error;
     }
 }
-
