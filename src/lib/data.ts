@@ -434,12 +434,14 @@ const purchasesCollection = collection(db, 'purchases');
 export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' | 'createdAt'>) {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
-    
+
     // Standardize material name
-    const standardizedMaterialName = purchaseData.materialName.toLowerCase().trim();
-    if (!standardizedMaterialName) {
+    const rawMaterialName = purchaseData.materialName.trim();
+    if (!rawMaterialName) {
         throw new Error("O nome do material não pode ser vazio.");
     }
+    const standardizedMaterialName = rawMaterialName.charAt(0).toUpperCase() + rawMaterialName.slice(1).toLowerCase();
+
     const standardizedPurchaseData = { ...purchaseData, materialName: standardizedMaterialName };
 
     await runTransaction(db, async (transaction) => {
