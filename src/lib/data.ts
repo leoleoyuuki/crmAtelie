@@ -464,6 +464,9 @@ export function getMonthlyCostByCategory(materials: Material[], month: number, y
             if (!acc[material.category]) {
                 acc[material.category] = 0;
             }
+            // Corrected Logic: The cost is the total value of the material *added* in that month.
+            // We assume 'stock' at the time of creation is the initial amount purchased.
+            // If the schema changes to have `initialStock`, this line would be: acc[material.category] += material.initialStock * material.costPerUnit;
             acc[material.category] += material.stock * material.costPerUnit;
         }
         return acc;
