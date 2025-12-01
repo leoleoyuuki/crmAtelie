@@ -5,9 +5,9 @@ import { useCollection } from '@/firebase';
 import { Material } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaterialTableShell } from '@/components/estoque/material-table-shell';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { getMonths, getTotalStockCost, getMonthlyCostByCategory } from '@/lib/data';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -17,21 +17,28 @@ export default function EstoquePage() {
   
   const months = useMemo(() => getMonths(), []);
 
-  const { totalStockCost, monthlyCostData } = useMemo(() => {
-    if (!materials) return { totalStockCost: 0, monthlyCostData: [] };
+  const { totalStockCost, monthlyCostData, totalMonthlyCost } = useMemo(() => {
+    if (!materials) return { totalStockCost: 0, monthlyCostData: [], totalMonthlyCost: 0 };
 
     const totalStockCost = getTotalStockCost(materials);
     
     const [month, year] = selectedMonth.split('-').map(Number);
     const monthlyCostData = getMonthlyCostByCategory(materials, month, year);
 
-    return { totalStockCost, monthlyCostData };
+    const totalMonthlyCost = monthlyCostData.reduce((acc, item) => acc + item.cost, 0);
+
+    return { totalStockCost, monthlyCostData, totalMonthlyCost };
   }, [materials, selectedMonth]);
 
-  const formattedTotalStockCost = new Intl.NumberFormat("pt-BR", {
+  const formattedTotalStockCost = useMemo(() => new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(totalStockCost);
+  }).format(totalStockCost), [totalStockCost]);
+
+  const formattedTotalMonthlyCost = useMemo(() => new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(totalMonthlyCost), [totalMonthlyCost]);
 
   return (
     <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
@@ -52,8 +59,8 @@ export default function EstoquePage() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Custo Total do Estoque</p>
-                    <p className="text-2xl font-bold">{formattedTotalStockCost}</p>
+                    <p className="text-sm text-muted-foreground">Custo do Mês</p>
+                    <p className="text-2xl font-bold">{formattedTotalMonthlyCost}</p>
                 </div>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                     <SelectTrigger className="w-[180px]">
@@ -102,6 +109,14 @@ export default function EstoquePage() {
             </div>
           )}
         </CardContent>
+         <CardFooter className="border-t pt-4 text-sm text-muted-foreground">
+          <div className="flex w-full justify-end">
+            <div className="text-right">
+              <span>Custo Total do Estoque (geral): </span>
+              <span className="font-bold text-base text-foreground">{formattedTotalStockCost}</span>
+            </div>
+          </div>
+        </CardFooter>
       </Card>
 
        {loading ? (
