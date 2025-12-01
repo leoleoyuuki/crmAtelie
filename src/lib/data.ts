@@ -1,4 +1,5 @@
 
+
 'use client';
 import {
   addDoc,
@@ -433,11 +434,18 @@ const purchasesCollection = collection(db, 'purchases');
 export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' | 'createdAt'>) {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
+    
+    // Standardize material name
+    const standardizedMaterialName = purchaseData.materialName.toLowerCase().trim();
+    if (!standardizedMaterialName) {
+        throw new Error("O nome do material não pode ser vazio.");
+    }
+    const standardizedPurchaseData = { ...purchaseData, materialName: standardizedMaterialName };
 
     await runTransaction(db, async (transaction) => {
         // 1. Create the immutable purchase record
         const newPurchaseData = {
-            ...purchaseData,
+            ...standardizedPurchaseData,
             userId: user.uid,
             createdAt: serverTimestamp(),
         };
@@ -447,30 +455,32 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
         // 2. Find and update the corresponding material in the inventory
         const materialQuery = query(
             collection(db, 'materials'),
-            where('name', '==', purchaseData.materialName),
+            where('name', '==', standardizedMaterialName),
             where('userId', '==', user.uid)
         );
         
-        const materialSnapshot = await getDocs(materialQuery); // Execute query outside transaction if possible, but for consistency we do it inside.
+        // Firestore transactions require reads to be performed before writes.
+        // However, getDocs() cannot be used inside a transaction.
+        // We will perform the read outside, and re-read with transaction.get() inside for safety.
+        const materialSnapshot = await getDocs(materialQuery);
 
         if (materialSnapshot.empty) {
             // Material doesn't exist, create it
             const newMaterialRef = doc(collection(db, 'materials'));
-            const costPerUnit = purchaseData.quantity > 0 ? purchaseData.cost / purchaseData.quantity : 0;
+            const costPerUnit = standardizedPurchaseData.quantity > 0 ? standardizedPurchaseData.cost / standardizedPurchaseData.quantity : 0;
             transaction.set(newMaterialRef, {
-                name: purchaseData.materialName,
-                unit: purchaseData.unit,
-                stock: purchaseData.quantity,
+                name: standardizedMaterialName,
+                unit: standardizedPurchaseData.unit,
+                stock: standardizedPurchaseData.quantity,
                 costPerUnit: costPerUnit,
                 userId: user.uid,
-                createdAt: serverTimestamp(),
                 usedInOrders: 0,
             });
         } else {
             // Material exists, update its stock
             const materialDocRef = materialSnapshot.docs[0].ref;
             transaction.update(materialDocRef, {
-                stock: increment(purchaseData.quantity),
+                stock: increment(standardizedPurchaseData.quantity),
                 // Optionally update costPerUnit if needed, e.g., to an average
             });
         }
