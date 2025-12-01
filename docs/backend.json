@@ -90,6 +90,19 @@
         "userId": {
             "type": "string",
             "description": "The ID of the user who created the order."
+        },
+        "materialsUsed": {
+          "type": "array",
+          "description": "A list of materials from the inventory used in this order.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "materialId": { "type": "string" },
+              "materialName": { "type": "string" },
+              "quantityUsed": { "type": "number" }
+            },
+            "required": ["materialId", "materialName", "quantityUsed"]
+          }
         }
       },
       "required": ["customerId", "customerName", "items", "totalValue", "dueDate", "status", "createdAt", "userId"]
@@ -248,6 +261,10 @@
         "userId": {
           "type": "string",
           "description": "The ID of the user who owns this material."
+        },
+        "usedInOrders": {
+          "type": "number",
+          "description": "Counter for how many orders this material has been used in."
         }
       },
       "required": ["name", "unit", "stock", "costPerUnit", "userId"]

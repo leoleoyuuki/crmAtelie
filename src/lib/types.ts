@@ -22,6 +22,12 @@ export interface OrderItem {
   assignedTo?: string;
 }
 
+export interface UsedMaterial {
+    materialId: string;
+    materialName: string;
+    quantityUsed: number;
+}
+
 export interface Order {
   id: string;
   customerId: string;
@@ -32,6 +38,7 @@ export interface Order {
   status: OrderStatus;
   createdAt: Date;
   userId: string;
+  materialsUsed?: UsedMaterial[];
 }
 
 export interface PriceTableItem {
@@ -79,4 +86,5 @@ export interface Material {
     category?: string;
     userId: string;
     createdAt: Date;
+    usedInOrders?: number;
 }

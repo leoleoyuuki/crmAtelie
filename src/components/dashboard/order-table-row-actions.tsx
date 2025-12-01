@@ -2,7 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { MoreHorizontal, MessageSquare, Pencil, Trash2, Printer } from "lucide-react";
+import { MoreHorizontal, MessageSquare, Pencil, Trash2, Printer, CheckCircle } from "lucide-react";
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -29,6 +29,7 @@ import { deleteOrder, getCustomerById } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ConcludeOrderDialog } from "../pedidos/conclude-order-dialog";
 
 interface OrderTableRowActionsProps {
   order: Order;
@@ -40,6 +41,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isConcludeDialogOpen, setIsConcludeDialogOpen] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
 
   useEffect(() => {
@@ -83,6 +85,11 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
       });
     }
   };
+
+  const handleOrderConcluded = (updatedOrder: Partial<Order>) => {
+    onUpdate(order.id, updatedOrder);
+    setIsConcludeDialogOpen(false);
+  }
   
   return (
     <>
@@ -103,6 +110,12 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                {order.status !== 'Concluído' && (
+                  <DropdownMenuItem onClick={() => setIsConcludeDialogOpen(true)}>
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Concluir Pedido
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Editar
@@ -152,6 +165,13 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
         setIsOpen={setIsEditDialogOpen}
         onOrderUpdated={onUpdate}
       />
+
+       <ConcludeOrderDialog
+          order={order}
+          isOpen={isConcludeDialogOpen}
+          setIsOpen={setIsConcludeDialogOpen}
+          onOrderConcluded={handleOrderConcluded}
+       />
     </>
   );
 }

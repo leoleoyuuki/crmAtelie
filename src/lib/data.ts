@@ -13,9 +13,11 @@ import {
   writeBatch,
   getDoc,
   serverTimestamp,
+  runTransaction,
+  increment,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material } from '@/lib/types';
+import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -464,9 +466,6 @@ export function getMonthlyCostByCategory(materials: Material[], month: number, y
             if (!acc[material.category]) {
                 acc[material.category] = 0;
             }
-            // Corrected Logic: The cost is the total value of the material *added* in that month.
-            // We assume 'stock' at the time of creation is the initial amount purchased.
-            // If the schema changes to have `initialStock`, this line would be: acc[material.category] += material.initialStock * material.costPerUnit;
             acc[material.category] += material.stock * material.costPerUnit;
         }
         return acc;
@@ -476,4 +475,49 @@ export function getMonthlyCostByCategory(materials: Material[], month: number, y
         name,
         cost
     }));
+}
+
+
+// Order Conclusion
+export async function concludeOrderWithStockUpdate(orderId: string, usedMaterials: UsedMaterial[]) {
+    if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const orderRef = doc(db, 'orders', orderId);
+
+            // 1. Update the order status and materials used
+            transaction.update(orderRef, {
+                status: 'Concluído',
+                materialsUsed: usedMaterials,
+            });
+
+            // 2. Decrement stock for each material
+            for (const used of usedMaterials) {
+                const materialRef = doc(db, 'materials', used.materialId);
+                const materialDoc = await transaction.get(materialRef);
+                
+                if (!materialDoc.exists()) {
+                    throw new Error(`Material com ID ${used.materialId} não encontrado.`);
+                }
+                
+                const currentStock = materialDoc.data().stock;
+                const newStock = currentStock - used.quantityUsed;
+
+                if (newStock < 0) {
+                    throw new Error(`Estoque insuficiente para ${materialDoc.data().name}.`);
+                }
+
+                transaction.update(materialRef, { 
+                    stock: newStock,
+                    usedInOrders: increment(1) 
+                });
+            }
+        });
+    } catch (error: any) {
+        console.error("Transaction failed: ", error);
+        // Let's not emit a generic permission error here, as the transaction might fail for other reasons
+        // like insufficient stock. We'll let the component's catch block handle the UI toast.
+        throw error; // Re-throw the specific error to be caught by the UI
+    }
 }
