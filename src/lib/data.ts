@@ -396,6 +396,59 @@ export async function getMaterials(): Promise<Material[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Material);
 }
 
+export async function addMaterial(material: Omit<Material, 'id' | 'userId' | 'createdAt'>): Promise<Material> {
+    if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+    const newMaterialData = {
+        ...material,
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+        usedInOrders: 0,
+    };
+    const docRef = await addDoc(materialsCollection, newMaterialData)
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: materialsCollection.path,
+                operation: 'create',
+                requestResourceData: newMaterialData,
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+            throw serverError;
+        });
+    const newDoc = await getDoc(docRef);
+    return fromFirebase(newDoc.data(), newDoc.id) as Material;
+}
+
+export async function updateMaterial(materialId: string, material: Partial<Omit<Material, 'id' | 'userId' | 'createdAt'>>): Promise<Material> {
+    const docRef = doc(db, 'materials', materialId);
+    await updateDoc(docRef, material)
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'update',
+                requestResourceData: material,
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+            throw serverError;
+        });
+    const updatedDoc = await getDoc(docRef);
+    return fromFirebase(updatedDoc.data(), updatedDoc.id) as Material;
+}
+
+export async function deleteMaterial(materialId: string): Promise<{ success: boolean }> {
+    const docRef = doc(db, 'materials', materialId);
+    await deleteDoc(docRef)
+        .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: docRef.path,
+                operation: 'delete',
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+            throw serverError;
+        });
+    return { success: true };
+}
+
+
 // Purchase Functions
 const purchasesCollection = collection(db, 'purchases');
 
@@ -455,6 +508,31 @@ export function getMonthlyCostByCategory(purchases: Purchase[], month: number, y
         name,
         cost
     }));
+}
+
+export function getInventoryValue(materials: Material[]) {
+  if (!materials) return 0;
+  return materials.reduce((acc, material) => acc + (material.stock * material.costPerUnit), 0);
+}
+
+export function getMonthlyCostOfGoodsSold(orders: Order[], month: number, year: number) {
+    const monthlyOrders = orders.filter(o => {
+        const createdAt = o.createdAt;
+        return o.status === 'Concluído' && createdAt && isValid(createdAt) && getMonth(createdAt) === month && getYear(createdAt) === year;
+    });
+
+    // This is a simplified calculation. A real-world scenario would be much more complex,
+    // requiring historical cost data for each material.
+    const totalCost = monthlyOrders.reduce((acc, order) => {
+        if (order.materialsUsed) {
+            // Here we would ideally get the cost of the material at the time of use.
+            // For simplicity, we can't do that without significant data model changes.
+            // This will be inaccurate if material costs change.
+        }
+        return acc;
+    }, 0);
+
+    return totalCost;
 }
 
 

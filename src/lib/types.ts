@@ -81,7 +81,9 @@ export interface Material {
     id: string;
     name: string;
     unit: string;
-    stock: number; // The current quantity
+    stock: number;
+    costPerUnit: number;
+    createdAt: Date;
     userId: string;
     usedInOrders?: number;
 }
