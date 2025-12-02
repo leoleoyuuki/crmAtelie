@@ -34,9 +34,9 @@ export function PurchaseTableToolbar<TData>({ table }: PurchaseTableToolbarProps
         </div>
         <PurchaseFormDialog
             trigger={
-                <Button>
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Nova Compra
+                <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">
+                    <ShoppingCart className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Nova Compra</span>
                 </Button>
             }
         />
