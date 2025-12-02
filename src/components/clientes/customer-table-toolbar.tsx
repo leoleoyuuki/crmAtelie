@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Table } from "@tanstack/react-table"
@@ -31,7 +32,7 @@ export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: Custom
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
-            className="h-10 w-full"
+            className="h-10 w-full lg:w-[250px]"
           />
         </div>
         <CustomerFormDialog
