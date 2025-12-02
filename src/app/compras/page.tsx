@@ -51,13 +51,13 @@ export default function ComprasPage() {
                   Analise os custos de aquisição de materiais por categoria.
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 sm:pt-0">
+                <div className="text-center sm:text-right">
                     <p className="text-sm text-muted-foreground">Custo do Mês</p>
                     <p className="text-2xl font-bold">{formattedTotalMonthlyCost}</p>
                 </div>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full sm:w-[180px]">
                       <SelectValue placeholder="Selecione um mês" />
                     </SelectTrigger>
                     <SelectContent>
@@ -74,14 +74,16 @@ export default function ComprasPage() {
             <Skeleton className="h-[300px] w-full" />
           ) : monthlyCostData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyCostData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+              <BarChart data={monthlyCostData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis
+                  tick={{ fontSize: 12 }}
                   tickFormatter={(value) =>
                     new Intl.NumberFormat("pt-BR", {
                       style: "currency",
                       currency: "BRL",
+                      notation: 'compact'
                     }).format(value as number)
                   }
                 />
