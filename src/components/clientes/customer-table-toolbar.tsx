@@ -1,4 +1,3 @@
-
 "use client"
 
 import { Table } from "@tanstack/react-table"
@@ -25,21 +24,21 @@ export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: Custom
         </CardDescription>
       </CardHeader>
       <div className="flex items-center justify-between p-6 pt-0">
-        <div className="flex flex-1 items-center space-x-2">
+        <div className="flex items-center pr-2">
           <Input
             placeholder="Filtrar por nome do cliente..."
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
-            className="h-10 w-[200px] lg:w-[300px]"
+            className="h-10 w-full"
           />
         </div>
         <CustomerFormDialog
             onCustomerCreated={onCustomerCreated}
             onCustomerUpdated={() => {}}
             trigger={
-                <Button size="icon" className="md:h-10 md:w-auto md:px-4">
+                <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">
                     <UserPlus className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Novo Cliente</span>
                 </Button>
