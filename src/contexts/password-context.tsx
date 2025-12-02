@@ -14,7 +14,7 @@ interface PasswordContextType {
 }
 
 export const PasswordContext = createContext<PasswordContextType>({
-  isPrivacyMode: true,
+  isPrivacyMode: false,
   isPasswordSet: false,
   togglePrivacyMode: () => {},
   verifyPassword: () => false,
@@ -23,7 +23,7 @@ export const PasswordContext = createContext<PasswordContextType>({
 });
 
 export const PasswordProvider = ({ children }: { children: ReactNode }) => {
-  const [isPrivacyMode, setIsPrivacyMode] = useState(true);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const [isPasswordSet, setIsPasswordSet] = useState(false);
   const [passwordHash, setPasswordHash] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
