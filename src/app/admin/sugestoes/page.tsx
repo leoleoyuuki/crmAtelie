@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -186,7 +187,7 @@ export default function SuggestionsAdminPage() {
 
     if (loading || userLoading) {
         return (
-            <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
+            <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
                 <Skeleton className="h-10 w-1/3" />
                 <Skeleton className="h-96 w-full" />
             </div>
@@ -194,7 +195,7 @@ export default function SuggestionsAdminPage() {
     }
      if (!isAdmin) {
         return (
-             <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
+             <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
                 <Card>
                     <CardHeader>
                         <CardTitle>Acesso Negado</CardTitle>
@@ -206,7 +207,7 @@ export default function SuggestionsAdminPage() {
     }
 
     return (
-        <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
+        <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
             <Card>
                 <CardHeader>
                     <div className="flex items-center gap-4 mb-2">

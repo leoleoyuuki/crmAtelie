@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -201,7 +202,7 @@ export default function GenerateActivationPage() {
   });
 
   return (
-    <div className="flex-1 space-y-8 p-4 pt-6 md:p-8">
+    <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
        <div className="flex items-center gap-4">
         <Button asChild variant="outline" size="icon" className="h-7 w-7">
           <Link href="/">
