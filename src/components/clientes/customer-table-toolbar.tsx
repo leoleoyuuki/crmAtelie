@@ -39,7 +39,7 @@ export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: Custom
             onCustomerCreated={onCustomerCreated}
             onCustomerUpdated={() => {}}
             trigger={
-                <Button size="icon" className="md:size-auto md:px-4">
+                <Button size="icon" className="md:h-10 md:w-auto md:px-4">
                     <UserPlus className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Novo Cliente</span>
                 </Button>
