@@ -55,7 +55,7 @@ export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProp
                      <p className="text-sm font-medium mb-1">Serviços</p>
                      <div className="flex flex-wrap gap-1">
                         {order.items?.map((item, index) => (
-                            <Badge key={index} variant="secondary" className="px-1.5 py-0.5">{item.serviceType}</Badge>
+                            <Badge key={index} variant="secondary" className="px-1 py-0.5">{item.serviceType}</Badge>
                         ))}
                     </div>
                 </div>
@@ -66,7 +66,7 @@ export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProp
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Entrega</span>
                         <span className={cn('font-semibold', isDueSoon ? 'text-destructive' : '')}>
-                            {dueDate ? format(dueDate, "PPP", { locale: ptBR }) : 'N/A'}
+                            {dueDate ? format(dueDate, "dd/MMM", { locale: ptBR }) : 'N/A'}
                         </span>
                     </div>
                     <div className="flex flex-col items-end">
