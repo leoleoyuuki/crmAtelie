@@ -45,7 +45,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
             onChange={(event) =>
               table.getColumn("customerName")?.setFilterValue(event.target.value)
             }
-            className="h-10 w-[150px] lg:w-[250px]"
+            className="h-10 w-full md:w-[150px] lg:w-[250px]"
           />
           <Select
             value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
@@ -53,7 +53,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
               table.getColumn("status")?.setFilterValue(value === "all" ? undefined : value);
             }}
           >
-            <SelectTrigger className="h-10 w-[180px]">
+            <SelectTrigger className="h-10 w-full md:w-[180px]">
               <SelectValue placeholder="Filtrar por status..." />
             </SelectTrigger>
             <SelectContent>
@@ -69,7 +69,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
                 table.getColumn("completionStatus")?.setFilterValue(value === "all" ? undefined : value)
             }}
           >
-            <SelectTrigger className="h-10 w-[180px]">
+            <SelectTrigger className="h-10 w-full md:w-[180px]">
               <SelectValue placeholder="Filtrar por conclusão..." />
             </SelectTrigger>
             <SelectContent>
@@ -84,7 +84,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
               table.getColumn("items")?.setFilterValue(value === "all" ? undefined : value)
             }}
           >
-            <SelectTrigger className="h-10 w-[180px]">
+            <SelectTrigger className="h-10 w-full md:w-[180px]">
               <SelectValue placeholder="Tipo de Serviço..." />
             </SelectTrigger>
             <SelectContent>
@@ -100,7 +100,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
                 table.getColumn("createdAt")?.setFilterValue(value === "all" ? undefined : value)
              }}
           >
-            <SelectTrigger className="h-10 w-[180px]">
+            <SelectTrigger className="h-10 w-full md:w-[180px]">
                 <SelectValue placeholder="Filtrar por Mês..." />
             </SelectTrigger>
             <SelectContent>
