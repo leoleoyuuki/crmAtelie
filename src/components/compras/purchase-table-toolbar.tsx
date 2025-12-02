@@ -29,7 +29,7 @@ export function PurchaseTableToolbar<TData>({ table }: PurchaseTableToolbarProps
             onChange={(event) =>
               table.getColumn("materialName")?.setFilterValue(event.target.value)
             }
-            className="h-10 w-[200px] lg:w-[300px]"
+            className="h-10 w-[150px] lg:w-[300px]"
           />
         </div>
         <PurchaseFormDialog
