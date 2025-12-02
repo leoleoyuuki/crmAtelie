@@ -31,16 +31,16 @@ export function PriceTableToolbar<TData>({ table, onItemCreated }: PriceTableToo
             onChange={(event) =>
               table.getColumn("serviceName")?.setFilterValue(event.target.value)
             }
-            className="h-10 w-[200px] lg:w-[300px]"
+            className="h-10 w-[150px] lg:w-[300px]"
           />
         </div>
         <PriceFormDialog
             onItemCreated={onItemCreated}
             onItemUpdated={() => {}} // This will be handled by the shell
             trigger={
-                <Button>
-                    <Tag className="mr-2 h-4 w-4" />
-                    Novo Serviço
+                <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">
+                    <Tag className="h-4 w-4 md:mr-2" />
+                    <span className="hidden md:inline">Novo Serviço</span>
                 </Button>
             }
         />
