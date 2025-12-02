@@ -106,7 +106,7 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
             <SelectContent>
                 <SelectItem value="all">Todos os Meses</SelectItem>
                  {months.map(month => (
-                    <SelectItem key={month.value} value={month.value}>{month.value}</SelectItem>
+                    <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                 ))}
             </SelectContent>
           </Select>
