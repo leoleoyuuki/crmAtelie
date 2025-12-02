@@ -44,18 +44,18 @@ export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProp
             <CardHeader>
                 <div className="flex justify-between items-start">
                     <div>
-                        <CardTitle className="font-headline text-lg">{order.customerName}</CardTitle>
+                        <CardTitle className="font-headline text-base">{order.customerName}</CardTitle>
                         <CardDescription className="font-mono text-xs">#{order.id.substring(0, 7)}</CardDescription>
                     </div>
                     {getStatusBadge(order.status)}
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-4 pt-0">
                 <div>
                      <p className="text-sm font-medium mb-1">Serviços</p>
                      <div className="flex flex-wrap gap-1">
                         {order.items?.map((item, index) => (
-                            <Badge key={index} variant="secondary">{item.serviceType}</Badge>
+                            <Badge key={index} variant="secondary" className="px-1.5 py-0.5">{item.serviceType}</Badge>
                         ))}
                     </div>
                 </div>
@@ -71,7 +71,7 @@ export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProp
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-muted-foreground">Total</span>
-                        <span className="font-bold text-lg">{formatCurrency(order.totalValue)}</span>
+                        <span className="font-bold text-base">{formatCurrency(order.totalValue)}</span>
                     </div>
                 </div>
 
