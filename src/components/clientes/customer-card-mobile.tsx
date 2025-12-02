@@ -19,20 +19,20 @@ export function CustomerCardMobile({ row, onUpdate, onDelete }: CustomerCardMobi
 
     return (
         <Card className="w-full">
-            <CardHeader>
-                <CardTitle className="font-headline text-lg">{customer.name}</CardTitle>
-                <CardDescription>
+            <CardHeader className="p-4">
+                <CardTitle className="font-headline text-base">{customer.name}</CardTitle>
+                <CardDescription className="text-xs">
                     Cliente desde {format(customer.createdAt, 'dd/MM/yyyy')}
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-                 <div className="flex items-center text-sm">
-                    <Phone className="mr-2 h-4 w-4 text-muted-foreground" />
+            <CardContent className="space-y-2 p-4 pt-0">
+                 <div className="flex items-center text-xs">
+                    <Phone className="mr-2 h-3 w-3 text-muted-foreground" />
                     <span>{customer.phone}</span>
                 </div>
                  {customer.email && (
-                    <div className="flex items-center text-sm">
-                        <Mail className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center text-xs">
+                        <Mail className="mr-2 h-3 w-3 text-muted-foreground" />
                         <span>{customer.email}</span>
                     </div>
                 )}

@@ -27,21 +27,21 @@ export function PurchaseCardMobile({ row }: PurchaseCardMobileProps) {
 
     return (
         <Card className="w-full">
-            <CardHeader>
+            <CardHeader className="p-4">
                 <div className="flex justify-between items-start">
                     <div>
-                        <CardTitle className="font-headline text-lg">{purchase.materialName}</CardTitle>
+                        <CardTitle className="font-headline text-base">{purchase.materialName}</CardTitle>
                         <CardDescription className="text-xs">
                              {isValid(createdAt)
                                 ? format(createdAt, "dd/MM/yyyy", { locale: ptBR })
                                 : "Calculando..."}
                         </CardDescription>
                     </div>
-                    {purchase.category && <Badge variant="secondary">{purchase.category}</Badge>}
+                    {purchase.category && <Badge variant="secondary" className="text-xs">{purchase.category}</Badge>}
                 </div>
             </CardHeader>
-            <CardContent>
-                 <div className="flex justify-between items-center text-sm">
+            <CardContent className="p-4 pt-0">
+                 <div className="flex justify-between items-center text-xs">
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Quantidade</span>
                         <span className='font-semibold'>
@@ -50,7 +50,7 @@ export function PurchaseCardMobile({ row }: PurchaseCardMobileProps) {
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-muted-foreground">Custo Total</span>
-                        <span className="font-bold text-lg">{formatCurrency(purchase.cost)}</span>
+                        <span className="font-bold text-base">{formatCurrency(purchase.cost)}</span>
                     </div>
                 </div>
             </CardContent>

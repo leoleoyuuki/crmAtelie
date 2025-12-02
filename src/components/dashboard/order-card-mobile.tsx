@@ -41,7 +41,7 @@ export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProp
 
     return (
         <Card className="w-full">
-            <CardHeader>
+            <CardHeader className="p-4">
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className="font-headline text-base">{order.customerName}</CardTitle>
@@ -50,19 +50,21 @@ export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProp
                     {getStatusBadge(order.status)}
                 </div>
             </CardHeader>
-            <CardContent className="space-y-4 px-4 pt-0">
+            <CardContent className="space-y-3 px-4 pt-0">
                 <div>
-                     <p className="text-sm font-medium mb-1">Serviços</p>
+                     <p className="text-xs font-medium mb-1">Serviços</p>
                      <div className="flex flex-wrap gap-1">
                         {order.items?.map((item, index) => (
-                            <Badge key={index} variant="secondary" className="px-1 py-0.5">{item.serviceType}</Badge>
+                            <Badge key={index} variant="secondary" className="px-1 py-0.5 text-[10px]">
+                                {item.serviceType}
+                            </Badge>
                         ))}
                     </div>
                 </div>
 
                 <Separator />
                 
-                <div className="flex justify-between items-center text-sm">
+                <div className="flex justify-between items-center text-xs">
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Entrega</span>
                         <span className={cn('font-semibold', isDueSoon ? 'text-destructive' : '')}>

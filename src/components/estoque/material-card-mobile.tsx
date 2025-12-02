@@ -25,27 +25,27 @@ export function MaterialCardMobile({ row }: MaterialCardMobileProps) {
 
     return (
         <Card className="w-full">
-            <CardHeader>
+            <CardHeader className="p-4">
                 <div className="flex justify-between items-start">
-                    <CardTitle className="font-headline text-lg">{material.name}</CardTitle>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <TrendingUp className="h-4 w-4" />
+                    <CardTitle className="font-headline text-base">{material.name}</CardTitle>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <TrendingUp className="h-3 w-3" />
                         <span>{usedCount}</span>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent>
-                 <div className="flex justify-between items-center text-sm">
+            <CardContent className="p-4 pt-0">
+                 <div className="flex justify-between items-center text-xs">
                     <div className="flex flex-col">
                         <span className="text-muted-foreground">Em Estoque</span>
                         <div className="flex items-baseline gap-1">
-                             <span className='text-xl font-bold'>{material.stock}</span>
+                             <span className='text-lg font-bold'>{material.stock}</span>
                              <span className="text-xs">{material.unit}</span>
                         </div>
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-muted-foreground">Custo/Unidade</span>
-                        <span className="font-semibold text-base">{formatCurrency(cost)}</span>
+                        <span className="font-semibold text-sm">{formatCurrency(cost)}</span>
                     </div>
                 </div>
             </CardContent>
