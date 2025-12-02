@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { PriceTableItem } from "@/lib/types"
 import { CardHeader, CardTitle, CardDescription } from "../ui/card"
 import { PriceFormDialog } from "./price-form-dialog"
-import { Tag } from "lucide-react"
+import { PlusCircle } from "lucide-react"
 import { Button } from "../ui/button"
 
 interface PriceTableToolbarProps<TData> {
@@ -31,7 +31,7 @@ export function PriceTableToolbar<TData>({ table, onItemCreated }: PriceTableToo
             onChange={(event) =>
               table.getColumn("serviceName")?.setFilterValue(event.target.value)
             }
-            className="h-10 w-[150px] lg:w-[300px]"
+            className="h-10 w-[200px] lg:w-[300px]"
           />
         </div>
         <PriceFormDialog
@@ -39,7 +39,7 @@ export function PriceTableToolbar<TData>({ table, onItemCreated }: PriceTableToo
             onItemUpdated={() => {}} // This will be handled by the shell
             trigger={
                 <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">
-                    <Tag className="h-4 w-4 md:mr-2" />
+                    <PlusCircle className="h-4 w-4 md:mr-2" />
                     <span className="hidden md:inline">Novo Serviço</span>
                 </Button>
             }
