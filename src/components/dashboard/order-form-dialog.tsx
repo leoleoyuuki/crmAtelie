@@ -32,17 +32,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Order, OrderStatus, ServiceType, Customer, PriceTableItem } from "@/lib/types";
 import { addOrder, updateOrder, getCustomers, getPriceTableItems } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, UserPlus, Trash2, Calendar as CalendarIcon } from "lucide-react";
+import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { DatePickerWithDialog } from "../ui/date-picker";
 
 const orderItemSchema = z.object({
   serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
@@ -454,32 +450,10 @@ export function OrderFormDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel className="mb-1.5">Data de Entrega</FormLabel>
-                        <Popover modal={false}>
-                            <PopoverTrigger asChild>
-                                <FormControl>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? format(field.value, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                                </Button>
-                                </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                disabled={(date) => date < new Date("1900-01-01")}
-                                initialFocus
-                                locale={ptBR}
-                                />
-                            </PopoverContent>
-                        </Popover>
+                        <DatePickerWithDialog
+                            date={field.value}
+                            setDate={field.onChange}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -532,5 +506,7 @@ export function OrderFormDialog({
     </>
   );
 }
+
+    
 
     
