@@ -16,7 +16,7 @@ import {
 
 export function DatePicker({ date, setDate, className }: { date?: Date, setDate: (date?: Date) => void, className?: string }) {
   return (
-    <Popover>
+    <Popover modal={false}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
