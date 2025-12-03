@@ -359,7 +359,7 @@ export function OrderFormDialog({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         {!isEditing && (
           <DialogTrigger asChild>
-            <Button size="icon" className="md:size-auto">
+             <Button size="icon" className="md:w-auto md:px-4">
               <PlusCircle className="md:mr-2" />
               <span className="hidden md:inline">Novo Pedido</span>
             </Button>
