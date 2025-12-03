@@ -17,6 +17,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -72,6 +74,9 @@ export function DatePickerWithDialog({ date, setDate, className }: { date?: Date
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Escolha uma data</DialogTitle>
+                    </DialogHeader>
                     <Calendar
                         mode="single"
                         selected={date}
@@ -88,7 +93,7 @@ export function DatePickerWithDialog({ date, setDate, className }: { date?: Date
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal={false}>
             <PopoverTrigger asChild>
                 <Button
                     variant={"outline"}
