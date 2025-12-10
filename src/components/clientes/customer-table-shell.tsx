@@ -23,7 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { CustomerTableToolbar } from "./customer-table-toolbar";
@@ -84,7 +84,13 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
       {
         accessorKey: 'createdAt',
         header: 'Cliente Desde',
-        cell: ({ row }) => format(row.original.createdAt, 'dd/MM/yyyy'),
+        cell: ({ row }) => {
+          const createdAt = row.original.createdAt;
+          // Check if createdAt is a valid date before formatting
+          return isValid(createdAt)
+            ? format(createdAt, 'dd/MM/yyyy')
+            : "Calculando...";
+        },
       },
       {
         id: "actions",
