@@ -1,7 +1,6 @@
-
 "use client"
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Customer } from "@/lib/types";
 import {
   ColumnDef,
@@ -38,30 +37,11 @@ interface CustomerTableShellProps {
 }
 
 export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
-  const [customers, setCustomers] = useState<Customer[]>(data);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
   const isMobile = useIsMobile();
-  
-  useEffect(() => {
-    setCustomers(data);
-  }, [data]);
-
-  const addOptimisticCustomer = (customer: Customer) => {
-    setCustomers(currentCustomers => [customer, ...currentCustomers]);
-  };
-
-  const updateOptimisticCustomer = (customerId: string, updatedCustomer: Partial<Customer>) => {
-    setCustomers(currentCustomers =>
-      currentCustomers.map(c => c.id === customerId ? { ...c, ...updatedCustomer } as Customer : c)
-    );
-  };
-
-  const removeOptimisticCustomer = (customerId: string) => {
-    setCustomers(currentCustomers => currentCustomers.filter(c => c.id !== customerId));
-  };
   
   const columns: ColumnDef<Customer>[] = useMemo(
     () => [
@@ -69,17 +49,18 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
         accessorKey: "name",
         header: "Nome",
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.name}</div>
+          <div className="font-medium text-sm">{row.original.name}</div>
         ),
       },
       {
         accessorKey: "phone",
         header: "Telefone",
+        cell: ({ row }) => <div className="text-sm">{row.original.phone}</div>,
       },
       {
         accessorKey: "email",
         header: "Email",
-        cell: ({ row }) => row.original.email || "N/A",
+        cell: ({ row }) => <div className="text-sm">{row.original.email || "N/A"}</div>,
       },
       {
         accessorKey: 'createdAt',
@@ -98,8 +79,6 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
           <div className="text-right">
             <CustomerTableRowActions 
               customer={row.original} 
-              onUpdate={updateOptimisticCustomer} 
-              onDelete={removeOptimisticCustomer} 
             />
           </div>
         ),
@@ -109,7 +88,7 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
   );
 
   const table = useReactTable({
-    data: customers,
+    data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -158,7 +137,7 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
 
   return (
     <Card>
-      <CustomerTableToolbar table={table} onCustomerCreated={addOptimisticCustomer} />
+      <CustomerTableToolbar table={table} />
       <CardContent>
         {isMobile ? (
           <div className="space-y-4">
@@ -167,8 +146,6 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
                     <CustomerCardMobile
                         key={row.id}
                         row={row as Row<Customer>}
-                        onUpdate={updateOptimisticCustomer}
-                        onDelete={removeOptimisticCustomer}
                     />
                 ))
             ) : (

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Customer } from '@/lib/types';
@@ -10,11 +9,9 @@ import { format } from "date-fns";
 
 interface CustomerCardMobileProps {
     row: Row<Customer>;
-    onUpdate: (customerId: string, updatedCustomer: Partial<Customer>) => void;
-    onDelete: (customerId: string) => void;
 }
 
-export function CustomerCardMobile({ row, onUpdate, onDelete }: CustomerCardMobileProps) {
+export function CustomerCardMobile({ row }: CustomerCardMobileProps) {
     const customer = row.original;
 
     return (
@@ -40,8 +37,6 @@ export function CustomerCardMobile({ row, onUpdate, onDelete }: CustomerCardMobi
             <CardFooter className="bg-muted/50 p-2 border-t flex justify-end">
                 <CustomerTableRowActions 
                     customer={customer} 
-                    onUpdate={onUpdate} 
-                    onDelete={onDelete} 
                 />
             </CardFooter>
         </Card>

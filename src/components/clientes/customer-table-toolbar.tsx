@@ -1,4 +1,3 @@
-
 "use client"
 
 import { Table } from "@tanstack/react-table"
@@ -11,11 +10,9 @@ import { Button } from "../ui/button"
 
 interface CustomerTableToolbarProps<TData> {
   table: Table<TData>
-  onCustomerCreated: (customer: Customer) => void
 }
 
-
-export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: CustomerTableToolbarProps<TData>) {
+export function CustomerTableToolbar<TData>({ table }: CustomerTableToolbarProps<TData>) {
   return (
     <>
       <CardHeader>
@@ -25,18 +22,18 @@ export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: Custom
         </CardDescription>
       </CardHeader>
       <div className="flex items-center justify-between p-6 pt-0">
-        <div className="flex items-center pr-2">
+        <div className="flex items-center">
           <Input
             placeholder="Filtrar por nome do cliente..."
             value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("name")?.setFilterValue(event.target.value)
             }
-            className="h-10 w-full lg:w-[250px]"
+            className="h-10 w-[200px] lg:w-[250px]"
           />
         </div>
         <CustomerFormDialog
-            onCustomerCreated={onCustomerCreated}
+            onCustomerCreated={() => {}} // No longer needed for optimistic update
             onCustomerUpdated={() => {}}
             trigger={
                 <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">

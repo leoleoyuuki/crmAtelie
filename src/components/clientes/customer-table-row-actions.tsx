@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react";
@@ -29,11 +28,9 @@ import { CustomerFormDialog } from "../dashboard/customer-form-dialog";
 
 interface CustomerTableRowActionsProps {
   customer: Customer;
-  onUpdate: (customerId: string, updatedCustomer: Partial<Customer>) => void;
-  onDelete: (customerId: string) => void;
 }
 
-export function CustomerTableRowActions({ customer, onUpdate, onDelete }: CustomerTableRowActionsProps) {
+export function CustomerTableRowActions({ customer }: CustomerTableRowActionsProps) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -41,7 +38,6 @@ export function CustomerTableRowActions({ customer, onUpdate, onDelete }: Custom
   const handleDelete = async () => {
     try {
       await deleteCustomer(customer.id);
-      onDelete(customer.id);
       toast({
         title: "Cliente Excluído",
         description: `O cliente ${customer.name} foi excluído com sucesso.`,
@@ -54,11 +50,6 @@ export function CustomerTableRowActions({ customer, onUpdate, onDelete }: Custom
         description: "Falha ao excluir o cliente. Verifique se ele não possui pedidos associados.",
       });
     }
-  };
-
-  const handleUpdate = (updatedCustomer: Customer) => {
-    onUpdate(customer.id, updatedCustomer);
-    // The dialog will show its own toast
   };
   
   return (
@@ -108,8 +99,8 @@ export function CustomerTableRowActions({ customer, onUpdate, onDelete }: Custom
         customer={customer}
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
-        onCustomerCreated={() => {}} // Not used here, for update
-        onCustomerUpdated={handleUpdate}
+        onCustomerCreated={() => {}} // Not used here
+        onCustomerUpdated={() => {}} // Not used here
       />
     </>
   );
