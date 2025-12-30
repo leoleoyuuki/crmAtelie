@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -33,8 +34,8 @@ import { ConcludeOrderDialog } from "../pedidos/conclude-order-dialog";
 
 interface OrderTableRowActionsProps {
   order: Order;
-  onUpdate: (orderId: string, updatedOrder: Partial<Order>) => void;
-  onDelete: (orderId: string) => void;
+  onUpdate: () => void;
+  onDelete: () => void;
 }
 
 export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRowActionsProps) {
@@ -71,7 +72,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
   const handleDelete = async () => {
     try {
       await deleteOrder(order.id);
-      onDelete(order.id);
+      onDelete();
       toast({
         title: "Pedido Excluído",
         description: `O pedido #${order.id.substring(0, 5)} foi excluído com sucesso.`,
@@ -86,8 +87,8 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
     }
   };
 
-  const handleOrderConcluded = (updatedOrder: Partial<Order>) => {
-    onUpdate(order.id, updatedOrder);
+  const handleOrderConcluded = () => {
+    onUpdate();
     setIsConcludeDialogOpen(false);
   }
   
@@ -164,6 +165,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
         onOrderUpdated={onUpdate}
+        onOrderCreated={onUpdate}
       />
 
        <ConcludeOrderDialog

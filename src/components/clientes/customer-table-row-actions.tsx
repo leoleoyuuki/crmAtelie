@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react";
@@ -28,9 +29,10 @@ import { CustomerFormDialog } from "../dashboard/customer-form-dialog";
 
 interface CustomerTableRowActionsProps {
   customer: Customer;
+  onCustomerDeleted: () => void;
 }
 
-export function CustomerTableRowActions({ customer }: CustomerTableRowActionsProps) {
+export function CustomerTableRowActions({ customer, onCustomerDeleted }: CustomerTableRowActionsProps) {
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -43,6 +45,7 @@ export function CustomerTableRowActions({ customer }: CustomerTableRowActionsPro
         description: `O cliente ${customer.name} foi excluído com sucesso.`,
       });
       setIsDeleteDialogOpen(false);
+      onCustomerDeleted();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -99,8 +102,8 @@ export function CustomerTableRowActions({ customer }: CustomerTableRowActionsPro
         customer={customer}
         isOpen={isEditDialogOpen}
         setIsOpen={setIsEditDialogOpen}
-        onCustomerCreated={() => {}} // Not used here
-        onCustomerUpdated={() => {}} // Not used here
+        onCustomerCreated={onCustomerDeleted} // Refresh list
+        onCustomerUpdated={onCustomerDeleted} // Refresh list
       />
     </>
   );

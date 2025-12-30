@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -35,11 +36,21 @@ import { ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OrderCardMobile } from "./order-card-mobile";
+import { useCollection } from "@/firebase";
+import { Skeleton } from "../ui/skeleton";
+
 
 interface OrderTableShellProps {
   data: Order[];
   isPage?: boolean;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
+  onDataMutated?: () => void;
+  loading?: boolean;
 }
+
 
 const monthFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
     const date = row.original.createdAt;
@@ -64,33 +75,32 @@ const completionStatusFilterFn: FilterFn<any> = (row, columnId, value, addMeta) 
 }
 
 
-export default function OrderTableShell({ data, isPage = false }: OrderTableShellProps) {
-  const [orders, setOrders] = useState<Order[]>(data);
+export default function OrderTableShell({ 
+    data, 
+    isPage = false,
+    onNextPage,
+    onPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    onDataMutated,
+    loading,
+}: OrderTableShellProps) {
+  const { data: dashboardOrders, loading: dashboardLoading } = useCollection<Order>('orders');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
   const isMobile = useIsMobile();
   
-  useEffect(() => {
-    setOrders(data);
-  }, [data]);
-
-  const handleOrderCreated = () => {
-    // No longer doing optimistic updates here.
-    // The useCollection hook will update the data from Firestore.
-  };
-
-  const updateOptimisticOrder = (orderId: string, updatedOrder: Partial<Order>) => {
-    setOrders(currentOrders =>
-      currentOrders.map(o => o.id === orderId ? { ...o, ...updatedOrder } as Order : o)
-    );
-  };
-
-  const removeOptimisticOrder = (orderId: string) => {
-    setOrders(currentOrders => currentOrders.filter(o => o.id !== orderId));
-  };
+  const orders = isPage ? data : dashboardOrders || [];
+  const isLoading = isPage ? loading : dashboardLoading;
   
+  const handleDataMutation = () => {
+    if (onDataMutated) {
+        onDataMutated();
+    }
+  };
+
   const columns: ColumnDef<Order>[] = useMemo(
     () => [
       {
@@ -184,21 +194,21 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
           <div className="text-right">
             <OrderTableRowActions 
               order={row.original} 
-              onUpdate={updateOptimisticOrder} 
-              onDelete={removeOptimisticOrder} 
+              onUpdate={handleDataMutation} 
+              onDelete={handleDataMutation} 
             />
           </div>
         ),
       },
     ],
-    []
+    [handleDataMutation]
   );
 
   const table = useReactTable({
     data: orders,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    getPaginationRowModel: isPage ? undefined : getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -208,42 +218,69 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
       sorting,
     },
     initialState: {
-      pagination: {
-        pageSize: isPage ? 10 : 5,
-      },
+      pagination: isPage ? undefined : { pageSize: 5 },
        columnVisibility: {
         createdAt: false, 
         completionStatus: false,
       },
-    }
+    },
+    manualPagination: isPage,
   });
 
-  const renderPagination = () => (
-     <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-        variant="outline"
-        size="sm"
-        onClick={() => table.previousPage()}
-        disabled={!table.getCanPreviousPage()}
-        >
-        Anterior
-        </Button>
-        <Button
-        variant="outline"
-        size="sm"
-        onClick={() => table.nextPage()}
-        disabled={!table.getCanNextPage()}
-        >
-        Próximo
-        </Button>
-    </div>
-  );
+  const renderPagination = () => {
+    if (!isPage) {
+        return (
+             <div className="flex items-center justify-end space-x-2 py-4">
+                <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                >
+                Anterior
+                </Button>
+                <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                >
+                Próximo
+                </Button>
+            </div>
+        )
+    }
+    return (
+        <div className="flex items-center justify-end space-x-2 py-4">
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={onPrevPage}
+                disabled={!hasPrevPage || isLoading}
+            >
+                Anterior
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={onNextPage}
+                disabled={!hasNextPage || isLoading}
+            >
+                Próximo
+            </Button>
+        </div>
+    );
+  }
+
+  if (isLoading && orders.length === 0) {
+      return <Skeleton className="h-[400px] w-full" />
+  }
 
   return (
     <Card>
       <OrderTableToolbar 
         table={table} 
-        onOrderCreated={handleOrderCreated} 
+        onOrderCreated={handleDataMutation} 
         isPage={isPage} 
       />
       <CardContent>
@@ -253,9 +290,9 @@ export default function OrderTableShell({ data, isPage = false }: OrderTableShel
                 table.getRowModel().rows.map(row => (
                     <OrderCardMobile 
                         key={row.id}
-                        row={row as Row<Order>} // Cast row to Row<Order>
-                        onUpdate={updateOptimisticOrder}
-                        onDelete={removeOptimisticOrder}
+                        row={row as Row<Order>}
+                        onUpdate={(orderId, updatedOrder) => handleDataMutation()}
+                        onDelete={(orderId) => handleDataMutation()}
                     />
                 ))
             ) : (

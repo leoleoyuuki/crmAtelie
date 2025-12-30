@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from "react";
@@ -34,9 +35,22 @@ import { CustomerCardMobile } from "./customer-card-mobile";
 interface CustomerTableShellProps {
   data: Customer[];
   loading: boolean;
+  onNextPage: () => void;
+  onPrevPage: () => void;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  onDataMutated: () => void;
 }
 
-export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
+export function CustomerTableShell({ 
+    data, 
+    loading, 
+    onNextPage, 
+    onPrevPage, 
+    hasNextPage, 
+    hasPrevPage,
+    onDataMutated 
+}: CustomerTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
@@ -79,19 +93,21 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
           <div className="text-right">
             <CustomerTableRowActions 
               customer={row.original} 
+              onCustomerDeleted={onDataMutated}
             />
           </div>
         ),
       },
     ],
-    []
+    [onDataMutated]
   );
 
   const table = useReactTable({
     data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // We are now handling pagination manually, so we disable the tanstack-table pagination model
+    // getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -100,17 +116,10 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
       columnFilters,
       sorting,
     },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-       columnVisibility: {
-        createdAt: false,
-      },
-    }
+    manualPagination: true, // Tell the table we're handling pagination ourselves
   });
 
-  if (loading) {
+  if (loading && table.getRowModel().rows.length === 0) {
       return <Skeleton className="h-[600px] w-full" />;
   }
 
@@ -119,16 +128,16 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
       <Button
         variant="outline"
         size="sm"
-        onClick={() => table.previousPage()}
-        disabled={!table.getCanPreviousPage()}
+        onClick={() => onPrevPage()}
+        disabled={!hasPrevPage || loading}
       >
         Anterior
       </Button>
       <Button
         variant="outline"
         size="sm"
-        onClick={() => table.nextPage()}
-        disabled={!table.getCanNextPage()}
+        onClick={() => onNextPage()}
+        disabled={!hasNextPage || loading}
       >
         Próximo
       </Button>
@@ -137,7 +146,7 @@ export function CustomerTableShell({ data, loading }: CustomerTableShellProps) {
 
   return (
     <Card>
-      <CustomerTableToolbar table={table} />
+      <CustomerTableToolbar table={table} onCustomerCreated={onDataMutated} />
       <CardContent>
         {isMobile ? (
           <div className="space-y-4">

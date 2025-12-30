@@ -6,10 +6,12 @@ import React, {
   useContext,
   ReactNode,
   useMemo,
+  useState,
+  useCallback,
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
-import { Firestore, collection, onSnapshot, query, where, Timestamp } from 'firebase/firestore';
+import { Firestore, collection, onSnapshot, query, where, Timestamp, getDocs, limit, startAfter, endBefore, limitToLast, orderBy, Query, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 import { app, auth, db } from './config';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from './errors';
@@ -113,6 +115,93 @@ export function useCollection<T>(path: string) {
 
   return { data, loading, error };
 }
+
+
+export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
+    const { db, auth } = useFirebase();
+    const [data, setData] = useState<T[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<Error | null>(null);
+    const [firstVisible, setFirstVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+    const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+    const [hasMore, setHasMore] = useState(true);
+    const [hasPrev, setHasPrev] = useState(false);
+    
+    const fetchData = useCallback(async (q: Query) => {
+        setLoading(true);
+        try {
+            const snapshot = await getDocs(q);
+            const result: T[] = snapshot.docs.map(doc => {
+                 const docData = doc.data();
+                 const convertedData = { ...docData };
+                 for (const key in convertedData) {
+                    const value = (convertedData as any)[key];
+                    if (value instanceof Timestamp) {
+                        (convertedData as any)[key] = value.toDate();
+                    }
+                 }
+                 return { ...convertedData, id: doc.id } as T;
+            });
+            setData(result);
+            setFirstVisible(snapshot.docs[0] || null);
+            setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null);
+            setHasMore(snapshot.docs.length === pageSize);
+            setError(null);
+        } catch (err: any) {
+            setError(err);
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }, [pageSize]);
+
+    const loadFirstPage = useCallback(() => {
+        if (!auth.currentUser) return;
+        const q = query(
+            collection(db, path),
+            where('userId', '==', auth.currentUser.uid),
+            orderBy('createdAt', 'desc'),
+            limit(pageSize)
+        );
+        fetchData(q);
+        setHasPrev(false);
+    }, [db, path, auth.currentUser, pageSize, fetchData]);
+    
+    useEffect(() => {
+        loadFirstPage();
+    }, [loadFirstPage]);
+    
+    const nextPage = async () => {
+        if (!auth.currentUser || !lastVisible) return;
+        const q = query(
+            collection(db, path),
+            where('userId', '==', auth.currentUser.uid),
+            orderBy('createdAt', 'desc'),
+            startAfter(lastVisible),
+            limit(pageSize)
+        );
+        await fetchData(q);
+        setHasPrev(true);
+    };
+
+    const prevPage = async () => {
+        if (!auth.currentUser || !firstVisible) return;
+         const q = query(
+            collection(db, path),
+            where('userId', '==', auth.currentUser.uid),
+            orderBy('createdAt', 'desc'),
+            endBefore(firstVisible),
+            limitToLast(pageSize)
+        );
+        await fetchData(q);
+        // This is a simplification; robust backward pagination is more complex
+        setHasPrev(false); // A simple way to handle it for now
+    };
+    
+    return { data, loading, error, nextPage, prevPage, hasMore, hasPrev, refresh: loadFirstPage };
+}
+
+
 
 export function useDoc<T>(path: string) {
     // Similar to useCollection, but for a single document

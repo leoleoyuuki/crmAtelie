@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Order, OrderStatus } from '@/lib/types';
@@ -13,8 +14,8 @@ import { Separator } from '../ui/separator';
 
 interface OrderCardMobileProps {
     row: Row<Order>;
-    onUpdate: (orderId: string, updatedOrder: Partial<Order>) => void;
-    onDelete: (orderId: string) => void;
+    onUpdate: () => void;
+    onDelete: () => void;
 }
 
 const getStatusBadge = (status: OrderStatus) => {

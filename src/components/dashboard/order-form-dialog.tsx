@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -211,7 +212,7 @@ interface OrderFormDialogProps {
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
   onOrderCreated?: () => void;
-  onOrderUpdated?: (orderId: string, updatedOrder: Partial<Order>) => void;
+  onOrderUpdated?: () => void;
 }
 
 export function OrderFormDialog({
@@ -327,9 +328,9 @@ export function OrderFormDialog({
       };
 
       if (isEditing && order) {
-        const updated = await updateOrder(order.id, orderData);
+        await updateOrder(order.id, orderData);
         if (onOrderUpdated) {
-          onOrderUpdated(order.id, updated);
+          onOrderUpdated();
         }
         toast({ title: "Pedido Atualizado", description: `O pedido foi atualizado.` });
       } else {
@@ -352,6 +353,7 @@ export function OrderFormDialog({
     setCustomers(prev => [newCustomer, ...prev]);
     form.setValue('customerId', newCustomer.id);
     setIsCustomerSelectOpen(true);
+    if(onOrderCreated) onOrderCreated();
   };
 
   return (
@@ -501,7 +503,7 @@ export function OrderFormDialog({
         isOpen={isCustomerDialogOpen} 
         setIsOpen={setIsCustomerDialogOpen}
         onCustomerCreated={handleCustomerCreated}
-        onCustomerUpdated={() => {}}
+        onCustomerUpdated={handleCustomerCreated} // Also refresh on update
       />
     </>
   );

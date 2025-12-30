@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Table } from "@tanstack/react-table"
@@ -10,9 +11,10 @@ import { Button } from "../ui/button"
 
 interface CustomerTableToolbarProps<TData> {
   table: Table<TData>
+  onCustomerCreated: () => void;
 }
 
-export function CustomerTableToolbar<TData>({ table }: CustomerTableToolbarProps<TData>) {
+export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: CustomerTableToolbarProps<TData>) {
   return (
     <>
       <CardHeader>
@@ -33,8 +35,8 @@ export function CustomerTableToolbar<TData>({ table }: CustomerTableToolbarProps
           />
         </div>
         <CustomerFormDialog
-            onCustomerCreated={() => {}} // No longer needed for optimistic update
-            onCustomerUpdated={() => {}}
+            onCustomerCreated={onCustomerCreated}
+            onCustomerUpdated={onCustomerCreated} // Refresh list on update too
             trigger={
                 <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">
                     <UserPlus className="h-4 w-4 md:mr-2" />
