@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -36,7 +35,6 @@ import { ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OrderCardMobile } from "./order-card-mobile";
-import { useCollection } from "@/firebase";
 import { Skeleton } from "../ui/skeleton";
 
 
@@ -47,7 +45,6 @@ interface OrderTableShellProps {
   onPrevPage?: () => void;
   hasNextPage?: boolean;
   hasPrevPage?: boolean;
-  onDataMutated?: () => void;
   loading?: boolean;
 }
 
@@ -82,24 +79,13 @@ export default function OrderTableShell({
     onPrevPage,
     hasNextPage,
     hasPrevPage,
-    onDataMutated,
     loading,
 }: OrderTableShellProps) {
-  const { data: dashboardOrders, loading: dashboardLoading } = useCollection<Order>('orders');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
   const isMobile = useIsMobile();
-  
-  const orders = isPage ? data : dashboardOrders || [];
-  const isLoading = isPage ? loading : dashboardLoading;
-  
-  const handleDataMutation = () => {
-    if (onDataMutated) {
-        onDataMutated();
-    }
-  };
 
   const columns: ColumnDef<Order>[] = useMemo(
     () => [
@@ -194,18 +180,18 @@ export default function OrderTableShell({
           <div className="text-right">
             <OrderTableRowActions 
               order={row.original} 
-              onUpdate={handleDataMutation} 
-              onDelete={handleDataMutation} 
+              onUpdate={() => {}} // Listener on page will handle update
+              onDelete={() => {}} // Listener on page will handle update
             />
           </div>
         ),
       },
     ],
-    [handleDataMutation]
+    []
   );
 
   const table = useReactTable({
-    data: orders,
+    data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: isPage ? undefined : getPaginationRowModel(),
@@ -256,7 +242,7 @@ export default function OrderTableShell({
                 variant="outline"
                 size="sm"
                 onClick={onPrevPage}
-                disabled={!hasPrevPage || isLoading}
+                disabled={!hasPrevPage || loading}
             >
                 Anterior
             </Button>
@@ -264,7 +250,7 @@ export default function OrderTableShell({
                 variant="outline"
                 size="sm"
                 onClick={onNextPage}
-                disabled={!hasNextPage || isLoading}
+                disabled={!hasNextPage || loading}
             >
                 Próximo
             </Button>
@@ -272,7 +258,7 @@ export default function OrderTableShell({
     );
   }
 
-  if (isLoading && orders.length === 0) {
+  if (loading && data.length === 0) {
       return <Skeleton className="h-[400px] w-full" />
   }
 
@@ -280,7 +266,7 @@ export default function OrderTableShell({
     <Card>
       <OrderTableToolbar 
         table={table} 
-        onOrderCreated={handleDataMutation} 
+        onOrderCreated={() => {}}
         isPage={isPage} 
       />
       <CardContent>
@@ -291,8 +277,8 @@ export default function OrderTableShell({
                     <OrderCardMobile 
                         key={row.id}
                         row={row as Row<Order>}
-                        onUpdate={(orderId, updatedOrder) => handleDataMutation()}
-                        onDelete={(orderId) => handleDataMutation()}
+                        onUpdate={() => {}}
+                        onDelete={() => {}}
                     />
                 ))
             ) : (
