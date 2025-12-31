@@ -215,38 +215,23 @@ export function getMonths() {
 }
 
 export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>) {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Usuário não autenticado.");
-    
-    const newOrderData = {
-        ...order,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-        dueDate: Timestamp.fromDate(order.dueDate),
-    };
-
-    try {
-        await runTransaction(db, async (transaction) => {
-            // 1. Create the new order
-            const orderRef = doc(collection(db, 'orders'));
-            transaction.set(orderRef, newOrderData);
-
-            // 2. Update the summary document
-            const summaryRef = doc(db, 'summaries', user.uid);
-            transaction.set(summaryRef, { 
-                totalOrders: increment(1),
-                pendingOrders: increment(1)
-            }, { merge: true });
-        });
-    } catch (error: any) {
-        console.error("Add order transaction failed: ", error);
-        // Fallback or specific error handling can be done here.
-        // For now, we'll let it throw.
-        throw error;
-    }
-    
-    // For optimistic updates, we can't easily return the created doc from a transaction
-    // The calling UI should rely on the real-time listener to get the new data.
+  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+  const newOrderData = {
+    ...order,
+    userId: auth.currentUser.uid,
+    createdAt: serverTimestamp(),
+    dueDate: Timestamp.fromDate(order.dueDate),
+  };
+  await addDoc(ordersCollection, newOrderData)
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: ordersCollection.path,
+            operation: 'create',
+            requestResourceData: newOrderData,
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
 }
 
 

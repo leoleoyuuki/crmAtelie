@@ -132,7 +132,7 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
     );
 
     return () => unsubscribe();
-  }, [db, path, auth.currentUser, limitValue, orderByValue]);
+  }, [db, path, auth.currentUser, limitValue, orderByValue?.[0], orderByValue?.[1]]);
 
   return { data, loading, error };
 }
