@@ -98,3 +98,12 @@ export interface Purchase {
     createdAt: Date;
     userId: string;
 }
+
+export interface UserSummary {
+  id: string;
+  userId: string;
+  totalRevenue: number;
+  totalOrders: number;
+  pendingOrders: number;
+  monthlyRevenue: { [key: string]: number }; // YYYY-MM format
+}

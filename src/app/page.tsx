@@ -3,9 +3,9 @@
 'use client';
 
 import { useEffect, useState, useContext, useMemo } from 'react';
-import { useCollection } from '@/firebase';
-import { Order } from '@/lib/types';
-import { getOrdersLast6Months, getRevenueLast6Months, getServiceDistribution, getStatusMetrics } from '@/lib/data';
+import { useCollection, useDocument } from '@/firebase';
+import { Order, UserSummary } from '@/lib/types';
+import { getServiceDistribution, getRevenueChartDataFromSummary } from '@/lib/data';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { ServiceDistributionChart } from '@/components/dashboard/service-distribution-chart';
@@ -13,24 +13,40 @@ import OrderTableShell from '@/components/dashboard/order-table-shell';
 import { OrderVolumeChart } from '@/components/dashboard/order-volume-chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PasswordContext } from '@/contexts/password-context';
+import { getOrCreateUserSummary } from '@/lib/data';
+import { useUser } from '@/firebase/auth/use-user';
+
 
 export default function DashboardPage() {
-  const { data: orders, loading } = useCollection<Order>('orders');
+  const { user } = useUser();
+  const { data: summary, loading: summaryLoading } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
+  const { data: recentOrders, loading: ordersLoading } = useCollection<Order>('orders', {
+    limit: 5,
+    orderBy: ['createdAt', 'desc']
+  });
+
   const { isPrivacyMode } = useContext(PasswordContext);
-
-  const [stats, setStats] = useState({ totalOrders: 0, totalRevenue: 0, pendingCount: 0 });
-  const [revenueData, setRevenueData] = useState<{ month: string; revenue: number }[]>([]);
   const [serviceDistributionData, setServiceDistributionData] = useState<{ service: string; count: number; fill: string }[]>([]);
-  const [orderVolumeData, setOrderVolumeData] = useState<{ month: string; orders: number }[]>([]);
+  const [revenueData, setRevenueData] = useState<{ month: string; revenue: number }[]>([]);
 
+  // Trigger migration for existing users
   useEffect(() => {
-    if (orders) {
-        setStats(getStatusMetrics(orders));
-        setRevenueData(getRevenueLast6Months(orders));
-        setServiceDistributionData(getServiceDistribution(orders));
-        setOrderVolumeData(getOrdersLast6Months(orders));
+    if (user && !summary && !summaryLoading) {
+      getOrCreateUserSummary(user.uid); 
+      // This will trigger a recalculation and the useDocument hook will pick up the new data
     }
-  }, [orders]);
+  }, [user, summary, summaryLoading]);
+  
+  useEffect(() => {
+    if (recentOrders) {
+        setServiceDistributionData(getServiceDistribution(recentOrders));
+    }
+    if (summary) {
+        setRevenueData(getRevenueChartDataFromSummary(summary));
+    }
+  }, [recentOrders, summary]);
+
+  const loading = summaryLoading || ordersLoading;
 
   const renderDashboardContent = () => {
     if (loading) {
@@ -64,7 +80,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
             <div className="xl:col-span-2">
-              <OrderTableShell data={orders || []} />
+              <OrderTableShell data={recentOrders || []} />
             </div>
             <div>
               <ServiceDistributionChart data={serviceDistributionData} />
@@ -78,20 +94,21 @@ export default function DashboardPage() {
       <main className="flex flex-1 flex-col gap-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <StatsCards 
-            totalOrders={stats.totalOrders}
-            totalRevenue={stats.totalRevenue}
-            pendingCount={stats.pendingCount}
+            totalOrders={summary?.totalOrders || 0}
+            totalRevenue={summary?.totalRevenue || 0}
+            pendingCount={summary?.pendingOrders || 0}
           />
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <RevenueChart data={revenueData} />
-          <OrderVolumeChart data={orderVolumeData} />
+          {/* OrderVolumeChart could also be adapted to use summary data if needed */}
+          <OrderVolumeChart data={[]} /> 
         </div>
         
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
           <div className="xl:col-span-2">
-            <OrderTableShell data={orders || []} />
+            <OrderTableShell data={recentOrders || []} />
           </div>
           <div>
             <ServiceDistributionChart data={serviceDistributionData} />

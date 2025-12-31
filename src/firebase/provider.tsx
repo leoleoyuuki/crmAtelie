@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, {
@@ -12,7 +13,7 @@ import React, {
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
-import { Firestore, collection, onSnapshot, query, where, Timestamp, getDocs, limit, startAfter, endBefore, limitToLast, orderBy, Query, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { Firestore, collection, onSnapshot, query, where, Timestamp, getDocs, limit, startAfter, endBefore, limitToLast, orderBy, Query, DocumentData, QueryDocumentSnapshot, doc } from 'firebase/firestore';
 import { app, auth, db } from './config';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from './errors';
@@ -63,7 +64,12 @@ export function useFirestore() {
   return db;
 }
 
-export function useCollection<T>(path: string) {
+interface CollectionOptions {
+  limit?: number;
+  orderBy?: [string, 'asc' | 'desc'];
+}
+
+export function useCollection<T>(path: string, options: CollectionOptions = {}) {
   const { db, auth } = useFirebase();
   const [data, setData] = React.useState<T[] | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -76,7 +82,18 @@ export function useCollection<T>(path: string) {
         return;
     }
 
-    const q = query(collection(db, path), where('userId', '==', auth.currentUser.uid));
+    const collectionRef = collection(db, path);
+    const queryConstraints = [where('userId', '==', auth.currentUser.uid)];
+
+    if (options.orderBy) {
+      queryConstraints.push(orderBy(options.orderBy[0], options.orderBy[1]));
+    }
+    if (options.limit) {
+      queryConstraints.push(limit(options.limit));
+    }
+    
+    const q = query(collectionRef, ...queryConstraints);
+
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -112,7 +129,7 @@ export function useCollection<T>(path: string) {
     );
 
     return () => unsubscribe();
-  }, [db, path, auth.currentUser]);
+  }, [db, path, auth.currentUser, options.limit, options.orderBy]);
 
   return { data, loading, error };
 }
@@ -202,9 +219,50 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
     return { data, loading, error, nextPage, prevPage, hasMore, hasPrev, refresh: loadFirstPage };
 }
 
+export function useDocument<T>(path: string | null) {
+  const { db } = useFirebase();
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
+  useEffect(() => {
+    if (!path) {
+      setLoading(false);
+      setData(null);
+      return;
+    }
 
-export function useDoc<T>(path: string) {
-    // Similar to useCollection, but for a single document
-    return { data: null, loading: true, error: null };
+    const docRef = doc(db, path);
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const docData = docSnap.data();
+          const convertedData: any = { ...docData };
+          for (const key in convertedData) {
+            if (convertedData[key] instanceof Timestamp) {
+              convertedData[key] = convertedData[key].toDate();
+            }
+          }
+          setData({ id: docSnap.id, ...convertedData } as T);
+        } else {
+          setData(null);
+        }
+        setLoading(false);
+      },
+      (err) => {
+        setError(err);
+        setLoading(false);
+        const permissionError = new FirestorePermissionError({
+          path: path,
+          operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [db, path]);
+
+  return { data, loading, error };
 }

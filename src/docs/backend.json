@@ -1,0 +1,392 @@
+{
+  "entities": {
+    "PriceTableItem": {
+      "title": "Price Table Item",
+      "description": "Represents a single service and its price in the price table.",
+      "type": "object",
+      "properties": {
+        "serviceName": {
+          "type": "string",
+          "description": "The name of the service."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the service."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the service."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who created the item."
+        }
+      },
+      "required": ["serviceName", "price", "userId"]
+    },
+    "OrderItem": {
+      "title": "Order Item",
+      "description": "Represents a single item within a customer's order.",
+      "type": "object",
+      "properties": {
+        "serviceType": {
+          "type": "string",
+          "description": "The type of service for this item.",
+          "enum": ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the item."
+        },
+        "value": {
+          "type": "number",
+          "description": "The value of this specific item."
+        },
+        "assignedTo": {
+          "type": "string",
+          "description": "The professional assigned to work on this item."
+        }
+      },
+      "required": ["serviceType", "value"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Represents a customer's order, containing multiple items.",
+      "type": "object",
+      "properties": {
+        "customerId": {
+            "type": "string",
+            "description": "The ID of the customer who placed the order."
+        },
+        "customerName": {
+            "type": "string",
+            "description": "The name of the customer (denormalized for display)."
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/entities/OrderItem"
+          }
+        },
+        "totalValue": {
+          "type": "number",
+          "description": "The total value of the order (sum of all items)."
+        },
+        "dueDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The due date for the order."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the order.",
+          "enum": ["Novo", "Em Processo", "Aguardando Retirada", "Concluído"]
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The creation date of the order."
+        },
+        "userId": {
+            "type": "string",
+            "description": "The ID of the user who created the order."
+        },
+        "materialsUsed": {
+          "type": "array",
+          "description": "A list of materials from the inventory used in this order.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "materialId": { "type": "string" },
+              "materialName": { "type": "string" },
+              "quantityUsed": { "type": "number" }
+            },
+            "required": ["materialId", "materialName", "quantityUsed"]
+          }
+        }
+      },
+      "required": ["customerId", "customerName", "items", "totalValue", "dueDate", "status", "createdAt", "userId"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Represents a customer of the atelier.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The full name of the customer."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The phone number of the customer."
+        },
+        "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The email address of the customer."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The creation date of the customer record."
+        },
+         "userId": {
+            "type": "string",
+            "description": "The ID of the user who created the customer."
+        }
+      },
+      "required": ["name", "phone", "createdAt", "userId"]
+    },
+    "UserProfile": {
+        "title": "User Profile",
+        "description": "Represents a user's profile information, including their activation status.",
+        "type": "object",
+        "properties": {
+            "displayName": {
+                "type": "string",
+                "description": "The user's display name."
+            },
+            "email": {
+                "type": "string",
+                "format": "email",
+                "description": "The user's email address."
+            },
+            "photoURL": {
+                "type": "string",
+                "format": "uri",
+                "description": "The URL of the user's profile picture."
+            },
+            "status": {
+                "type": "string",
+                "description": "The activation status of the user's account.",
+                "enum": ["active", "inactive"]
+            },
+            "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The date when the user's subscription expires."
+            }
+        },
+        "required": ["displayName", "email", "status"]
+    },
+    "AccessToken": {
+      "title": "Access Token",
+      "description": "Represents a one-time activation code for user subscriptions.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The unique activation code."
+        },
+        "duration": {
+          "type": "number",
+          "description": "The duration of the subscription in months (e.g., 3, 6, 12)."
+        },
+        "isUsed": {
+          "type": "boolean",
+          "description": "Flag indicating if the token has been used."
+        },
+        "usedBy": {
+          "type": "string",
+          "description": "The UID of the user who redeemed the token."
+        },
+        "usedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the token was used."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the token was created."
+        }
+      },
+      "required": ["code", "duration", "isUsed", "createdAt"]
+    },
+     "Suggestion": {
+      "title": "Suggestion",
+      "description": "Represents a user-submitted suggestion or feedback.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "The content of the suggestion."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who submitted the suggestion."
+        },
+        "userName": {
+          "type": "string",
+          "description": "The name of the user who submitted the suggestion."
+        },
+        "userEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "The email of the user who submitted the suggestion."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the suggestion was created."
+        }
+      },
+      "required": ["text", "userId", "userName", "userEmail", "createdAt"]
+    },
+    "Material": {
+      "title": "Material",
+      "description": "Represents a single material in the inventory.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the material."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement (e.g., 'm', 'un', 'cm')."
+        },
+        "stock": {
+          "type": "number",
+          "description": "The current quantity in stock."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this material."
+        },
+        "usedInOrders": {
+          "type": "number",
+          "description": "Counter for how many orders this material has been used in."
+        }
+      },
+      "required": ["name", "unit", "stock", "userId"]
+    },
+    "Purchase": {
+      "title": "Purchase",
+      "description": "Represents a record of a material purchase.",
+      "type": "object",
+      "properties": {
+        "materialName": {
+          "type": "string",
+          "description": "The name of the material purchased."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity purchased."
+        },
+        "cost": {
+          "type": "number",
+          "description": "The total cost of the purchase."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for the quantity."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the material."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date of the purchase."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who made the purchase."
+        }
+      },
+      "required": ["materialName", "quantity", "cost", "unit", "category", "createdAt", "userId"]
+    },
+    "UserSummary": {
+      "title": "User Summary",
+      "description": "Stores aggregated data for a user's dashboard.",
+      "type": "object",
+      "properties": {
+        "totalRevenue": {
+          "type": "number",
+          "description": "The total revenue from all completed orders."
+        },
+        "totalOrders": {
+          "type": "number",
+          "description": "The total number of orders created."
+        },
+        "pendingOrders": {
+          "type": "number",
+          "description": "The number of orders currently in 'Novo' or 'Em Processo' status."
+        },
+        "monthlyRevenue": {
+          "type": "object",
+          "description": "A map of monthly revenue, with keys in 'YYYY-MM' format.",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user this summary belongs to."
+        }
+      },
+      "required": ["totalRevenue", "totalOrders", "pendingOrders", "monthlyRevenue", "userId"]
+    }
+  },
+  "auth": {
+    "providers": ["Google"]
+  },
+  "firestore": {
+    "/priceTable/{itemId}": {
+      "schema": {
+        "$ref": "#/entities/PriceTableItem"
+      },
+      "description": "Stores items for the price table."
+    },
+    "/orders/{orderId}": {
+      "schema": {
+        "$ref": "#/entities/Order"
+      },
+      "description": "Stores individual order details."
+    },
+     "/customers/{customerId}": {
+      "schema": {
+        "$ref": "#/entities/Customer"
+      },
+      "description": "Stores customer information."
+    },
+    "/users/{userId}": {
+        "schema": {
+            "$ref": "#/entities/UserProfile"
+        },
+        "description": "Stores user profile information, including activation status."
+    },
+    "/accessTokens/{tokenId}": {
+      "schema": {
+        "$ref": "#/entities/AccessToken"
+      },
+      "description": "Stores one-time use activation tokens."
+    },
+    "/suggestions/{suggestionId}": {
+      "schema": {
+        "$ref": "#/entities/Suggestion"
+      },
+      "description": "Stores user-submitted suggestions and feedback."
+    },
+    "/materials/{materialId}": {
+      "schema": {
+        "$ref": "#/entities/Material"
+      },
+      "description": "Stores inventory materials."
+    },
+    "/purchases/{purchaseId}": {
+      "schema": {
+        "$ref": "#/entities/Purchase"
+      },
+      "description": "Stores records of material purchases for cost analysis."
+    },
+    "/summaries/{summaryId}": {
+      "schema": {
+        "$ref": "#/entities/UserSummary"
+      },
+      "description": "Stores aggregated dashboard data for each user."
+    }
+  }
+}

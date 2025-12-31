@@ -16,9 +16,10 @@ import {
   serverTimestamp,
   runTransaction,
   increment,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase } from '@/lib/types';
+import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -175,56 +176,9 @@ export function getStatusMetrics(orders: Order[]) {
   return { totalOrders, totalRevenue, pendingCount };
 }
 
-const getMonthlyData = (orders: Order[], reducer: (acc: number, order: Order) => number) => {
-    const data: { month: string; value: number }[] = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-        const monthDate = subMonths(now, i);
-        const monthStart = startOfMonth(monthDate);
-        const monthEnd = endOfMonth(monthDate);
-        
-        const value = orders
-            .filter(o => {
-                const createdAt = o.createdAt;
-                return createdAt && isValid(createdAt) && createdAt >= monthStart && createdAt <= monthEnd;
-            })
-            .reduce(reducer, 0);
-
-        data.push({
-            month: format(monthDate, 'MMM', { locale: ptBR }),
-            value: Math.round(value),
-        });
-    }
-    return data;
-}
-
-
-export function getRevenueLast6Months(orders: Order[]) {
-  const revenueReducer = (sum: number, order: Order) => {
-    if (order.status === 'Concluído') {
-      return sum + order.totalValue;
-    }
-    return sum;
-  };
-  const data = getMonthlyData(orders, revenueReducer).map(item => ({ month: item.month, revenue: item.value }));
-  return data;
-}
-
-export function getOrdersLast6Months(orders: Order[]) {
-    const orderCountReducer = (count: number, order: Order) => count + 1;
-    const data = getMonthlyData(orders, orderCountReducer).map(item => ({ month: item.month, orders: item.value }));
-    return data;
-}
 
 export function getServiceDistribution(orders: Order[]) {
-  const now = new Date();
-  const last30Days = subDays(now, 30);
-  const recentOrders = orders.filter(o => {
-      const createdAt = o.createdAt;
-      return createdAt && isValid(createdAt) && createdAt >= last30Days
-  });
-  
-  const distribution = recentOrders.reduce((acc, order) => {
+  const distribution = orders.reduce((acc, order) => {
     if (order.items && Array.isArray(order.items)) {
       order.items.forEach(item => {
         acc[item.serviceType] = (acc[item.serviceType] || 0) + 1;
@@ -261,26 +215,40 @@ export function getMonths() {
 }
 
 export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>) {
-  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
-  const newOrderData = {
-      ...order,
-      userId: auth.currentUser.uid,
-      createdAt: serverTimestamp(),
-      dueDate: Timestamp.fromDate(order.dueDate),
-  };
-  const docRef = await addDoc(ordersCollection, newOrderData)
-    .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: ordersCollection.path,
-            operation: 'create',
-            requestResourceData: newOrderData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
-    });
-  const newDoc = await getDoc(docRef);
-  return fromFirebase(newDoc.data(), newDoc.id) as Order;
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+    
+    const newOrderData = {
+        ...order,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+        dueDate: Timestamp.fromDate(order.dueDate),
+    };
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            // 1. Create the new order
+            const orderRef = doc(collection(db, 'orders'));
+            transaction.set(orderRef, newOrderData);
+
+            // 2. Update the summary document
+            const summaryRef = doc(db, 'summaries', user.uid);
+            transaction.set(summaryRef, { 
+                totalOrders: increment(1),
+                pendingOrders: increment(1)
+            }, { merge: true });
+        });
+    } catch (error: any) {
+        console.error("Add order transaction failed: ", error);
+        // Fallback or specific error handling can be done here.
+        // For now, we'll let it throw.
+        throw error;
+    }
+    
+    // For optimistic updates, we can't easily return the created doc from a transaction
+    // The calling UI should rely on the real-time listener to get the new data.
 }
+
 
 export async function updateOrder(orderId: string, updatedData: Partial<Omit<Order, 'id' | 'createdAt' | 'userId'>>) {
   const docRef = doc(db, 'orders', orderId);
@@ -553,16 +521,39 @@ export function getMonthlyCostOfGoodsSold(orders: Order[], month: number, year: 
     return totalCost;
 }
 
+export function getRevenueChartDataFromSummary(summary: UserSummary) {
+    const data: { month: string; revenue: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthKey = format(monthDate, 'yyyy-MM');
+        
+        data.push({
+            month: format(monthDate, 'MMM', { locale: ptBR }),
+            revenue: summary.monthlyRevenue[monthKey] || 0,
+        });
+    }
+    return data;
+}
+
 
 // Order Conclusion
 export async function concludeOrderWithStockUpdate(orderId: string, usedMaterials: UsedMaterial[]) {
-    if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
 
     try {
         await runTransaction(db, async (transaction) => {
             const orderRef = doc(db, 'orders', orderId);
+            const summaryRef = doc(db, 'summaries', user.uid);
             
             // 1. All reads first
+            const orderDoc = await transaction.get(orderRef);
+            if (!orderDoc.exists()) {
+                throw new Error("Pedido não encontrado.");
+            }
+            const orderData = orderDoc.data() as Order;
+
             const materialRefs = usedMaterials.map(used => doc(db, 'materials', used.materialId));
             const materialDocs = await Promise.all(materialRefs.map(ref => transaction.get(ref)));
 
@@ -587,8 +578,21 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
                     usedInOrders: increment(1)
                 });
             }
+            
+            // --- Update Summary ---
+            const orderMonthKey = format(new Date(), 'yyyy-MM');
+            const revenueIncrement = orderData.totalValue;
 
-            // Update the order after all material updates are staged
+            transaction.set(summaryRef, {
+                totalRevenue: increment(revenueIncrement),
+                pendingOrders: increment(-1),
+                monthlyRevenue: {
+                    [orderMonthKey]: increment(revenueIncrement)
+                }
+            }, { merge: true });
+
+
+            // --- Update Order ---
             transaction.update(orderRef, {
                 status: 'Concluído',
                 materialsUsed: usedMaterials,
@@ -598,4 +602,49 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
         console.error("Transaction failed: ", error);
         throw error;
     }
+}
+
+
+// Dashboard Summary Migration
+export async function getOrCreateUserSummary(userId: string): Promise<UserSummary> {
+    const summaryRef = doc(db, 'summaries', userId);
+    const summarySnap = await getDoc(summaryRef);
+
+    if (summarySnap.exists()) {
+        return fromFirebase(summarySnap.data(), summarySnap.id) as UserSummary;
+    }
+
+    // --- Migration Logic ---
+    const ordersQuery = query(collection(db, 'orders'), where('userId', '==', userId));
+    const ordersSnapshot = await getDocs(ordersQuery);
+    
+    let totalRevenue = 0;
+    let totalOrders = 0;
+    let pendingOrders = 0;
+    const monthlyRevenue: { [key: string]: number } = {};
+
+    ordersSnapshot.forEach(orderDoc => {
+        const order = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
+        totalOrders++;
+
+        if (order.status === 'Concluído') {
+            totalRevenue += order.totalValue;
+            const monthKey = format(order.createdAt, 'yyyy-MM');
+            monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + order.totalValue;
+        } else if (order.status === 'Novo' || order.status === 'Em Processo') {
+            pendingOrders++;
+        }
+    });
+
+    const newSummaryData = {
+        userId,
+        totalRevenue,
+        totalOrders,
+        pendingOrders,
+        monthlyRevenue,
+    };
+
+    await setDoc(summaryRef, newSummaryData);
+
+    return { id: userId, ...newSummaryData };
 }
