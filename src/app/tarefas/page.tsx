@@ -1,18 +1,17 @@
 
-
 'use client';
 
-import { useCollection } from '@/firebase';
+import { useCollection, useFirebase } from '@/firebase';
 import { Order, OrderItem } from '@/lib/types';
-import { useMemo, useState } from 'react';
-import { isAfter, isBefore, addDays, compareAsc, compareDesc } from 'date-fns';
+import { useMemo, useState, useEffect } from 'react';
+import { addDays, compareAsc, compareDesc, startOfDay, endOfDay, subDays } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ListChecks } from 'lucide-react';
 import { EditableTaskItemCard } from '@/components/tarefas/task-item-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-
+import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 
 // Define a new type that combines OrderItem with parent Order info
 export type TaskItem = OrderItem & {
@@ -22,63 +21,111 @@ export type TaskItem = OrderItem & {
   orderStatus: Order['status'];
 };
 
+// Helper to convert Firestore Timestamps in nested objects
+const convertTimestamps = (data: any) => {
+    for (const key in data) {
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate();
+        } else if (typeof data[key] === 'object' && data[key] !== null) {
+            convertTimestamps(data[key]);
+        }
+    }
+    return data;
+}
+
+
 export default function TarefasPage() {
-  const { data: orders, loading } = useCollection<Order>('orders');
+  const { db, auth } = useFirebase();
+  const [upcomingTasks, setUpcomingTasks] = useState<TaskItem[]>([]);
+  const [overdueTasks, setOverdueTasks] = useState<TaskItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [allTaskOrders, setAllTaskOrders] = useState<Order[]>([]);
 
-  const upcomingTasks = useMemo(() => {
-    if (!orders) return [];
-    const now = new Date();
-    // Set time to 00:00:00 to include all of today
-    now.setHours(0, 0, 0, 0); 
-    const threeDaysFromNow = addDays(now, 4); // To include tasks up to 3 days from now
 
-    const tasks: TaskItem[] = orders
-      .filter(order =>
-        order.status !== 'Concluído' &&
-        order.dueDate &&
-        isAfter(order.dueDate, now) &&
-        isBefore(order.dueDate, threeDaysFromNow)
-      )
-      .flatMap(order =>
-        (order.items || []).map(item => ({
-          ...item,
-          orderId: order.id,
-          customerName: order.customerName,
-          dueDate: order.dueDate,
-          orderStatus: order.status,
-        }))
-      );
-    tasks.sort((a, b) => compareAsc(a.dueDate, b.dueDate));
-    return tasks;
-  }, [orders]);
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!auth.currentUser) {
+        setLoading(false);
+        return;
+      }
 
-  const overdueTasks = useMemo(() => {
-    if (!orders) return [];
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+      setLoading(true);
 
-    const tasks: TaskItem[] = orders
-      .filter(order =>
-        order.status !== 'Concluído' &&
-        order.dueDate &&
-        isBefore(order.dueDate, now)
-      )
-      .flatMap(order =>
-        (order.items || []).map(item => ({
-          ...item,
-          orderId: order.id,
-          customerName: order.customerName,
-          dueDate: order.dueDate,
-          orderStatus: order.status,
-        }))
-      );
-    tasks.sort((a, b) => compareDesc(a.dueDate, b.dueDate)); // Show most recent overdue first
-    return tasks;
-  }, [orders]);
+      const now = new Date();
+      const todayStart = startOfDay(now);
+      const threeDaysFromNow = endOfDay(addDays(now, 3));
+      const sevenDaysAgo = startOfDay(subDays(now, 7));
+
+      try {
+        // Query for upcoming tasks
+        const upcomingQuery = query(
+          collection(db, 'orders'),
+          where('userId', '==', auth.currentUser.uid),
+          where('status', 'in', ['Novo', 'Em Processo']),
+          where('dueDate', '>=', todayStart),
+          where('dueDate', '<=', threeDaysFromNow),
+          orderBy('dueDate', 'asc')
+        );
+
+        // Query for overdue tasks
+        const overdueQuery = query(
+          collection(db, 'orders'),
+          where('userId', '==', auth.currentUser.uid),
+          where('status', 'in', ['Novo', 'Em Processo']),
+          where('dueDate', '<', todayStart),
+          where('dueDate', '>=', sevenDaysAgo),
+          orderBy('dueDate', 'desc')
+        );
+
+        const [upcomingSnapshot, overdueSnapshot] = await Promise.all([
+          getDocs(upcomingQuery),
+          getDocs(overdueQuery)
+        ]);
+        
+        const upcomingOrders: Order[] = upcomingSnapshot.docs.map(doc => convertTimestamps({ ...doc.data(), id: doc.id }) as Order);
+        const overdueOrders: Order[] = overdueSnapshot.docs.map(doc => convertTimestamps({ ...doc.data(), id: doc.id }) as Order);
+
+        const allOrders = [...upcomingOrders, ...overdueOrders];
+        setAllTaskOrders(allOrders);
+
+        const upcoming = upcomingOrders.flatMap(order =>
+          (order.items || []).map(item => ({
+            ...item,
+            orderId: order.id,
+            customerName: order.customerName,
+            dueDate: order.dueDate,
+            orderStatus: order.status,
+          }))
+        );
+
+        const overdue = overdueOrders.flatMap(order =>
+          (order.items || []).map(item => ({
+            ...item,
+            orderId: order.id,
+            customerName: order.customerName,
+            dueDate: order.dueDate,
+            orderStatus: order.status,
+          }))
+        );
+
+        setUpcomingTasks(upcoming);
+        setOverdueTasks(overdue);
+
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+        // Handle error display to the user if necessary
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [db, auth.currentUser]);
+
 
   const findOrderForTask = (taskId: string) => {
-    return orders?.find(o => o.id === taskId);
+    return allTaskOrders?.find(o => o.id === taskId);
   }
   
   const renderTaskList = (tasks: TaskItem[], type: 'upcoming' | 'overdue') => {
