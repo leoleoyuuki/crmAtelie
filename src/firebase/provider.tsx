@@ -74,6 +74,9 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
   const [data, setData] = React.useState<T[] | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<Error | null>(null);
+  
+  const limitValue = options.limit;
+  const orderByValue = options.orderBy;
 
   React.useEffect(() => {
     if (!auth.currentUser) {
@@ -85,11 +88,11 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
     const collectionRef = collection(db, path);
     const queryConstraints = [where('userId', '==', auth.currentUser.uid)];
 
-    if (options.orderBy) {
-      queryConstraints.push(orderBy(options.orderBy[0], options.orderBy[1]));
+    if (orderByValue) {
+      queryConstraints.push(orderBy(orderByValue[0], orderByValue[1]));
     }
-    if (options.limit) {
-      queryConstraints.push(limit(options.limit));
+    if (limitValue) {
+      queryConstraints.push(limit(limitValue));
     }
     
     const q = query(collectionRef, ...queryConstraints);
@@ -129,7 +132,7 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
     );
 
     return () => unsubscribe();
-  }, [db, path, auth.currentUser, options.limit, options.orderBy]);
+  }, [db, path, auth.currentUser, limitValue, orderByValue]);
 
   return { data, loading, error };
 }
