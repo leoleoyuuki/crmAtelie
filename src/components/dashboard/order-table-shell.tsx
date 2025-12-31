@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -194,7 +193,7 @@ export default function OrderTableShell({
     data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: isPage ? undefined : getPaginationRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -204,7 +203,7 @@ export default function OrderTableShell({
       sorting,
     },
     initialState: {
-      pagination: isPage ? undefined : { pageSize: 5 },
+      pagination: { pageSize: isPage ? 10 : 5 },
        columnVisibility: {
         createdAt: false, 
         completionStatus: false,
@@ -214,7 +213,30 @@ export default function OrderTableShell({
   });
 
   const renderPagination = () => {
-    if (!isPage) {
+    if (isPage) {
+        return (
+            <div className="flex items-center justify-end space-x-2 py-4">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onPrevPage}
+                    disabled={!hasPrevPage || loading}
+                >
+                    Anterior
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onNextPage}
+                    disabled={!hasNextPage || loading}
+                >
+                    Próximo
+                </Button>
+            </div>
+        );
+    }
+     // Render internal pagination for non-page (dashboard) view
+    if (table.getPageCount() > 1) {
         return (
              <div className="flex items-center justify-end space-x-2 py-4">
                 <Button
@@ -236,26 +258,8 @@ export default function OrderTableShell({
             </div>
         )
     }
-    return (
-        <div className="flex items-center justify-end space-x-2 py-4">
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={onPrevPage}
-                disabled={!hasPrevPage || loading}
-            >
-                Anterior
-            </Button>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={onNextPage}
-                disabled={!hasNextPage || loading}
-            >
-                Próximo
-            </Button>
-        </div>
-    );
+
+    return null;
   }
 
   if (loading && data.length === 0) {
