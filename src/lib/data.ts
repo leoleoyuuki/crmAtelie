@@ -215,49 +215,101 @@ export function getMonths() {
 }
 
 export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>) {
-  if (!auth.currentUser) throw new Error("Usuário não autenticado.");
-  const newOrderData = {
-    ...order,
-    userId: auth.currentUser.uid,
-    createdAt: serverTimestamp(),
-    dueDate: Timestamp.fromDate(order.dueDate),
-  };
-  await addDoc(ordersCollection, newOrderData)
-    .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: ordersCollection.path,
-            operation: 'create',
-            requestResourceData: newOrderData,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
-    });
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const newOrderData = {
+        ...order,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+        dueDate: Timestamp.fromDate(order.dueDate),
+    };
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const orderRef = doc(collection(db, 'orders'));
+            transaction.set(orderRef, newOrderData);
+
+            const summaryRef = doc(db, 'summaries', user.uid);
+            transaction.set(summaryRef, {
+                totalOrders: increment(1),
+                pendingOrders: increment(1),
+            }, { merge: true });
+        });
+    } catch (error) {
+        console.error("Add order transaction failed: ", error);
+        // Optionally, re-throw a more user-friendly error
+        throw new Error("Falha ao criar o pedido. Tente novamente.");
+    }
 }
 
 
 export async function updateOrder(orderId: string, updatedData: Partial<Omit<Order, 'id' | 'createdAt' | 'userId'>>) {
-  const docRef = doc(db, 'orders', orderId);
-  const updatePayload: any = { ...updatedData };
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
 
-  if (updatedData.dueDate && !(updatedData.dueDate instanceof Timestamp)) {
-    updatePayload.dueDate = Timestamp.fromDate(updatedData.dueDate);
-  }
+    const orderRef = doc(db, 'orders', orderId);
 
-  // TODO: Add a check to ensure the user owns this document before updating.
-  await updateDoc(docRef, updatePayload)
-    .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'update',
-            requestResourceData: updatePayload,
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
-    });
-  
-  const updatedDoc = await getDoc(docRef);
-  return fromFirebase(updatedDoc.data(), updatedDoc.id) as Order;
+    try {
+        await runTransaction(db, async (transaction) => {
+            const orderDoc = await transaction.get(orderRef);
+            if (!orderDoc.exists()) {
+                throw new Error("Pedido não encontrado.");
+            }
+
+            const currentOrder = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
+            const currentStatus = currentOrder.status;
+            const newStatus = updatedData.status;
+
+            // --- Case: Reverting from "Concluído" ---
+            if (currentStatus === 'Concluído' && newStatus && newStatus !== 'Concluído') {
+                const summaryRef = doc(db, 'summaries', user.uid);
+
+                // 1. Revert summary calculations
+                const orderMonthKey = format(currentOrder.createdAt, 'yyyy-MM');
+                const revenueDecrement = currentOrder.totalValue;
+
+                transaction.set(summaryRef, {
+                    totalRevenue: increment(-revenueDecrement),
+                    pendingOrders: increment(1), // It's no longer concluded, so it's pending
+                    monthlyRevenue: {
+                        [orderMonthKey]: increment(-revenueDecrement)
+                    }
+                }, { merge: true });
+
+                // 2. Revert stock
+                if (currentOrder.materialsUsed && currentOrder.materialsUsed.length > 0) {
+                    for (const used of currentOrder.materialsUsed) {
+                        const materialRef = doc(db, 'materials', used.materialId);
+                        transaction.update(materialRef, {
+                            stock: increment(used.quantityUsed),
+                            usedInOrders: increment(-1)
+                        });
+                    }
+                }
+                
+                // 3. Clear the materialsUsed from the order and update status
+                 transaction.update(orderRef, { ...updatedData, materialsUsed: [] });
+
+            } else {
+                 // --- Standard update ---
+                const updatePayload: any = { ...updatedData };
+                if (updatedData.dueDate && !(updatedData.dueDate instanceof Timestamp)) {
+                    updatePayload.dueDate = Timestamp.fromDate(updatedData.dueDate);
+                }
+                 transaction.update(orderRef, updatePayload);
+            }
+        });
+
+    } catch (error) {
+        console.error("Update order transaction failed: ", error);
+        throw new Error("Falha ao atualizar o pedido.");
+    }
+    
+    const updatedDoc = await getDoc(orderRef);
+    return fromFirebase(updatedDoc.data(), updatedDoc.id) as Order;
 }
+
 
 export async function deleteOrder(orderId: string) {
   const docRef = doc(db, 'orders', orderId);
