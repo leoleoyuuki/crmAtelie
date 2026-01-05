@@ -157,6 +157,9 @@ export default function TarefasPage() {
                 <AlertDescription>
                   Não há nenhuma tarefa atrasada no momento.
                 </AlertDescription>
+                 <AlertDescription className="mt-2 text-xs text-green-600">
+                    Obs: Apenas tarefas com até 1 semana de atraso são exibidas aqui.
+                </AlertDescription>
               </Alert>
           )}
         </div>
