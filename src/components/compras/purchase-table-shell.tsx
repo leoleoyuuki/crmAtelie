@@ -37,20 +37,10 @@ import { Skeleton } from "../ui/skeleton";
 
 interface PurchaseTableShellProps {
   data: Purchase[];
-  loading: boolean;
-  onNextPage: () => void;
-  onPrevPage: () => void;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
 }
 
 export function PurchaseTableShell({ 
     data, 
-    loading,
-    onNextPage,
-    onPrevPage,
-    hasNextPage,
-    hasPrevPage
 }: PurchaseTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
@@ -124,6 +114,7 @@ export function PurchaseTableShell({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -132,28 +123,28 @@ export function PurchaseTableShell({
       columnFilters,
       sorting,
     },
-    manualPagination: true,
+     initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    }
   });
-
-  if (loading && table.getRowModel().rows.length === 0) {
-      return <Skeleton className="h-[600px] w-full" />;
-  }
 
   const renderPagination = () => (
     <div className="flex items-center justify-end space-x-2 py-4">
       <Button
         variant="outline"
         size="sm"
-        onClick={onPrevPage}
-        disabled={!hasPrevPage || loading}
+        onClick={() => table.previousPage()}
+        disabled={!table.getCanPreviousPage()}
       >
         Anterior
       </Button>
       <Button
         variant="outline"
         size="sm"
-        onClick={onNextPage}
-        disabled={!hasNextPage || loading}
+        onClick={() => table.nextPage()}
+        disabled={!table.getCanNextPage()}
       >
         Próximo
       </Button>
@@ -231,7 +222,7 @@ export function PurchaseTableShell({
             </Table>
           </div>
         )}
-        {renderPagination()}
+        {table.getPageCount() > 1 && renderPagination()}
       </CardContent>
     </Card>
   );
