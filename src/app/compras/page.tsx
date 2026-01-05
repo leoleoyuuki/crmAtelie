@@ -2,32 +2,35 @@
 
 'use client';
 
-import { useCollection } from '@/firebase';
+import { usePaginatedCollection } from '@/firebase';
 import { Purchase } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PurchaseTableShell } from '@/components/compras/purchase-table-shell';
-import { useState, useMemo } from 'react';
-import { getMonths, getMonthlyCostByCategory } from '@/lib/data';
+import { useState, useMemo, useEffect } from 'react';
+import { getMonths, getMonthlyCostByCategory, getOrders } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useCollection } from '@/firebase';
 
 export default function ComprasPage() {
-  const { data: purchases, loading } = useCollection<Purchase>('purchases');
+  const { data: allPurchases, loading: allPurchasesLoading } = useCollection<Purchase>('purchases');
+  const { data: purchases, loading, nextPage, prevPage, hasMore, hasPrev, refresh } = usePaginatedCollection<Purchase>('purchases');
+  
   const [selectedMonth, setSelectedMonth] = useState<string>(`${new Date().getMonth()}-${new Date().getFullYear()}`);
   
   const months = useMemo(() => getMonths(), []);
 
   const { monthlyCostData, totalMonthlyCost } = useMemo(() => {
-    if (!purchases) return { monthlyCostData: [], totalMonthlyCost: 0 };
+    if (!allPurchases) return { monthlyCostData: [], totalMonthlyCost: 0 };
     
     const [month, year] = selectedMonth.split('-').map(Number);
-    const monthlyCostData = getMonthlyCostByCategory(purchases, month, year);
+    const monthlyCostData = getMonthlyCostByCategory(allPurchases, month, year);
 
     const totalMonthlyCost = monthlyCostData.reduce((acc, item) => acc + item.cost, 0);
 
     return { monthlyCostData, totalMonthlyCost };
-  }, [purchases, selectedMonth]);
+  }, [allPurchases, selectedMonth]);
 
   const formattedTotalMonthlyCost = useMemo(() => new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -70,7 +73,7 @@ export default function ComprasPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {allPurchasesLoading ? (
             <Skeleton className="h-[300px] w-full" />
           ) : monthlyCostData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -107,11 +110,16 @@ export default function ComprasPage() {
         </CardContent>
       </Card>
 
-       {loading ? (
+       {loading && !purchases.length ? (
         <Skeleton className="h-[500px] w-full" />
       ) : (
         <PurchaseTableShell 
           data={purchases || []}
+          onNextPage={nextPage}
+          onPrevPage={prevPage}
+          hasNextPage={hasMore}
+          hasPrevPage={hasPrev}
+          loading={loading}
         />
       )}
     </div>

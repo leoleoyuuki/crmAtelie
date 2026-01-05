@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import React, { useState, useMemo } from "react";
@@ -32,12 +33,25 @@ import { format, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PurchaseCardMobile } from "./purchase-card-mobile";
+import { Skeleton } from "../ui/skeleton";
 
 interface PurchaseTableShellProps {
   data: Purchase[];
+  loading: boolean;
+  onNextPage: () => void;
+  onPrevPage: () => void;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
-export function PurchaseTableShell({ data }: PurchaseTableShellProps) {
+export function PurchaseTableShell({ 
+    data, 
+    loading,
+    onNextPage,
+    onPrevPage,
+    hasNextPage,
+    hasPrevPage
+}: PurchaseTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
@@ -110,7 +124,6 @@ export function PurchaseTableShell({ data }: PurchaseTableShellProps) {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -119,28 +132,28 @@ export function PurchaseTableShell({ data }: PurchaseTableShellProps) {
       columnFilters,
       sorting,
     },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    }
+    manualPagination: true,
   });
+
+  if (loading && table.getRowModel().rows.length === 0) {
+      return <Skeleton className="h-[600px] w-full" />;
+  }
 
   const renderPagination = () => (
     <div className="flex items-center justify-end space-x-2 py-4">
       <Button
         variant="outline"
         size="sm"
-        onClick={() => table.previousPage()}
-        disabled={!table.getCanPreviousPage()}
+        onClick={onPrevPage}
+        disabled={!hasPrevPage || loading}
       >
         Anterior
       </Button>
       <Button
         variant="outline"
         size="sm"
-        onClick={() => table.nextPage()}
-        disabled={!table.getCanNextPage()}
+        onClick={onNextPage}
+        disabled={!hasNextPage || loading}
       >
         Próximo
       </Button>
