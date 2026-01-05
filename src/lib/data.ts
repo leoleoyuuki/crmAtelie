@@ -481,16 +481,16 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
 
-    // Standardize material name
     const rawMaterialName = purchaseData.materialName.trim();
-    if (!rawMaterialName) {
-        throw new Error("O nome do material não pode ser vazio.");
-    }
+    if (!rawMaterialName) throw new Error("O nome do material não pode ser vazio.");
+    
     const standardizedMaterialName = rawMaterialName.charAt(0).toUpperCase() + rawMaterialName.slice(1).toLowerCase();
-
     const standardizedPurchaseData = { ...purchaseData, materialName: standardizedMaterialName };
 
     await runTransaction(db, async (transaction) => {
+        const purchaseMonthKey = format(new Date(), 'yyyy-MM');
+        const costIncrement = standardizedPurchaseData.cost;
+
         // 1. Create the immutable purchase record
         const newPurchaseData = {
             ...standardizedPurchaseData,
@@ -500,18 +500,24 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
         const purchaseRef = doc(collection(db, 'purchases'));
         transaction.set(purchaseRef, newPurchaseData);
 
-        // 2. Find and update the corresponding material in the inventory
+        // 2. Update summary document
+        const summaryRef = doc(db, 'summaries', user.uid);
+        transaction.set(summaryRef, {
+            monthlyCosts: {
+                [purchaseMonthKey]: increment(costIncrement)
+            }
+        }, { merge: true });
+
+        // 3. Find and update the corresponding material in the inventory
         const materialQuery = query(
             collection(db, 'materials'),
             where('name', '==', standardizedMaterialName),
             where('userId', '==', user.uid)
         );
         
-        // This query needs to be outside the transaction.
         const materialSnapshot = await getDocs(materialQuery);
 
         if (materialSnapshot.empty) {
-            // Material doesn't exist, create it within the transaction
             const newMaterialRef = doc(collection(db, 'materials'));
             const costPerUnit = standardizedPurchaseData.quantity > 0 ? standardizedPurchaseData.cost / standardizedPurchaseData.quantity : 0;
             transaction.set(newMaterialRef, {
@@ -524,7 +530,6 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
                 usedInOrders: 0,
             });
         } else {
-            // Material exists, update its stock within the transaction
             const materialDocRef = materialSnapshot.docs[0].ref;
             transaction.update(materialDocRef, {
                 stock: increment(standardizedPurchaseData.quantity),
@@ -538,17 +543,38 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
 
 
 export async function deletePurchase(purchaseId: string): Promise<{ success: boolean }> {
-  const docRef = doc(db, 'purchases', purchaseId);
-  await deleteDoc(docRef)
-    .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'delete',
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const purchaseRef = doc(db, 'purchases', purchaseId);
+    const summaryRef = doc(db, 'summaries', user.uid);
+
+    await runTransaction(db, async (transaction) => {
+        const purchaseDoc = await transaction.get(purchaseRef);
+        if (!purchaseDoc.exists()) {
+            throw new Error("Registro de compra não encontrado.");
+        }
+        
+        const purchaseData = fromFirebase(purchaseDoc.data(), purchaseId) as Purchase;
+        const purchaseMonthKey = format(purchaseData.createdAt, 'yyyy-MM');
+        const costDecrement = purchaseData.cost;
+
+        // Decrement summary
+        transaction.set(summaryRef, {
+            monthlyCosts: {
+                [purchaseMonthKey]: increment(-costDecrement)
+            }
+        }, { merge: true });
+
+        // Delete purchase record
+        transaction.delete(purchaseRef);
+
+    }).catch(error => {
+        console.error("Delete purchase transaction failed: ", error);
+        throw new Error("Falha ao excluir o registro da compra.");
     });
-  return { success: true };
+    
+    return { success: true };
 }
 
 // Cost Analytics
@@ -609,6 +635,21 @@ export function getRevenueChartDataFromSummary(summary: UserSummary) {
         data.push({
             month: format(monthDate, 'MMM', { locale: ptBR }),
             revenue: summary.monthlyRevenue[monthKey] || 0,
+        });
+    }
+    return data;
+}
+
+export function getCostChartDataFromSummary(summary: UserSummary) {
+    const data: { month: string; cost: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthKey = format(monthDate, 'yyyy-MM');
+        
+        data.push({
+            month: format(monthDate, 'MMM', { locale: ptBR }),
+            cost: summary.monthlyCosts[monthKey] || 0,
         });
     }
     return data;
@@ -694,12 +735,18 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
 
     // --- Migration Logic ---
     const ordersQuery = query(collection(db, 'orders'), where('userId', '==', userId));
-    const ordersSnapshot = await getDocs(ordersQuery);
+    const purchasesQuery = query(collection(db, 'purchases'), where('userId', '==', userId));
+    
+    const [ordersSnapshot, purchasesSnapshot] = await Promise.all([
+        getDocs(ordersQuery),
+        getDocs(purchasesQuery)
+    ]);
     
     let totalRevenue = 0;
     let totalOrders = 0;
     let pendingOrders = 0;
     const monthlyRevenue: { [key: string]: number } = {};
+    const monthlyCosts: { [key: string]: number } = {};
 
     ordersSnapshot.forEach(orderDoc => {
         const order = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
@@ -714,12 +761,20 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
         }
     });
 
+     purchasesSnapshot.forEach(purchaseDoc => {
+        const purchase = fromFirebase(purchaseDoc.data(), purchaseDoc.id) as Purchase;
+        const monthKey = format(purchase.createdAt, 'yyyy-MM');
+        monthlyCosts[monthKey] = (monthlyCosts[monthKey] || 0) + purchase.cost;
+    });
+
+
     const newSummaryData = {
         userId,
         totalRevenue,
         totalOrders,
         pendingOrders,
         monthlyRevenue,
+        monthlyCosts,
     };
 
     await setDoc(summaryRef, newSummaryData);

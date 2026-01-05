@@ -297,6 +297,44 @@
         }
       },
       "required": ["materialName", "quantity", "cost", "unit", "category", "createdAt", "userId"]
+    },
+    "UserSummary": {
+      "title": "User Summary",
+      "description": "Stores aggregated data for a user's dashboard.",
+      "type": "object",
+      "properties": {
+        "totalRevenue": {
+          "type": "number",
+          "description": "The total revenue from all completed orders."
+        },
+        "totalOrders": {
+          "type": "number",
+          "description": "The total number of orders created."
+        },
+        "pendingOrders": {
+          "type": "number",
+          "description": "The number of orders currently in 'Novo' or 'Em Processo' status."
+        },
+        "monthlyRevenue": {
+          "type": "object",
+          "description": "A map of monthly revenue, with keys in 'YYYY-MM' format.",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+         "monthlyCosts": {
+          "type": "object",
+          "description": "A map of monthly costs from purchases, with keys in 'YYYY-MM' format.",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user this summary belongs to."
+        }
+      },
+      "required": ["totalRevenue", "totalOrders", "pendingOrders", "monthlyRevenue", "monthlyCosts", "userId"]
     }
   },
   "auth": {
@@ -350,6 +388,12 @@
         "$ref": "#/entities/Purchase"
       },
       "description": "Stores records of material purchases for cost analysis."
+    },
+    "/summaries/{summaryId}": {
+      "schema": {
+        "$ref": "#/entities/UserSummary"
+      },
+      "description": "Stores aggregated dashboard data for each user."
     }
   }
 }

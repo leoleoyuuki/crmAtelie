@@ -106,4 +106,5 @@ export interface UserSummary {
   totalOrders: number;
   pendingOrders: number;
   monthlyRevenue: { [key: string]: number }; // YYYY-MM format
+  monthlyCosts: { [key: string]: number }; // YYYY-MM format
 }

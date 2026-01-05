@@ -2,40 +2,39 @@
 
 'use client';
 
-import { usePaginatedCollection } from '@/firebase';
-import { Purchase } from '@/lib/types';
+import { usePaginatedCollection, useDocument } from '@/firebase';
+import { Purchase, UserSummary } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PurchaseTableShell } from '@/components/compras/purchase-table-shell';
 import { useState, useMemo, useEffect } from 'react';
-import { getMonths, getMonthlyCostByCategory, getOrders } from '@/lib/data';
+import { getMonths, getCostChartDataFromSummary } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useCollection } from '@/firebase';
+import { useUser } from '@/firebase/auth/use-user';
+
 
 export default function ComprasPage() {
-  const { data: allPurchases, loading: allPurchasesLoading } = useCollection<Purchase>('purchases');
+  const { user } = useUser();
+  const { data: summary, loading: summaryLoading } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
   const { data: purchases, loading, nextPage, prevPage, hasMore, hasPrev, refresh } = usePaginatedCollection<Purchase>('purchases');
   
-  const [selectedMonth, setSelectedMonth] = useState<string>(`${new Date().getMonth()}-${new Date().getFullYear()}`);
-  
-  const months = useMemo(() => getMonths(), []);
+  const costData = useMemo(() => {
+    if (!summary) return [];
+    return getCostChartDataFromSummary(summary);
+  }, [summary]);
 
-  const { monthlyCostData, totalMonthlyCost } = useMemo(() => {
-    if (!allPurchases) return { monthlyCostData: [], totalMonthlyCost: 0 };
-    
-    const [month, year] = selectedMonth.split('-').map(Number);
-    const monthlyCostData = getMonthlyCostByCategory(allPurchases, month, year);
+  const totalCostThisMonth = useMemo(() => {
+    if (!costData || costData.length === 0) return 0;
+    const currentMonthLabel = new Date().toLocaleString('default', { month: 'short' });
+    const currentMonthData = costData.find(d => d.month.toLowerCase().startsWith(currentMonthLabel.toLowerCase()));
+    return currentMonthData ? currentMonthData.cost : 0;
+  }, [costData]);
 
-    const totalMonthlyCost = monthlyCostData.reduce((acc, item) => acc + item.cost, 0);
-
-    return { monthlyCostData, totalMonthlyCost };
-  }, [allPurchases, selectedMonth]);
-
-  const formattedTotalMonthlyCost = useMemo(() => new Intl.NumberFormat("pt-BR", {
+  const formattedTotalCost = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(totalMonthlyCost), [totalMonthlyCost]);
+  }).format(totalCostThisMonth);
+
 
   return (
     <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
@@ -51,35 +50,25 @@ export default function ComprasPage() {
               <div>
                 <CardTitle>Visão Geral de Custos</CardTitle>
                 <CardDescription>
-                  Analise os custos de aquisição de materiais por categoria.
+                  Analise o total de custos com aquisição de materiais por mês.
                 </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 sm:pt-0">
                 <div className="text-center sm:text-right">
-                    <p className="text-sm text-muted-foreground">Custo do Mês</p>
-                    <p className="text-2xl font-bold">{formattedTotalMonthlyCost}</p>
+                    <p className="text-sm text-muted-foreground">Custo do Mês Atual</p>
+                    <p className="text-2xl font-bold">{summaryLoading ? <Skeleton className="h-8 w-24" /> : formattedTotalCost}</p>
                 </div>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Selecione um mês" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {months.map(m => (
-                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                </Select>
               </div>
           </div>
         </CardHeader>
         <CardContent>
-          {allPurchasesLoading ? (
+          {summaryLoading ? (
             <Skeleton className="h-[300px] w-full" />
-          ) : monthlyCostData.length > 0 ? (
+          ) : costData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyCostData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+              <BarChart data={costData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis
                   tick={{ fontSize: 12 }}
                   tickFormatter={(value) =>
@@ -104,7 +93,7 @@ export default function ComprasPage() {
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              Nenhum dado de custo para o mês selecionado.
+              Nenhum dado de custo para exibir.
             </div>
           )}
         </CardContent>
