@@ -7,7 +7,7 @@ import { Purchase, UserSummary } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PurchaseTableShell } from '@/components/compras/purchase-table-shell';
 import { useState, useMemo, useEffect } from 'react';
-import { getMonths, getCostChartDataFromSummary } from '@/lib/data';
+import { getCostChartDataFromSummary } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useUser } from '@/firebase/auth/use-user';
@@ -56,7 +56,7 @@ export default function ComprasPage() {
               <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 sm:pt-0">
                 <div className="text-center sm:text-right">
                     <p className="text-sm text-muted-foreground">Custo do Mês Atual</p>
-                    <p className="text-2xl font-bold">{summaryLoading ? <Skeleton className="h-8 w-24" /> : formattedTotalCost}</p>
+                    <div className="text-2xl font-bold">{summaryLoading ? <Skeleton className="h-8 w-24" /> : formattedTotalCost}</div>
                 </div>
               </div>
           </div>
