@@ -64,6 +64,7 @@ interface PurchaseFormDialogProps {
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
   trigger?: React.ReactNode;
+  onPurchaseCreated: () => void;
 }
 
 export function PurchaseFormDialog({
@@ -71,6 +72,7 @@ export function PurchaseFormDialog({
   isOpen: controlledIsOpen,
   setIsOpen: setControlledIsOpen,
   trigger,
+  onPurchaseCreated,
 }: PurchaseFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const { toast } = useToast();
@@ -146,6 +148,7 @@ export function PurchaseFormDialog({
         description: `A compra de ${finalMaterialName} foi adicionada.`,
       });
       
+      onPurchaseCreated();
       setIsOpen(false);
       form.reset(defaultValues);
     } catch (error) {

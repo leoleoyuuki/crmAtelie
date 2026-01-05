@@ -10,9 +10,10 @@ import { PurchaseFormDialog } from "./purchase-form-dialog"
 
 interface PurchaseTableToolbarProps<TData> {
   table: Table<TData>
+  onPurchaseCreated: () => void;
 }
 
-export function PurchaseTableToolbar<TData>({ table }: PurchaseTableToolbarProps<TData>) {
+export function PurchaseTableToolbar<TData>({ table, onPurchaseCreated }: PurchaseTableToolbarProps<TData>) {
   return (
     <>
       <CardHeader>
@@ -33,6 +34,7 @@ export function PurchaseTableToolbar<TData>({ table }: PurchaseTableToolbarProps
           />
         </div>
         <PurchaseFormDialog
+            onPurchaseCreated={onPurchaseCreated}
             trigger={
                 <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">
                     <ShoppingCart className="h-4 w-4 md:mr-2" />

@@ -27,9 +27,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface PurchaseTableRowActionsProps {
   purchase: Purchase;
+  onPurchaseDeleted: () => void;
 }
 
-export function PurchaseTableRowActions({ purchase }: PurchaseTableRowActionsProps) {
+export function PurchaseTableRowActions({ purchase, onPurchaseDeleted }: PurchaseTableRowActionsProps) {
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
@@ -40,6 +41,7 @@ export function PurchaseTableRowActions({ purchase }: PurchaseTableRowActionsPro
         title: "Registro Excluído",
         description: `A compra de ${purchase.materialName} foi excluída.`,
       });
+      onPurchaseDeleted();
       setIsDeleteDialogOpen(false);
     } catch (error) {
       toast({
@@ -73,7 +75,7 @@ export function PurchaseTableRowActions({ purchase }: PurchaseTableRowActionsPro
             <AlertDialogHeader>
                 <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
                 <AlertDialogDescription>
-                Essa ação não pode ser desfeita. Isso excluirá permanentemente o registro da compra de {purchase.materialName}.
+                Essa ação não pode ser desfeita. Isso excluirá permanentemente o registro da compra de {purchase.materialName} e o valor será abatido dos seus custos.
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

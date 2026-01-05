@@ -37,10 +37,22 @@ import { Skeleton } from "../ui/skeleton";
 
 interface PurchaseTableShellProps {
   data: Purchase[];
+  loading: boolean;
+  onNextPage: () => void;
+  onPrevPage: () => void;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  onDataMutated: () => void;
 }
 
 export function PurchaseTableShell({ 
     data, 
+    loading,
+    onNextPage,
+    onPrevPage,
+    hasNextPage,
+    hasPrevPage,
+    onDataMutated,
 }: PurchaseTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
@@ -102,19 +114,19 @@ export function PurchaseTableShell({
           <div className="text-right">
             <PurchaseTableRowActions 
               purchase={row.original} 
+              onPurchaseDeleted={onDataMutated}
             />
           </div>
         ),
       },
     ],
-    []
+    [onDataMutated]
   );
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -123,11 +135,7 @@ export function PurchaseTableShell({
       columnFilters,
       sorting,
     },
-     initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    }
+    manualPagination: true,
   });
 
   const renderPagination = () => (
@@ -135,16 +143,16 @@ export function PurchaseTableShell({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => table.previousPage()}
-        disabled={!table.getCanPreviousPage()}
+        onClick={onPrevPage}
+        disabled={!hasPrevPage || loading}
       >
         Anterior
       </Button>
       <Button
         variant="outline"
         size="sm"
-        onClick={() => table.nextPage()}
-        disabled={!table.getCanNextPage()}
+        onClick={onNextPage}
+        disabled={!hasNextPage || loading}
       >
         Próximo
       </Button>
@@ -153,7 +161,7 @@ export function PurchaseTableShell({
 
   return (
     <Card>
-      <PurchaseTableToolbar table={table} />
+      <PurchaseTableToolbar table={table} onPurchaseCreated={onDataMutated} />
       <CardContent>
         {isMobile ? (
            <div className="space-y-4">
@@ -222,7 +230,7 @@ export function PurchaseTableShell({
             </Table>
           </div>
         )}
-        {table.getPageCount() > 1 && renderPagination()}
+        {renderPagination()}
       </CardContent>
     </Card>
   );
