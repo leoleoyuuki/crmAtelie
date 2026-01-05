@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useDocument, usePaginatedCollection, useCollection } from '@/firebase';
+import { useDocument, usePaginatedCollection } from '@/firebase';
 import { Purchase, UserSummary, FixedCost } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PurchaseTableShell } from '@/components/compras/purchase-table-shell';
@@ -14,20 +14,66 @@ import { getOrCreateUserSummary } from '@/lib/data';
 import { useEffect } from 'react';
 import { FixedCostManager } from '@/components/compras/fixed-cost-manager';
 import { startOfMonth, endOfMonth } from 'date-fns';
+import { useFirebase } from '@/firebase';
+import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+
+
+// Helper to convert Firestore Timestamps in nested objects
+const convertTimestamps = (data: any) => {
+    for (const key in data) {
+        if (data[key] instanceof Timestamp) {
+            data[key] = data[key].toDate();
+        } else if (typeof data[key] === 'object' && data[key] !== null) {
+            convertTimestamps(data[key]);
+        }
+    }
+    return data;
+}
 
 export default function ComprasPage() {
   const { user } = useUser();
+  const { db } = useFirebase();
   const { data: purchases, loading, nextPage, prevPage, hasMore, hasPrev, refresh } = usePaginatedCollection<Purchase>('purchases');
   const { data: summary, loading: summaryLoading } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
   const [costData, setCostData] = useState<{ month: string; cost: number }[]>([]);
   
-  const now = new Date();
-  const startOfCurrentMonth = startOfMonth(now);
-  const endOfCurrentMonth = endOfMonth(now);
+  const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([]);
+  const [fixedCostsLoading, setFixedCostsLoading] = useState(true);
 
-  const { data: fixedCosts, loading: fixedCostsLoading, refresh: refreshFixedCosts } = useCollection<FixedCost>('fixedCosts', {
-    dateRange: [startOfCurrentMonth, endOfCurrentMonth]
-  });
+  const fetchFixedCosts = async () => {
+    if (!user) {
+        setFixedCosts([]);
+        setFixedCostsLoading(false);
+        return;
+    };
+
+    setFixedCostsLoading(true);
+    const now = new Date();
+    const startOfCurrentMonth = startOfMonth(now);
+    const endOfCurrentMonth = endOfMonth(now);
+
+    const q = query(
+        collection(db, 'fixedCosts'),
+        where('userId', '==', user.uid),
+        where('date', '>=', startOfCurrentMonth),
+        where('date', '<=', endOfCurrentMonth)
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        const costs = querySnapshot.docs.map(doc => convertTimestamps({ id: doc.id, ...doc.data() }) as FixedCost);
+        setFixedCosts(costs);
+    } catch (error) {
+        console.error("Error fetching fixed costs:", error);
+    } finally {
+        setFixedCostsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchFixedCosts();
+  }, [user, db]);
+
 
   // Trigger summary creation for existing users
   useEffect(() => {
@@ -43,10 +89,10 @@ export default function ComprasPage() {
   }, [summary]);
   
   const totalCostThisMonth = useMemo(() => {
-    if (!costData || costData.length === 0) return 0;
-    // Assuming the last item in costData is the current month
-    return costData[costData.length - 1].cost;
-  }, [costData]);
+    if (!summary || !summary.monthlyCosts) return 0;
+    const currentMonthKey = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+    return summary.monthlyCosts[currentMonthKey] || 0;
+  }, [summary]);
   
   const formattedTotalCost = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -56,7 +102,7 @@ export default function ComprasPage() {
   const handleDataMutation = () => {
     refresh();
     if(user) getOrCreateUserSummary(user.uid); // Re-calculates and refreshes summary
-    refreshFixedCosts();
+    fetchFixedCosts();
   }
 
   return (
