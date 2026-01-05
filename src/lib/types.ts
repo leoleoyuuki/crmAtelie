@@ -99,6 +99,14 @@ export interface Purchase {
     userId: string;
 }
 
+export interface FixedCost {
+    id: string;
+    description: string;
+    cost: number;
+    date: Date;
+    userId: string;
+}
+
 export interface UserSummary {
   id: string;
   userId: string;

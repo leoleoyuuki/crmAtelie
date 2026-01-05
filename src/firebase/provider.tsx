@@ -67,6 +67,8 @@ export function useFirestore() {
 interface CollectionOptions {
   limit?: number;
   orderBy?: [string, 'asc' | 'desc'];
+  dateRange?: [Date, Date];
+  refreshTrigger?: any;
 }
 
 export function useCollection<T>(path: string, options: CollectionOptions = {}) {
@@ -77,6 +79,10 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
   
   const limitValue = options.limit;
   const orderByValue = options.orderBy;
+  const dateRange = options.dateRange;
+
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = () => setRefreshKey(prev => prev + 1);
 
   React.useEffect(() => {
     if (!auth.currentUser) {
@@ -93,6 +99,10 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
     }
     if (limitValue) {
       queryConstraints.push(limit(limitValue));
+    }
+    if (dateRange && dateRange[0] && dateRange[1]) {
+        queryConstraints.push(where('date', '>=', dateRange[0]));
+        queryConstraints.push(where('date', '<=', dateRange[1]));
     }
     
     const q = query(collectionRef, ...queryConstraints);
@@ -132,9 +142,9 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
     );
 
     return () => unsubscribe();
-  }, [db, path, auth.currentUser, limitValue, orderByValue?.[0], orderByValue?.[1]]);
+  }, [db, path, auth.currentUser, limitValue, orderByValue?.[0], orderByValue?.[1], dateRange, refreshKey]);
 
-  return { data, loading, error };
+  return { data, loading, error, refresh };
 }
 
 

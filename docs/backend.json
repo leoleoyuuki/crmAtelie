@@ -299,6 +299,31 @@
       },
       "required": ["materialName", "quantity", "cost", "unit", "category", "createdAt", "userId"]
     },
+    "FixedCost": {
+      "title": "Fixed Cost",
+      "description": "Represents a fixed or operational cost, like rent or utilities.",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "A description of the cost (e.g., 'Aluguel do Ateliê', 'Conta de Luz')."
+        },
+        "cost": {
+          "type": "number",
+          "description": "The value of the cost."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date the cost was incurred or paid."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who recorded the cost."
+        }
+      },
+      "required": ["description", "cost", "date", "userId"]
+    },
     "UserSummary": {
       "title": "User Summary",
       "description": "Stores aggregated data for a user's dashboard.",
@@ -389,6 +414,12 @@
         "$ref": "#/entities/Purchase"
       },
       "description": "Stores records of material purchases for cost analysis."
+    },
+    "/fixedCosts/{costId}": {
+        "schema": {
+            "$ref": "#/entities/FixedCost"
+        },
+        "description": "Stores records of fixed and operational costs."
     },
     "/summaries/{summaryId}": {
       "schema": {

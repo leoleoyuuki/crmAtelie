@@ -19,7 +19,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary } from '@/lib/types';
+import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -165,17 +165,6 @@ export async function getOrders(): Promise<Order[]> {
   const snapshot = await getDocs(q);
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Order);
 }
-
-export function getStatusMetrics(orders: Order[]) {
-  const totalOrders = orders.length;
-  const totalRevenue = orders
-    .filter(o => o.status === 'Concluído')
-    .reduce((sum, o) => sum + o.totalValue, 0);
-  const pendingCount = orders.filter(o => o.status === 'Novo' || o.status === 'Em Processo').length;
-  
-  return { totalOrders, totalRevenue, pendingCount };
-}
-
 
 export function getServiceDistribution(orders: Order[]) {
   const distribution = orders.reduce((acc, order) => {
@@ -577,6 +566,69 @@ export async function deletePurchase(purchaseId: string): Promise<{ success: boo
     return { success: true };
 }
 
+
+// Fixed Cost Functions
+export async function addFixedCost(costData: Omit<FixedCost, 'id' | 'userId'>) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    await runTransaction(db, async (transaction) => {
+        const costMonthKey = format(costData.date, 'yyyy-MM');
+        const costIncrement = costData.cost;
+
+        const newCostData = {
+            ...costData,
+            userId: user.uid,
+            date: Timestamp.fromDate(costData.date),
+        };
+        const costRef = doc(collection(db, 'fixedCosts'));
+        transaction.set(costRef, newCostData);
+
+        const summaryRef = doc(db, 'summaries', user.uid);
+        transaction.set(summaryRef, {
+            monthlyCosts: {
+                [costMonthKey]: increment(costIncrement)
+            }
+        }, { merge: true });
+    }).catch(error => {
+        console.error("Add fixed cost transaction failed: ", error);
+        throw new Error("Falha ao registrar custo fixo.");
+    });
+}
+
+export async function deleteFixedCost(costId: string): Promise<{ success: boolean }> {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const costRef = doc(db, 'fixedCosts', costId);
+    const summaryRef = doc(db, 'summaries', user.uid);
+
+    await runTransaction(db, async (transaction) => {
+        const costDoc = await transaction.get(costRef);
+        if (!costDoc.exists()) {
+            throw new Error("Registro de custo não encontrado.");
+        }
+        
+        const costData = fromFirebase(costDoc.data(), costId) as FixedCost;
+        const costMonthKey = format(costData.date, 'yyyy-MM');
+        const costDecrement = costData.cost;
+
+        transaction.set(summaryRef, {
+            monthlyCosts: {
+                [costMonthKey]: increment(-costDecrement)
+            }
+        }, { merge: true });
+
+        transaction.delete(costRef);
+    }).catch(error => {
+        console.error("Delete fixed cost transaction failed: ", error);
+        throw new Error("Falha ao excluir o registro do custo.");
+    });
+    
+    return { success: true };
+}
+
+
 // Cost Analytics
 export function getMonthlyCostByCategory(purchases: Purchase[], month: number, year: number) {
     const monthlyPurchases = purchases.filter(p => {
@@ -762,7 +814,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     });
 
      purchasesSnapshot.forEach(purchaseDoc => {
-        const purchase = fromFirebase(purchaseDoc.data(), purchaseDoc.id) as Purchase;
+        const purchase = fromFirebase(purchaseDoc.data(), purchaseId) as Purchase;
         const monthKey = format(purchase.createdAt, 'yyyy-MM');
         monthlyCosts[monthKey] = (monthlyCosts[monthKey] || 0) + purchase.cost;
     });
