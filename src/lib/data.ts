@@ -271,7 +271,7 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
 
                 transaction.set(summaryRef, {
                     totalRevenue: increment(-revenueDecrement),
-                    pendingOrders: increment(1), // It's no longer concluded, so it's pending
+                    pendingOrders: increment(1),
                     monthlyRevenue: {
                         [orderMonthKey]: increment(-revenueDecrement)
                     }
@@ -312,19 +312,60 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
 
 
 export async function deleteOrder(orderId: string) {
-  const docRef = doc(db, 'orders', orderId);
-  // TODO: Add a check to ensure the user owns this document before deleting.
-  await deleteDoc(docRef)
-    .catch(async (serverError) => {
-        const permissionError = new FirestorePermissionError({
-            path: docRef.path,
-            operation: 'delete',
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
-        throw serverError;
-    });
-  return { success: true };
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    const orderRef = doc(db, 'orders', orderId);
+    const summaryRef = doc(db, 'summaries', user.uid);
+
+    try {
+        await runTransaction(db, async (transaction) => {
+            const orderDoc = await transaction.get(orderRef);
+            if (!orderDoc.exists()) {
+                throw new Error("Pedido não encontrado.");
+            }
+
+            const orderData = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
+            const revenueDecrement = orderData.totalValue;
+            const orderMonthKey = format(orderData.createdAt, 'yyyy-MM');
+
+            // --- Update Summary ---
+            if (orderData.status === 'Concluído') {
+                transaction.set(summaryRef, {
+                    totalRevenue: increment(-revenueDecrement),
+                    totalOrders: increment(-1),
+                    monthlyRevenue: {
+                        [orderMonthKey]: increment(-revenueDecrement)
+                    }
+                }, { merge: true });
+            } else {
+                // It was a pending order
+                transaction.set(summaryRef, {
+                    totalOrders: increment(-1),
+                    pendingOrders: increment(-1)
+                }, { merge: true });
+            }
+
+            // --- Revert Stock if necessary ---
+            if (orderData.materialsUsed && orderData.materialsUsed.length > 0) {
+                 for (const used of orderData.materialsUsed) {
+                    const materialRef = doc(db, 'materials', used.materialId);
+                    transaction.update(materialRef, {
+                        stock: increment(used.quantityUsed),
+                        usedInOrders: increment(-1)
+                    });
+                }
+            }
+            
+            // --- Delete Order ---
+            transaction.delete(orderRef);
+        });
+    } catch (error) {
+        console.error("Delete order transaction failed: ", error);
+        throw new Error("Falha ao excluir o pedido.");
+    }
 }
+
 
 
 // Price Table Functions

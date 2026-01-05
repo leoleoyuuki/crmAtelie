@@ -149,8 +149,8 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
             <AlertDialogHeader>
                 <AlertDialogTitle>Você tem certeza absoluta?</AlertDialogTitle>
                 <AlertDialogDescription>
-                Essa ação não pode ser desfeita. Isso excluirá permanentemente o pedido
-                de {order.customerName}.
+                  Esta ação não pode ser desfeita e excluirá permanentemente o pedido de {order.customerName}.
+                  {order.status === 'Concluído' && ' Como este pedido já foi concluído, o valor dele será abatido do seu faturamento total.'}
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
