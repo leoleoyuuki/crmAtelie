@@ -649,7 +649,7 @@ export function getCostChartDataFromSummary(summary: UserSummary) {
         
         data.push({
             month: format(monthDate, 'MMM', { locale: ptBR }),
-            cost: summary.monthlyCosts[monthKey] || 0,
+            cost: summary.monthlyCosts?.[monthKey] || 0,
         });
     }
     return data;
@@ -729,7 +729,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     const summaryRef = doc(db, 'summaries', userId);
     const summarySnap = await getDoc(summaryRef);
 
-    if (summarySnap.exists()) {
+    if (summarySnap.exists() && summarySnap.data()?.monthlyCosts) {
         return fromFirebase(summarySnap.data(), summarySnap.id) as UserSummary;
     }
 
@@ -777,7 +777,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
         monthlyCosts,
     };
 
-    await setDoc(summaryRef, newSummaryData);
+    await setDoc(summaryRef, newSummaryData, { merge: true });
 
     return { id: userId, ...newSummaryData };
 }
