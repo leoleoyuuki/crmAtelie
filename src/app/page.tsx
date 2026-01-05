@@ -10,7 +10,6 @@ import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { ServiceDistributionChart } from '@/components/dashboard/service-distribution-chart';
 import OrderTableShell from '@/components/dashboard/order-table-shell';
-import { OrderVolumeChart } from '@/components/dashboard/order-volume-chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PasswordContext } from '@/contexts/password-context';
 import { getOrCreateUserSummary } from '@/lib/data';
@@ -57,8 +56,7 @@ export default function DashboardPage() {
             <Skeleton className="h-[126px] w-full" />
             <Skeleton className="h-[126px] w-full" />
           </div>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <Skeleton className="h-[415px] w-full" />
+          <div className="grid grid-cols-1 gap-8">
             <Skeleton className="h-[415px] w-full" />
           </div>
           <Skeleton className="h-[500px] w-full" />
@@ -74,8 +72,7 @@ export default function DashboardPage() {
             <Skeleton className="h-[126px] w-full" />
             <Skeleton className="h-[126px] w-full" />
           </div>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <Skeleton className="h-[415px] w-full" />
+          <div className="grid grid-cols-1 gap-8">
             <Skeleton className="h-[415px] w-full" />
           </div>
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
@@ -100,10 +97,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-8">
           <RevenueChart data={revenueData} />
-          {/* OrderVolumeChart could also be adapted to use summary data if needed */}
-          <OrderVolumeChart data={[]} /> 
         </div>
         
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
