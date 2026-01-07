@@ -5,7 +5,7 @@
 import { useEffect, useState, useContext, useMemo } from 'react';
 import { useCollection, useDocument } from '@/firebase';
 import { Order, UserSummary } from '@/lib/types';
-import { getServiceDistribution, getRevenueChartDataFromSummary } from '@/lib/data';
+import { getServiceDistribution, getRevenueChartDataFromSummary, getProfitChartDataFromSummary } from '@/lib/data';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { ServiceDistributionChart } from '@/components/dashboard/service-distribution-chart';
@@ -14,6 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PasswordContext } from '@/contexts/password-context';
 import { getOrCreateUserSummary } from '@/lib/data';
 import { useUser } from '@/firebase/auth/use-user';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfitChart } from '@/components/dashboard/profit-chart';
 
 
 export default function DashboardPage() {
@@ -27,6 +29,7 @@ export default function DashboardPage() {
   const { isPrivacyMode } = useContext(PasswordContext);
   const [serviceDistributionData, setServiceDistributionData] = useState<{ service: string; count: number; fill: string }[]>([]);
   const [revenueData, setRevenueData] = useState<{ month: string; revenue: number }[]>([]);
+  const [profitData, setProfitData] = useState<{ month: string; revenue: number; cost: number; profit: number }[]>([]);
 
   // Trigger migration for existing users
   useEffect(() => {
@@ -42,6 +45,7 @@ export default function DashboardPage() {
     }
     if (summary) {
         setRevenueData(getRevenueChartDataFromSummary(summary));
+        setProfitData(getProfitChartDataFromSummary(summary));
     }
   }, [recentOrders, summary]);
 
@@ -97,9 +101,22 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-8">
-          <RevenueChart data={revenueData} />
-        </div>
+         <Tabs defaultValue="revenue" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="revenue">Faturamento</TabsTrigger>
+            <TabsTrigger value="profit">Lucro</TabsTrigger>
+          </TabsList>
+          <TabsContent value="revenue" className="space-y-4">
+             <div className="grid grid-cols-1 gap-8">
+                <RevenueChart data={revenueData} />
+            </div>
+          </TabsContent>
+          <TabsContent value="profit" className="space-y-4">
+             <div className="grid grid-cols-1 gap-8">
+                <ProfitChart data={profitData} />
+            </div>
+          </TabsContent>
+        </Tabs>
         
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
           <div className="xl:col-span-2">

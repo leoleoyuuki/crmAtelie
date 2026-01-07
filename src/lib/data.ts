@@ -707,6 +707,27 @@ export function getCostChartDataFromSummary(summary: UserSummary) {
     return data;
 }
 
+export function getProfitChartDataFromSummary(summary: UserSummary) {
+    const data: { month: string; revenue: number; cost: number; profit: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+        const monthDate = subMonths(now, i);
+        const monthKey = format(monthDate, 'yyyy-MM');
+        
+        const revenue = summary.monthlyRevenue[monthKey] || 0;
+        const cost = summary.monthlyCosts?.[monthKey] || 0;
+        const profit = revenue - cost;
+
+        data.push({
+            month: format(monthDate, 'MMM', { locale: ptBR }),
+            revenue,
+            cost,
+            profit,
+        });
+    }
+    return data;
+}
+
 
 // Order Conclusion
 export async function concludeOrderWithStockUpdate(orderId: string, usedMaterials: UsedMaterial[]) {
@@ -814,7 +835,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     });
 
      purchasesSnapshot.forEach(purchaseDoc => {
-        const purchase = fromFirebase(purchaseDoc.data(), purchaseId) as Purchase;
+        const purchase = fromFirebase(purchaseDoc.data(), 'temp-id') as Purchase; // id is not used here
         const monthKey = format(purchase.createdAt, 'yyyy-MM');
         monthlyCosts[monthKey] = (monthlyCosts[monthKey] || 0) + purchase.cost;
     });
