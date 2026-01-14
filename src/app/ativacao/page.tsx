@@ -6,17 +6,100 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Star, Gem, Crown } from 'lucide-react';
+import { MessageSquare, LogOut, Loader2, Star, Gem, Crown, Key } from 'lucide-react';
 import { Wallet, initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { activateAccount } from '@/lib/activation';
 
 type Plan = 'mensal' | 'trimestral' | 'anual';
 
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
 
-export default function AtivacaoPage() {
-  const { auth } = useFirebase();
+
+function CodeActivationTab() {
+  const [token, setToken] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const { auth, db } = useFirebase();
+
+  const handleActivation = async () => {
+    if (!token.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Por favor, insira um código de ativação.',
+      });
+      return;
+    }
+    
+    if (!auth.currentUser) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro',
+            description: 'Usuário não autenticado. Faça login novamente.',
+        });
+        return;
+    }
+
+    setIsLoading(true);
+    try {
+      await activateAccount(db, auth.currentUser, token);
+      toast({
+        title: 'Conta Ativada!',
+        description: 'Sua conta foi ativada com sucesso. Bem-vindo!',
+      });
+      router.push('/');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Falha na Ativação',
+        description: error.message || 'Não foi possível ativar sua conta. Verifique o código e tente novamente.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+       <Card>
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl">Ativação por Código</CardTitle>
+          <CardDescription>
+            Insira o código de ativação que você recebeu para liberar o acesso ao sistema.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Input
+              id="token"
+              placeholder="Cole seu código aqui"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              disabled={isLoading}
+            />
+             <p className="text-xs text-muted-foreground">
+                Se você ainda não tem um código, entre em contato com o administrador do sistema.
+             </p>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleActivation} disabled={isLoading} className="w-full">
+            <Key className="mr-2 h-4 w-4" />
+            {isLoading ? 'Ativando...' : 'Ativar Conta'}
+          </Button>
+        </CardFooter>
+      </Card>
+  )
+}
+
+
+function PlanSelectionTab() {
   const { user } = useUser();
   const [preferenceId, setPreferenceId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
@@ -52,21 +135,8 @@ export default function AtivacaoPage() {
     }
   };
 
-
-  const handleWhatsAppClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const phoneNumber = "5511921494313";
-    const message = "Olá! Gostaria de tirar uma dúvida sobre a assinatura do sistema AtelierFlow.";
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-       <div className="absolute top-5 left-5">
-          <Logo className="h-8 w-8 text-primary" />
-        </div>
-      <Card className="w-full max-w-md">
+      <Card>
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-2xl">Escolha seu Plano</CardTitle>
           <CardDescription>
@@ -107,27 +177,60 @@ export default function AtivacaoPage() {
                 </div>
             )}
         </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-            <Separator />
-             <div className="w-full text-center">
+    </Card>
+  )
+}
+
+export default function AtivacaoPage() {
+  const { auth } = useFirebase();
+
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const phoneNumber = "5511921494313";
+    const message = "Olá! Gostaria de tirar uma dúvida sobre a assinatura do sistema AtelierFlow.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+       <div className="absolute top-5 left-5">
+          <Logo className="h-8 w-8 text-primary" />
+        </div>
+        <div className="w-full max-w-md space-y-6">
+            <Tabs defaultValue="plan" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="plan">Pagar Assinatura</TabsTrigger>
+                    <TabsTrigger value="code">Usar Código</TabsTrigger>
+                </TabsList>
+                <TabsContent value="plan" className="mt-4">
+                    <PlanSelectionTab />
+                </TabsContent>
+                <TabsContent value="code" className="mt-4">
+                    <CodeActivationTab />
+                </TabsContent>
+            </Tabs>
+
+            <div className="w-full text-center">
+                <Separator className="my-4" />
                 <p className="text-xs text-muted-foreground mb-2">Dúvidas ou problemas?</p>
                 <Button variant="outline" className="w-full" onClick={handleWhatsAppClick}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     Falar no WhatsApp
                 </Button>
             </div>
-
-            <Button
-                variant="link"
-                size="sm"
-                className="text-muted-foreground"
-                onClick={() => auth.signOut()}
-                >
-                <LogOut className="mr-2 h-4 w-4" />
-                Trocar de conta (Sair)
-            </Button>
-        </CardFooter>
-      </Card>
+            <div className="text-center">
+                 <Button
+                    variant="link"
+                    size="sm"
+                    className="text-muted-foreground"
+                    onClick={() => auth.signOut()}
+                    >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Trocar de conta (Sair)
+                </Button>
+            </div>
+        </div>
     </div>
   );
 }
