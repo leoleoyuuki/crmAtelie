@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MercadoPagoConfig, Preference } from 'mercadopago';
+import '@/lib/load-env'; // Carrega as variáveis de ambiente
 
 // Tipos de Planos
 type Plan = 'mensal' | 'trimestral' | 'anual';
