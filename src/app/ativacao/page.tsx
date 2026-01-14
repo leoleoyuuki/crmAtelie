@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { activateAccount } from '@/lib/activation';
+import { redeemActivationToken } from '@/lib/activation';
 
 type Plan = 'mensal' | 'trimestral' | 'anual';
 
@@ -49,7 +49,7 @@ function CodeActivationTab() {
 
     setIsLoading(true);
     try {
-      await activateAccount(db, auth.currentUser, token);
+      await redeemActivationToken(db, auth.currentUser, token);
       toast({
         title: 'Conta Ativada!',
         description: 'Sua conta foi ativada com sucesso. Bem-vindo!',
