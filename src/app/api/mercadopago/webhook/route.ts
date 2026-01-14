@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
-import { doc, getDoc, getFirestore, runTransaction, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, runTransaction, updateDoc } from 'firebase/firestore';
 import { app, db } from '@/firebase/config';
 import { activateUserAccount } from '@/lib/activation';
 
