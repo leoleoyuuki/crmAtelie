@@ -16,6 +16,7 @@ import { getOrCreateUserSummary } from '@/lib/data';
 import { useUser } from '@/firebase/auth/use-user';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfitChart } from '@/components/dashboard/profit-chart';
+import { ProfitStatsCards } from '@/components/dashboard/profit-stats-cards';
 
 
 export default function DashboardPage() {
@@ -30,6 +31,13 @@ export default function DashboardPage() {
   const [serviceDistributionData, setServiceDistributionData] = useState<{ service: string; count: number; fill: string }[]>([]);
   const [revenueData, setRevenueData] = useState<{ month: string; revenue: number }[]>([]);
   const [profitData, setProfitData] = useState<{ month: string; revenue: number; cost: number; profit: number }[]>([]);
+  
+  const { totalCosts, totalProfit } = useMemo(() => {
+    if (!summary) return { totalCosts: 0, totalProfit: 0 };
+    const costs = Object.values(summary.monthlyCosts || {}).reduce((acc, cost) => acc + cost, 0);
+    const profit = summary.totalRevenue - costs;
+    return { totalCosts: costs, totalProfit: profit };
+  }, [summary]);
 
   // Trigger migration for existing users
   useEffect(() => {
@@ -92,41 +100,47 @@ export default function DashboardPage() {
     }
 
     return (
-      <main className="flex flex-1 flex-col gap-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <StatsCards 
-            totalOrders={summary?.totalOrders || 0}
-            totalRevenue={summary?.totalRevenue || 0}
-            pendingCount={summary?.pendingOrders || 0}
-          />
-        </div>
-
-         <Tabs defaultValue="revenue" className="space-y-4">
+       <Tabs defaultValue="revenue" className="space-y-4">
           <TabsList>
             <TabsTrigger value="revenue">Faturamento</TabsTrigger>
             <TabsTrigger value="profit">Lucro</TabsTrigger>
           </TabsList>
-          <TabsContent value="revenue" className="space-y-4">
-             <div className="grid grid-cols-1 gap-8">
+          
+          <TabsContent value="revenue" className="space-y-8">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <StatsCards 
+                totalOrders={summary?.totalOrders || 0}
+                totalRevenue={summary?.totalRevenue || 0}
+                pendingCount={summary?.pendingOrders || 0}
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-8">
                 <RevenueChart data={revenueData} />
             </div>
           </TabsContent>
-          <TabsContent value="profit" className="space-y-4">
+
+          <TabsContent value="profit" className="space-y-8">
+             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <ProfitStatsCards
+                    totalProfit={totalProfit}
+                    totalRevenue={summary?.totalRevenue || 0}
+                    totalCosts={totalCosts}
+                />
+            </div>
              <div className="grid grid-cols-1 gap-8">
                 <ProfitChart data={profitData} />
             </div>
           </TabsContent>
+
+            <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+            <div className="xl:col-span-2">
+                <OrderTableShell data={recentOrders || []} />
+            </div>
+            <div>
+                <ServiceDistributionChart data={serviceDistributionData} />
+            </div>
+            </div>
         </Tabs>
-        
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-          <div className="xl:col-span-2">
-            <OrderTableShell data={recentOrders || []} />
-          </div>
-          <div>
-            <ServiceDistributionChart data={serviceDistributionData} />
-          </div>
-        </div>
-      </main>
     );
   };
 
