@@ -1,16 +1,17 @@
 
 'use client';
 
-import { useCollection, useFirebase } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { Order, OrderItem } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { addDays, compareAsc, compareDesc, startOfDay, endOfDay, subDays } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ListChecks } from 'lucide-react';
+import { ListChecks, Search } from 'lucide-react';
 import { EditableTaskItemCard } from '@/components/tarefas/task-item-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 
 // Define a new type that combines OrderItem with parent Order info
@@ -41,6 +42,9 @@ export default function TarefasPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('upcoming');
   const [allTaskOrders, setAllTaskOrders] = useState<Order[]>([]);
+  
+  const [upcomingDays, setUpcomingDays] = useState(3);
+  const [overdueDays, setOverdueDays] = useState(7);
 
 
   useEffect(() => {
@@ -54,8 +58,8 @@ export default function TarefasPage() {
 
       const now = new Date();
       const todayStart = startOfDay(now);
-      const threeDaysFromNow = endOfDay(addDays(now, 3));
-      const sevenDaysAgo = startOfDay(subDays(now, 7));
+      const endOfUpcomingRange = endOfDay(addDays(now, upcomingDays));
+      const startOfOverdueRange = startOfDay(subDays(now, overdueDays));
 
       try {
         // Query for upcoming tasks
@@ -64,7 +68,7 @@ export default function TarefasPage() {
           where('userId', '==', auth.currentUser.uid),
           where('status', 'in', ['Novo', 'Em Processo']),
           where('dueDate', '>=', todayStart),
-          where('dueDate', '<=', threeDaysFromNow),
+          where('dueDate', '<=', endOfUpcomingRange),
           orderBy('dueDate', 'asc')
         );
 
@@ -74,7 +78,7 @@ export default function TarefasPage() {
           where('userId', '==', auth.currentUser.uid),
           where('status', 'in', ['Novo', 'Em Processo']),
           where('dueDate', '<', todayStart),
-          where('dueDate', '>=', sevenDaysAgo),
+          where('dueDate', '>=', startOfOverdueRange),
           orderBy('dueDate', 'desc')
         );
 
@@ -121,7 +125,7 @@ export default function TarefasPage() {
     };
 
     fetchTasks();
-  }, [db, auth.currentUser]);
+  }, [db, auth.currentUser, upcomingDays, overdueDays]);
 
 
   const findOrderForTask = (taskId: string) => {
@@ -138,16 +142,25 @@ export default function TarefasPage() {
         </div>
       );
     }
+    
+    const handleLoadMore = () => {
+        setLoading(true); // Show loading skeleton while fetching
+        if (type === 'upcoming') {
+            setUpcomingDays(prev => prev + 5);
+        } else {
+            setOverdueDays(prev => prev + 5);
+        }
+    }
 
     if (tasks.length === 0) {
       return (
-        <div className="flex justify-center items-center h-full py-16">
+        <div className="flex flex-col justify-center items-center h-full py-16 gap-6">
           {type === 'upcoming' ? (
              <Alert className="max-w-md">
                 <ListChecks className="h-4 w-4" />
                 <AlertTitle>Tudo em dia!</AlertTitle>
                 <AlertDescription>
-                  Não há nenhuma tarefa com data de entrega para os próximos 3 dias.
+                  Não há nenhuma tarefa com data de entrega para os próximos {upcomingDays} dias.
                 </AlertDescription>
               </Alert>
           ) : (
@@ -155,26 +168,35 @@ export default function TarefasPage() {
                 <ListChecks className="h-4 w-4 text-green-700" />
                 <AlertTitle>Nenhuma pendência!</AlertTitle>
                 <AlertDescription>
-                  Não há nenhuma tarefa atrasada no momento.
-                </AlertDescription>
-                 <AlertDescription className="mt-2 text-xs text-green-600">
-                    Obs: Apenas tarefas com até 1 semana de atraso são exibidas aqui.
+                  Não há nenhuma tarefa atrasada nos últimos {overdueDays} dias.
                 </AlertDescription>
               </Alert>
           )}
+          <Button variant="outline" onClick={handleLoadMore}>
+            <Search className="mr-2 h-4 w-4" />
+             {type === 'upcoming' ? 'Buscar nos próximos 5 dias' : 'Buscar 5 dias antes'}
+          </Button>
         </div>
       );
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {tasks.map((task, index) => {
-          const order = findOrderForTask(task.orderId);
-          return order ? (
-            <EditableTaskItemCard key={`${task.orderId}-${index}`} task={task} order={order} />
-          ) : null;
-        })}
-      </div>
+     <>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {tasks.map((task, index) => {
+            const order = findOrderForTask(task.orderId);
+            return order ? (
+                <EditableTaskItemCard key={`${task.orderId}-${index}`} task={task} order={order} />
+            ) : null;
+            })}
+        </div>
+        <div className="flex justify-center py-6">
+            <Button variant="outline" onClick={handleLoadMore}>
+                <Search className="mr-2 h-4 w-4" />
+                {type === 'upcoming' ? 'Buscar mais 5 dias' : 'Buscar mais 5 dias de atraso'}
+            </Button>
+        </div>
+     </>
     );
   }
 
