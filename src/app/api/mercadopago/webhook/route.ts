@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { doc, getDoc, runTransaction, updateDoc } from 'firebase/firestore';
 import { app, db } from '@/firebase/config';
-import { activateUserAccount } from '@/lib/activation';
+import { redeemActivationToken, activateUserAccount } from '@/lib/activation';
 
 // Inicialize o SDK do Mercado Pago
 const accessToken = process.env.MP_ACCESS_TOKEN;
