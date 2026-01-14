@@ -135,7 +135,7 @@ export default function TarefasPage() {
       where('userId', '==', auth.currentUser.uid),
       where('status', 'in', ['Novo', 'Em Processo']),
       where('dueDate', '<', todayStart),
-      orderBy('dueDate', 'desc'),
+      orderBy('dueDate', 'asc'),
       limit(ITEMS_PER_PAGE)
     );
      if (!initial && lastOverdueDoc) {
