@@ -4,7 +4,8 @@
 import { useFirebase } from '@/firebase';
 import { Order, OrderItem } from '@/lib/types';
 import { useState, useEffect, useCallback } from 'react';
-import { startOfDay, Timestamp, getDocs, query, collection, where, orderBy, limit, startAfter } from 'firebase/firestore';
+import { Timestamp, getDocs, query, collection, where, orderBy, limit, startAfter, type QuerySnapshot } from 'firebase/firestore';
+import { startOfDay } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ListChecks, Search } from 'lucide-react';
