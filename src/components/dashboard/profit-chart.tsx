@@ -1,4 +1,3 @@
-
 "use client"
 
 import { Area, AreaChart, Bar, BarChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
@@ -73,16 +72,7 @@ export function ProfitChart({ data }: ProfitChartProps) {
                 />
                 <ChartTooltip
                     cursor={false}
-                    content={
-                        <ChartTooltipContent
-                            indicator="dot"
-                            formatter={(value, name) => {
-                                const formattedValue = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value as number);
-                                // @ts-ignore
-                                return `${formattedValue}`;
-                            }}
-                        />
-                    }
+                    content={<ChartTooltipContent indicator="line" />}
                 />
                  <ChartLegend content={<ChartLegendContent />} />
                  <defs>

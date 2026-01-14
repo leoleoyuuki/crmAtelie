@@ -189,6 +189,8 @@ const ChartTooltipContent = React.forwardRef<
             const key = `${nameKey || item.name || item.dataKey || "value"}`
             const itemConfig = getPayloadConfigFromPayload(config, item, key)
             const indicatorColor = color || item.payload.fill || item.color
+            const value = item.value as number
+            const name = item.name as string
 
             return (
               <div
@@ -198,8 +200,8 @@ const ChartTooltipContent = React.forwardRef<
                   indicator === "dot" && "items-center"
                 )}
               >
-                {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
+                {formatter ? (
+                   formatter(value, name, item, index, payload)
                 ) : (
                   <>
                     {itemConfig?.icon ? (
@@ -240,7 +242,7 @@ const ChartTooltipContent = React.forwardRef<
                       </div>
                       {item.value && (
                         <span className="font-mono font-medium tabular-nums text-foreground">
-                          {item.value.toLocaleString()}
+                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.value as number)}
                         </span>
                       )}
                     </div>
