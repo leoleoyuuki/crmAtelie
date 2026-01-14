@@ -3,14 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { doc, getDoc, runTransaction, updateDoc } from 'firebase/firestore';
 import { app, db } from '@/firebase/config';
-import { redeemActivationToken, activateUserAccount } from '@/lib/activation';
+import { activateUserAccount } from '@/lib/activation';
 
-// Inicialize o SDK do Mercado Pago
+// Inicialize o SDK do Mercado Pago fora da função de requisição
 const accessToken = process.env.MP_ACCESS_TOKEN;
 if (!accessToken) {
-  throw new Error("[ERRO MP] Access Token não encontrado nas variáveis de ambiente.");
+  console.error("[ERRO MP] Access Token não encontrado nas variáveis de ambiente.");
 }
-const client = new MercadoPagoConfig({ accessToken });
+const client = new MercadoPagoConfig({ accessToken: accessToken || '' });
 const payment = new Payment(client);
 
 type PlanIdentifier = 'mensal' | 'trimestral' | 'anual';
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
       // Buscamos os detalhes do pagamento na API do Mercado Pago
       const paymentInfo = await payment.get({ id: paymentId });
-      console.log('[LOG MP] Informações do pagamento:', JSON.stringify(paymentInfo, null, 2));
+      console.log('[LOG MP] Informações do pagamento obtidas:', JSON.stringify(paymentInfo, null, 2));
 
       // Verificamos se o pagamento está aprovado e se temos os dados necessários
       if (paymentInfo.status === 'approved' && paymentInfo.external_reference && paymentInfo.order?.id) {
@@ -50,14 +50,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true });
 
       } else {
-        console.log(`[LOG MP] Status do pagamento não é 'approved' ou faltam dados: ${paymentInfo.status}`);
+        console.log(`[LOG MP] Status do pagamento não é 'approved' ou faltam dados. Status: ${paymentInfo.status}`);
         return NextResponse.json({ status: 'Pagamento não aprovado ou dados incompletos' });
       }
     }
 
+    console.log(`[LOG MP] Tipo de notificação não é 'payment': ${body.type}`);
     return NextResponse.json({ status: 'Notificação não relevante' });
   } catch (error) {
-    console.error('[ERRO MP] Falha ao processar webhook:', error);
+    console.error('[ERRO MP] Falha catastrófica ao processar webhook:', error);
     return NextResponse.json({ error: 'Falha interna ao processar o webhook.' }, { status: 500 });
   }
 }
