@@ -83,8 +83,8 @@ function CodeActivationTab() {
               onChange={(e) => setToken(e.target.value)}
               disabled={isLoading}
             />
-             <p className="text-xs text-muted-foreground">
-                Se você ainda não tem um código, entre em contato com o administrador do sistema.
+             <p className="text-xs text-muted-foreground pt-1">
+                Se você não tem um código, fale conosco no WhatsApp para adquirir um ou tirar dúvidas.
              </p>
           </div>
         </CardContent>
@@ -145,36 +145,50 @@ function PlanSelectionTab() {
         </CardHeader>
         <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4">
-                <Button variant="outline" className="h-20 flex flex-col items-start p-4" onClick={() => createPreference('mensal')} disabled={isLoading && selectedPlan !== 'mensal'}>
-                    <div className="flex items-center gap-2">
-                        <Star className="h-5 w-5 text-yellow-500"/>
-                        <span className="font-bold text-lg">Plano Mensal</span>
+                <Button variant="outline" className="h-20 flex flex-col items-start p-4 text-left" onClick={() => createPreference('mensal')} disabled={isLoading && selectedPlan !== 'mensal'}>
+                    <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Star className="h-5 w-5 text-yellow-500"/>
+                            <span className="font-bold text-lg">Plano Mensal</span>
+                        </div>
+                        {isLoading && selectedPlan === 'mensal' && <Loader2 className="animate-spin h-5 w-5"/>}
                     </div>
                     <span className="text-sm font-normal">R$ 29,90 / mês</span>
-                    {isLoading && selectedPlan === 'mensal' && <Loader2 className="animate-spin ml-auto"/>}
                 </Button>
-                 <Button variant="outline" className="h-20 flex flex-col items-start p-4" onClick={() => createPreference('trimestral')} disabled={isLoading && selectedPlan !== 'trimestral'}>
-                    <div className="flex items-center gap-2">
-                        <Gem className="h-5 w-5 text-blue-500"/>
-                        <span className="font-bold text-lg">Plano Trimestral</span>
+                 <Button variant="outline" className="h-20 flex flex-col items-start p-4 text-left" onClick={() => createPreference('trimestral')} disabled={isLoading && selectedPlan !== 'trimestral'}>
+                     <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Gem className="h-5 w-5 text-blue-500"/>
+                            <span className="font-bold text-lg">Plano Trimestral</span>
+                        </div>
+                        {isLoading && selectedPlan === 'trimestral' && <Loader2 className="animate-spin h-5 w-5"/>}
                     </div>
                     <span className="text-sm font-normal">R$ 79,90 / 3 meses</span>
-                    {isLoading && selectedPlan === 'trimestral' && <Loader2 className="animate-spin ml-auto"/>}
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-start p-4" onClick={() => createPreference('anual')} disabled={isLoading && selectedPlan !== 'anual'}>
-                     <div className="flex items-center gap-2">
-                        <Crown className="h-5 w-5 text-purple-500"/>
-                        <span className="font-bold text-lg">Plano Anual</span>
+                <Button variant="outline" className="h-20 flex flex-col items-start p-4 text-left" onClick={() => createPreference('anual')} disabled={isLoading && selectedPlan !== 'anual'}>
+                     <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Crown className="h-5 w-5 text-purple-500"/>
+                            <span className="font-bold text-lg">Plano Anual</span>
+                        </div>
+                         {isLoading && selectedPlan === 'anual' && <Loader2 className="animate-spin h-5 w-5"/>}
                     </div>
                     <span className="text-sm font-normal">R$ 299,90 / ano</span>
-                     {isLoading && selectedPlan === 'anual' && <Loader2 className="animate-spin ml-auto"/>}
                 </Button>
             </div>
             
             {preferenceId && (
-                <div className="mt-4">
+                <div className="mt-6 pt-6 border-t">
                     <Wallet initialization={{ preferenceId: preferenceId }} customization={{ texts: { valueProp: 'smart_option'}}} />
                 </div>
+            )}
+
+            {!preferenceId && (
+              <div className="text-center pt-4">
+                  <p className="text-xs text-muted-foreground">
+                      Prefere negociar ou pagar de outra forma? <br/> Fale conosco no WhatsApp para receber um código de ativação.
+                  </p>
+              </div>
             )}
         </CardContent>
     </Card>
@@ -213,10 +227,12 @@ export default function AtivacaoPage() {
 
             <div className="w-full text-center">
                 <Separator className="my-4" />
-                <p className="text-xs text-muted-foreground mb-2">Dúvidas ou problemas?</p>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Precisa de ajuda, quer negociar um plano ou sugerir uma funcionalidade? <br/> Nosso contato é direto e rápido.
+                </p>
                 <Button variant="outline" className="w-full" onClick={handleWhatsAppClick}>
                     <MessageSquare className="mr-2 h-4 w-4" />
-                    Falar no WhatsApp
+                    Falar com o desenvolvedor no WhatsApp
                 </Button>
             </div>
             <div className="text-center">
@@ -234,3 +250,5 @@ export default function AtivacaoPage() {
     </div>
   );
 }
+
+    
