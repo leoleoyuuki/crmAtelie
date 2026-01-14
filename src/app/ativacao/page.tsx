@@ -232,7 +232,7 @@ export default function AtivacaoPage() {
                 </p>
                 <Button variant="outline" className="w-full" onClick={handleWhatsAppClick}>
                     <MessageSquare className="mr-2 h-4 w-4" />
-                    Falar com o desenvolvedor no WhatsApp
+                    Fale conosco no WhatsApp
                 </Button>
             </div>
             <div className="text-center">
