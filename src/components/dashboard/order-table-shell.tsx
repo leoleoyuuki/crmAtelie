@@ -45,6 +45,7 @@ interface OrderTableShellProps {
   hasNextPage?: boolean;
   hasPrevPage?: boolean;
   loading?: boolean;
+  onDataMutated?: () => void;
 }
 
 
@@ -79,12 +80,17 @@ export default function OrderTableShell({
     hasNextPage,
     hasPrevPage,
     loading,
+    onDataMutated,
 }: OrderTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
   const isMobile = useIsMobile();
+
+  const handleUpdate = () => {
+    onDataMutated?.();
+  }
 
   const columns: ColumnDef<Order>[] = useMemo(
     () => [
@@ -179,14 +185,14 @@ export default function OrderTableShell({
           <div className="text-right">
             <OrderTableRowActions 
               order={row.original} 
-              onUpdate={() => {}} // Listener on page will handle update
-              onDelete={() => {}} // Listener on page will handle update
+              onUpdate={handleUpdate}
+              onDelete={handleUpdate}
             />
           </div>
         ),
       },
     ],
-    []
+    [onDataMutated]
   );
 
   const table = useReactTable({
@@ -270,7 +276,7 @@ export default function OrderTableShell({
     <Card>
       <OrderTableToolbar 
         table={table} 
-        onOrderCreated={() => {}}
+        onOrderCreated={handleUpdate}
         isPage={isPage} 
       />
       <CardContent>
@@ -281,8 +287,8 @@ export default function OrderTableShell({
                     <OrderCardMobile 
                         key={row.id}
                         row={row as Row<Order>}
-                        onUpdate={() => {}}
-                        onDelete={() => {}}
+                        onUpdate={handleUpdate}
+                        onDelete={handleUpdate}
                     />
                 ))
             ) : (

@@ -17,7 +17,7 @@ import { getMonths } from "@/lib/data"
 
 interface OrderTableToolbarProps<TData> {
   table: Table<TData>
-  onOrderCreated: () => void
+  onOrderCreated?: () => void
   isPage?: boolean;
 }
 

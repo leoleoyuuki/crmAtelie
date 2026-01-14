@@ -10,8 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function OrdersPage() {
   const { data: orders, loading, nextPage, prevPage, hasMore, hasPrev, refresh } = usePaginatedCollection<Order>('orders');
   
-  // The refresh function from usePaginatedCollection will be called when the listener detects a change
-  // so we don't need a separate handler here.
+  const handleDataMutation = () => {
+    refresh();
+  }
 
   if (loading && !orders?.length) {
     return (
@@ -41,6 +42,7 @@ export default function OrdersPage() {
         hasNextPage={hasMore}
         hasPrevPage={hasPrev}
         loading={loading}
+        onDataMutated={handleDataMutation}
       />
     </div>
   );
