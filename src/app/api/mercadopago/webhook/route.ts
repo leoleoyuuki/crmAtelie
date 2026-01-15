@@ -25,20 +25,21 @@ const getDurationFromPlan = (planIdentifier: PlanIdentifier): { value: number, u
 export async function POST(request: NextRequest) {
   console.log('[LOG MP] Webhook recebido.');
   const body = await request.json();
-  console.log('[LOG MP] Corpo do Webhook:', body);
+  console.log('[LOG MP] Corpo do Webhook:', JSON.stringify(body, null, 2));
 
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type');
 
   try {
+    // Verificamos se o tipo é 'payment' e se o corpo da requisição contém o ID.
     if (type === 'payment' && body.data?.id) {
-      const paymentId = body.data.id;
-      console.log(`[LOG MP] ID do pagamento recebido do corpo: ${paymentId}`);
+      const paymentId = body.data.id; // Usamos o ID do corpo da requisição!
+      console.log(`[LOG MP] ID do pagamento obtido do corpo: ${paymentId}`);
 
       const paymentInfo = await payment.get({ id: paymentId });
       console.log('[LOG MP] Informações do pagamento obtidas:', JSON.stringify(paymentInfo, null, 2));
 
-      if (paymentInfo.status === 'approved' && paymentInfo.external_reference && paymentInfo.order?.id) {
+      if (paymentInfo.status === 'approved' && paymentInfo.external_reference) {
         const userId = paymentInfo.external_reference;
         const planIdentifier = paymentInfo.items?.[0]?.id as PlanIdentifier;
         
@@ -49,18 +50,15 @@ export async function POST(request: NextRequest) {
 
         console.log(`[LOG MP] Iniciando ativação para o usuário ${userId} com o plano ${planIdentifier}.`);
         
-        // --- Lógica de ativação diretamente aqui ---
         const userRef = doc(db, 'users', userId);
         const { value, unit } = getDurationFromPlan(planIdentifier);
 
         try {
-            // Check if user already has an active subscription to extend it
             const userDoc = await getDoc(userRef);
             const userData = userDoc.data();
             let startDate = new Date();
             if (userData && userData.status === 'active' && userData.expiresAt) {
                 const currentExpiration = userData.expiresAt.toDate();
-                // If current expiration is in the future, extend from there
                 if (currentExpiration > new Date()) {
                     startDate = currentExpiration;
                 }
@@ -78,10 +76,8 @@ export async function POST(request: NextRequest) {
 
         } catch (dbError) {
              console.error(`[ERRO MP] Falha ao atualizar o documento do usuário ${userId} no Firestore:`, dbError);
-             // Retornar um erro 500 para o Mercado Pago tentar novamente.
              return NextResponse.json({ error: 'Falha ao atualizar banco de dados.' }, { status: 500 });
         }
-        // --- Fim da lógica de ativação ---
 
         console.log(`[LOG MP] Ativação para ${userId} concluída com sucesso.`);
         return NextResponse.json({ success: true }, { status: 200 });
@@ -93,11 +89,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[LOG MP] Tipo de notificação não é 'payment' ou ID do pagamento não encontrado no corpo. Tipo: ${type}`);
-    // Respondemos com 200 OK para que o Mercado Pago não tente reenviar notificações que não nos interessam.
     return NextResponse.json({ status: 'Notificação não relevante' }, { status: 200 });
   } catch (error: any) {
     console.error('[ERRO MP] Falha catastrófica ao processar webhook:', error);
-    // Retornamos 500 para que o Mercado Pago tente reenviar a notificação em caso de falha inesperada.
     return NextResponse.json({ error: 'Falha interna ao processar o webhook.', message: error.message }, { status: 500 });
   }
 }
