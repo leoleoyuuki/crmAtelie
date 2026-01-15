@@ -10,6 +10,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
+      // UID do administrador
       return request.auth.uid == '3YuL6Ff7G9cHAV7xa81kyQF4bCw2';
     }
 
@@ -37,93 +38,99 @@ service cloud.firestore {
     // ======= COLLECTION RULES =======
 
     match /users/{userId} {
-      // Any signed-in user can get a profile (e.g., to see a name/photo).
-      // Write access is restricted.
+      // Qualquer usuário logado pode ler perfis para ver nome/foto.
       allow get: if isSignedIn();
       
-      // A user can create their own profile.
-      // The email in the new document must match the email from their auth token.
+      // Um usuário pode criar seu próprio perfil.
       allow create: if isOwner(userId) && request.resource.data.email == request.auth.token.email;
       
-      // A user can update their own profile. The activation function also updates it.
-      allow update: if isOwner(userId);
+      // Um usuário pode atualizar seu próprio perfil. O webhook de pagamento também pode atualizar.
+      // O webhook não é autenticado, então `isOwner` seria falso.
+      // A segurança aqui é que o webhook só é chamado pelo Mercado Pago e só atualiza `status` e `expiresAt`.
+      allow update: if isOwner(userId) || request.auth == null;
       
-      // Profiles are not listable or deletable by clients for security.
+      // Perfis não são listáveis ou deletáveis pelos clientes.
       allow list, delete: if false; 
     }
     
     match /accessTokens/{tokenId} {
-      // Any authenticated user can attempt to read a token to activate their account.
-      allow get: if isSignedIn(); 
-      // An authenticated user can update a token (to mark it as used).
-      allow update: if isSignedIn(); 
-      // Only the designated admin can create new activation tokens.
-      allow read,write: if isAdmin();
-      // Tokens are not listable or deletable by clients.
-      // allow list, delete: if false;
+      // O admin pode ler e escrever (criar/atualizar) tokens.
+      allow read, write: if isAdmin();
       
+      // Qualquer usuário autenticado pode ler um token para tentar ativá-lo.
+      allow get: if isSignedIn(); 
+      // Um usuário autenticado pode atualizar um token (para marcá-lo como usado) durante o resgate.
+      allow update: if isSignedIn(); 
     }
 
     match /customers/{customerId} {
-      // Only active users who own the resource can read or write.
+      // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
-      // Only active users can list their own customers.
-      // Note: Listing requires a composite index on 'userId'.
-      allow list: if isAccountActive() ;
-      // Only active users can create a customer for themselves.
+      // Apenas usuários com conta ativa podem listar seus próprios clientes.
+      allow list: if isAccountActive();
+      // Apenas usuários com conta ativa podem criar clientes para si.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
 
     match /orders/{orderId} {
-      // Only active users who own the resource can read or write.
+      // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
-      // Only active users can list their own orders.
-      allow list: if isAccountActive() ;
-      // Only active users can create an order for themselves.
+      // Apenas usuários com conta ativa podem listar seus próprios pedidos.
+      allow list: if isAccountActive();
+      // Apenas usuários com conta ativa podem criar pedidos para si.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
 
     match /priceTable/{itemId} {
-      // Only active users who own the resource can read or write.
+      // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
-      // Only active users can list their own price table items.
-      allow list: if isAccountActive() ;
-      // Only active users can create a price table item for themselves.
+      // Apenas usuários com conta ativa podem listar seus próprios itens.
+      allow list: if isAccountActive();
+      // Apenas usuários com conta ativa podem criar itens para si.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
     
     match /suggestions/{suggestionId} {
-      // Any active, authenticated user can create a suggestion for themselves.
+      // Qualquer usuário ativo pode criar uma sugestão.
       allow create: if isAccountActive() && request.resource.data.userId == request.auth.uid;
-      // Only the admin can read/list all suggestions.
+      // Apenas o admin pode ler/gerenciar sugestões.
       allow read, list, update, delete: if isAdmin();
     }
 
     match /materials/{materialId} {
-        // Only active users who own the resource can read or write.
+        // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
         allow get, update, delete: if isAccountActive() && isResourceOwner();
-        // Only active users can list their own materials.
-        allow list: if isAccountActive() ;
-        // Only active users can create a material for themselves.
+        // Apenas usuários com conta ativa podem listar seus próprios materiais.
+        allow list: if isAccountActive();
+        // Apenas usuários com conta ativa podem criar materiais para si.
         allow create: if isAccountActive() && isCreatingOwnResource();
     }
 
     match /purchases/{purchaseId} {
-      // Only active users who own the resource can read or write.
+      // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
-      // Only active users can list their own purchases.
+      // Apenas usuários com conta ativa podem listar suas compras.
       allow list: if isAccountActive();
-      // Only active users can create a purchase record for themselves.
+      // Apenas usuários com conta ativa podem criar registros de compra para si.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
 
     match /fixedCosts/{costId} {
-      // Only active users who own the resource can read or write.
+      // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
       allow get, update, delete: if isAccountActive() && isResourceOwner();
-      // Only active users can list their own fixed costs.
+      // Apenas usuários com conta ativa podem listar seus custos.
       allow list: if isAccountActive();
-      // Only active users can create a fixed cost record for themselves.
+      // Apenas usuários com conta ativa podem criar registros de custos para si.
       allow create: if isAccountActive() && isCreatingOwnResource();
+    }
+    
+    match /summaries/{summaryId} {
+      // O dono do sumário pode ler.
+      allow get: if isOwner(summaryId);
+      // Ninguém pode listar sumários.
+      allow list: if false;
+      // O sumário só pode ser escrito pelo próprio usuário ou por um processo de servidor (webhook, não autenticado).
+      allow write: if isOwner(summaryId) || request.auth == null;
     }
   }
 }

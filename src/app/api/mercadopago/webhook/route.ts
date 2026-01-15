@@ -1,18 +1,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { add } from 'date-fns';
+import { activateUserAccount } from '@/lib/activation';
 import '@/lib/load-env'; // Carrega as variáveis de ambiente
-
-type PlanIdentifier = 'mensal' | 'trimestral' | 'anual';
-
-const getDurationFromPlan = (planIdentifier: PlanIdentifier): { value: number, unit: 'months' | 'years' } => {
-    if (planIdentifier === 'mensal') return { value: 1, unit: 'months' };
-    if (planIdentifier === 'trimestral') return { value: 3, unit: 'months' };
-    if (planIdentifier === 'anual') return { value: 1, unit: 'years' };
-    throw new Error('Identificador de plano inválido.');
-}
 
 export async function POST(request: NextRequest) {
   console.log('[LOG MP] Webhook recebido.');
@@ -43,7 +33,6 @@ export async function POST(request: NextRequest) {
 
       if (!paymentResponse.ok) {
         console.error('[ERRO MP] Falha ao buscar informações do pagamento:', paymentInfo);
-        // Retornamos 200 para o MP não ficar reenviando, mas logamos o erro.
         return NextResponse.json({ status: 'Falha ao buscar pagamento' }, { status: 200 });
       }
 
@@ -51,7 +40,7 @@ export async function POST(request: NextRequest) {
 
       if (paymentInfo.status === 'approved' && paymentInfo.external_reference) {
         const userId = paymentInfo.external_reference;
-        const planIdentifier = paymentInfo.additional_info?.items?.[0]?.id as PlanIdentifier;
+        const planIdentifier = paymentInfo.additional_info?.items?.[0]?.id;
         
         if (!userId || !planIdentifier) {
            console.error('[ERRO MP] ID do usuário ou do plano não encontrado no pagamento.');
@@ -60,28 +49,9 @@ export async function POST(request: NextRequest) {
 
         console.log(`[LOG MP] Iniciando ativação para o usuário ${userId} com o plano ${planIdentifier}.`);
         
-        const userRef = doc(db, 'users', userId);
-        const { value, unit } = getDurationFromPlan(planIdentifier);
-
         try {
-            const userDoc = await getDoc(userRef);
-            const userData = userDoc.data();
-            let startDate = new Date();
-            if (userData && userData.status === 'active' && userData.expiresAt) {
-                const currentExpiration = userData.expiresAt.toDate();
-                if (currentExpiration > new Date()) {
-                    startDate = currentExpiration;
-                }
-            }
-            
-            const expiresAt = add(startDate, { [unit]: value });
-
-            console.log(`[LOG MP] Calculada data de expiração: ${expiresAt.toISOString()}`);
-            
-            await updateDoc(userRef, {
-                status: 'active',
-                expiresAt: expiresAt,
-            });
+            // Use the centralized activation function
+            await activateUserAccount(db, userId, planIdentifier);
             console.log(`[LOG MP] Documento do usuário ${userId} atualizado com sucesso no Firestore.`);
 
         } catch (dbError) {

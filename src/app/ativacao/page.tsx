@@ -18,6 +18,7 @@ import { redeemActivationToken } from '@/lib/activation';
 
 type Plan = 'mensal' | 'trimestral' | 'anual';
 
+// A chave pública de teste é usada aqui para inicializar o SDK do MP no frontend.
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
 
 
@@ -49,6 +50,7 @@ function CodeActivationTab() {
 
     setIsLoading(true);
     try {
+      // Use a função centralizada para resgatar o token
       await redeemActivationToken(db, auth.currentUser, token);
       toast({
         title: 'Conta Ativada!',
@@ -104,10 +106,11 @@ function PlanSelectionTab() {
   const [preferenceId, setPreferenceId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const createPreference = async (plan: Plan) => {
     if (!user) {
-        alert('Você precisa estar logado para iniciar um pagamento.');
+        toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado para iniciar um pagamento.' });
         return;
     }
     setIsLoading(true);
@@ -126,9 +129,9 @@ function PlanSelectionTab() {
         } else {
             throw new Error(data.error || 'Erro ao criar preferência');
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        alert('Não foi possível iniciar o pagamento. Tente novamente.');
+        toast({ variant: 'destructive', title: 'Erro de Pagamento', description: error.message || 'Não foi possível iniciar o pagamento. Tente novamente.' });
         setSelectedPlan(null);
     } finally {
         setIsLoading(false);
@@ -250,5 +253,3 @@ export default function AtivacaoPage() {
     </div>
   );
 }
-
-    
