@@ -32,6 +32,10 @@ export async function POST(request: NextRequest) {
 
   const selectedPlan = plans[plan];
   
+  // Use a test user email in development to ensure test cards work
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const payerEmail = isDevelopment ? 'test_user_12345678@testuser.com' : userEmail;
+
   const preferencePayload = {
     items: [
       {
@@ -43,9 +47,9 @@ export async function POST(request: NextRequest) {
       },
     ],
     payer: {
-      email: userEmail,
+      email: payerEmail,
     },
-    external_reference: userId,
+    external_reference: userId, // This correctly links the payment to your app's user
     back_urls: {
       success: `${process.env.NEXT_PUBLIC_APP_URL}/`,
       failure: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
@@ -56,6 +60,8 @@ export async function POST(request: NextRequest) {
   };
 
   try {
+    console.log('[LOG MP] Criando preferência com payload:', JSON.stringify(preferencePayload, null, 2));
+
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -72,6 +78,7 @@ export async function POST(request: NextRequest) {
         throw new Error(data.message || 'Erro da API do Mercado Pago');
     }
 
+    console.log('[LOG MP] Preferência criada com sucesso. ID:', data.id);
     return NextResponse.json({ id: data.id });
 
   } catch (error) {
