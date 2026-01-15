@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { doc, getDoc, runTransaction, updateDoc } from 'firebase/firestore';
 import { app, db } from '@/firebase/config';
-import { activateUserAccount } from '@/lib/activation';
+import { add } from 'date-fns';
 
 // Inicialize o SDK do Mercado Pago fora da função de requisição
 const accessToken = process.env.MP_ACCESS_TOKEN;
@@ -15,6 +15,13 @@ const payment = new Payment(client);
 
 type PlanIdentifier = 'mensal' | 'trimestral' | 'anual';
 
+const getDurationFromPlan = (planIdentifier: PlanIdentifier): { value: number, unit: 'months' | 'years' } => {
+    if (planIdentifier === 'mensal') return { value: 1, unit: 'months' };
+    if (planIdentifier === 'trimestral') return { value: 3, unit: 'months' };
+    if (planIdentifier === 'anual') return { value: 1, unit: 'years' };
+    throw new Error('Identificador de plano inválido.');
+}
+
 export async function POST(request: NextRequest) {
   console.log('[LOG MP] Webhook recebido.');
 
@@ -22,16 +29,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('[LOG MP] Corpo do Webhook:', body);
 
-    // Verificamos se a notificação é sobre um pagamento
     if (body.type === 'payment' && body.data && body.data.id) {
       const paymentId = body.data.id;
       console.log(`[LOG MP] ID do pagamento recebido: ${paymentId}`);
 
-      // Buscamos os detalhes do pagamento na API do Mercado Pago
       const paymentInfo = await payment.get({ id: paymentId });
       console.log('[LOG MP] Informações do pagamento obtidas:', JSON.stringify(paymentInfo, null, 2));
 
-      // Verificamos se o pagamento está aprovado e se temos os dados necessários
       if (paymentInfo.status === 'approved' && paymentInfo.external_reference && paymentInfo.order?.id) {
         const userId = paymentInfo.external_reference;
         const planIdentifier = paymentInfo.items?.[0]?.id as PlanIdentifier;
@@ -41,10 +45,27 @@ export async function POST(request: NextRequest) {
            return NextResponse.json({ error: 'Dados do pagamento incompletos.' }, { status: 400 });
         }
 
-        console.log(`[LOG MP] Processando ativação para o usuário ${userId} com o plano ${planIdentifier}.`);
+        console.log(`[LOG MP] Iniciando ativação para o usuário ${userId} com o plano ${planIdentifier}.`);
         
-        // Ativa a conta do usuário
-        await activateUserAccount(db, userId, planIdentifier);
+        // --- Lógica de ativação diretamente aqui ---
+        const userRef = doc(db, 'users', userId);
+        const { value, unit } = getDurationFromPlan(planIdentifier);
+        const expiresAt = add(new Date(), { [unit]: value });
+
+        console.log(`[LOG MP] Calculada data de expiração: ${expiresAt.toISOString()}`);
+        
+        try {
+            await updateDoc(userRef, {
+                status: 'active',
+                expiresAt: expiresAt,
+            });
+            console.log(`[LOG MP] Documento do usuário ${userId} atualizado com sucesso no Firestore.`);
+        } catch (dbError) {
+             console.error(`[ERRO MP] Falha ao atualizar o documento do usuário ${userId} no Firestore:`, dbError);
+             // Retornar um erro 500 para o Mercado Pago tentar novamente.
+             return NextResponse.json({ error: 'Falha ao atualizar banco de dados.' }, { status: 500 });
+        }
+        // --- Fim da lógica de ativação ---
 
         console.log(`[LOG MP] Ativação para ${userId} concluída com sucesso.`);
         return NextResponse.json({ success: true });
