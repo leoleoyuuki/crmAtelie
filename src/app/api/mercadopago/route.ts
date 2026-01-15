@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   const selectedPlan = plans[plan];
   
-  // Use a test user email in development to ensure test cards work
+  // Use a test user email in development to ensure test cards work for guest checkouts
   const isDevelopment = process.env.NODE_ENV === 'development';
   const payerEmail = isDevelopment ? 'test_user_12345678@testuser.com' : userEmail;
 
