@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
         ],
         // O external_reference é crucial para sabermos qual usuário pagou
         external_reference: userId, 
+        purpose: 'wallet_purchase',
         back_urls: {
           success: `${process.env.NEXT_PUBLIC_APP_URL}/`,
           failure: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
