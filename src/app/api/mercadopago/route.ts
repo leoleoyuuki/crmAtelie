@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MercadoPagoConfig, Preference } from 'mercadopago';
 import '@/lib/load-env'; // Carrega as variáveis de ambiente
 
 // Tipos de Planos
@@ -30,39 +29,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Erro de configuração no servidor.' }, { status: 500 });
   }
 
-  const client = new MercadoPagoConfig({ accessToken });
-  const preference = new Preference(client);
-
   const selectedPlan = plans[plan];
+  
+  const preferencePayload = {
+    items: [
+      {
+        id: plan,
+        title: selectedPlan.title,
+        quantity: 1,
+        unit_price: selectedPlan.price,
+        currency_id: 'BRL',
+      },
+    ],
+    external_reference: userId,
+    purpose: 'wallet_purchase', // Essencial para sinalizar que não é de um marketplace
+    back_urls: {
+      success: `${process.env.NEXT_PUBLIC_APP_URL}/`,
+      failure: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
+      pending: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
+    },
+    auto_return: 'approved',
+    notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/mercadopago/webhook`,
+  };
 
   try {
-    const response = await preference.create({
-      body: {
-        items: [
-          {
-            id: plan,
-            title: selectedPlan.title,
-            quantity: 1,
-            unit_price: selectedPlan.price,
-            currency_id: 'BRL',
-          },
-        ],
-        // O external_reference é crucial para sabermos qual usuário pagou
-        external_reference: userId, 
-        purpose: 'wallet_purchase',
-        back_urls: {
-          success: `${process.env.NEXT_PUBLIC_APP_URL}/`,
-          failure: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
-          pending: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
-        },
-        auto_return: 'approved',
-        notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/mercadopago/webhook`,
+    const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
       },
+      body: JSON.stringify(preferencePayload),
     });
 
-    return NextResponse.json({ id: response.id });
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error('[ERRO MP] Falha ao criar preferência (HTTP):', data);
+        throw new Error(data.message || 'Erro da API do Mercado Pago');
+    }
+
+    return NextResponse.json({ id: data.id });
+
   } catch (error) {
-    console.error('[ERRO MP] Falha ao criar preferência:', error);
+    console.error('[ERRO MP] Falha catastrófica ao criar preferência:', error);
     return NextResponse.json({ error: 'Falha ao comunicar com o Mercado Pago.' }, { status: 500 });
   }
 }
