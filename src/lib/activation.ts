@@ -38,12 +38,23 @@ const getDuration = (planIdentifier: PlanIdentifier): { value: number, unit: 'da
 export async function activateUserAccount(db: Firestore, userId: string, planIdentifier: PlanIdentifier): Promise<void> {
   const userRef = doc(db, 'users', userId);
 
-  // Calculate expiration date
-  const now = new Date();
-  const { value, unit } = getDuration(planIdentifier);
-  const expiresAt = add(now, { [unit]: value });
-
   try {
+    const userDoc = await getDoc(userRef);
+    const userData = userDoc.data();
+    let startDate = new Date();
+
+    // If user has an active subscription, extend it from the expiration date
+    if (userData && userData.status === 'active' && userData.expiresAt) {
+      const currentExpiration = userData.expiresAt.toDate();
+      if (currentExpiration > new Date()) {
+        startDate = currentExpiration;
+      }
+    }
+    
+    // Calculate new expiration date
+    const { value, unit } = getDuration(planIdentifier);
+    const expiresAt = add(startDate, { [unit]: value });
+
     await updateDoc(userRef, {
       status: 'active',
       expiresAt: expiresAt,
@@ -81,11 +92,27 @@ export async function redeemActivationToken(db: Firestore, user: User, token: st
   try {
     const batch = writeBatch(db);
 
-    // Activate the user account using the central function
-    // We are passing a dummy userRef here because activateUserAccount will create its own.
-    // This is not ideal but avoids duplicating the date logic.
-    // A better refactor would have activateUserAccount only return the data to be written.
-    await activateUserAccount(db, user.uid, tokenDuration);
+    // Instead of calling activateUserAccount directly, we perform the logic here
+    // to include it in the same atomic transaction (batch).
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
+    const userData = userDoc.data();
+    let startDate = new Date();
+
+    if (userData && userData.status === 'active' && userData.expiresAt) {
+        const currentExpiration = userData.expiresAt.toDate();
+        if (currentExpiration > new Date()) {
+            startDate = currentExpiration;
+        }
+    }
+
+    const { value, unit } = getDuration(tokenDuration);
+    const expiresAt = add(startDate, { [unit]: value });
+
+    batch.update(userRef, {
+        status: 'active',
+        expiresAt: expiresAt,
+    });
 
     // Mark token as used
     batch.update(tokenRef, {

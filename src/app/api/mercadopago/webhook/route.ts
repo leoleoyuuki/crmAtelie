@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { doc, getDoc, runTransaction, updateDoc } from 'firebase/firestore';
-import { app, db } from '@/firebase/config';
+import { db } from '@/firebase/config';
 import { add } from 'date-fns';
 
 // Inicialize o SDK do Mercado Pago fora da função de requisição
@@ -24,14 +24,16 @@ const getDurationFromPlan = (planIdentifier: PlanIdentifier): { value: number, u
 
 export async function POST(request: NextRequest) {
   console.log('[LOG MP] Webhook recebido.');
+  const { searchParams } = new URL(request.url);
+  const paymentId = searchParams.get('data.id');
+  const type = searchParams.get('type');
 
   try {
     const body = await request.json();
     console.log('[LOG MP] Corpo do Webhook:', body);
 
-    if (body.type === 'payment' && body.data && body.data.id) {
-      const paymentId = body.data.id;
-      console.log(`[LOG MP] ID do pagamento recebido: ${paymentId}`);
+    if (type === 'payment' && paymentId) {
+      console.log(`[LOG MP] ID do pagamento recebido da URL: ${paymentId}`);
 
       const paymentInfo = await payment.get({ id: paymentId });
       console.log('[LOG MP] Informações do pagamento obtidas:', JSON.stringify(paymentInfo, null, 2));
@@ -50,16 +52,30 @@ export async function POST(request: NextRequest) {
         // --- Lógica de ativação diretamente aqui ---
         const userRef = doc(db, 'users', userId);
         const { value, unit } = getDurationFromPlan(planIdentifier);
-        const expiresAt = add(new Date(), { [unit]: value });
 
-        console.log(`[LOG MP] Calculada data de expiração: ${expiresAt.toISOString()}`);
-        
         try {
+            // Check if user already has an active subscription to extend it
+            const userDoc = await getDoc(userRef);
+            const userData = userDoc.data();
+            let startDate = new Date();
+            if (userData && userData.status === 'active' && userData.expiresAt) {
+                const currentExpiration = userData.expiresAt.toDate();
+                // If current expiration is in the future, extend from there
+                if (currentExpiration > new Date()) {
+                    startDate = currentExpiration;
+                }
+            }
+            
+            const expiresAt = add(startDate, { [unit]: value });
+
+            console.log(`[LOG MP] Calculada data de expiração: ${expiresAt.toISOString()}`);
+            
             await updateDoc(userRef, {
                 status: 'active',
                 expiresAt: expiresAt,
             });
             console.log(`[LOG MP] Documento do usuário ${userId} atualizado com sucesso no Firestore.`);
+
         } catch (dbError) {
              console.error(`[ERRO MP] Falha ao atualizar o documento do usuário ${userId} no Firestore:`, dbError);
              // Retornar um erro 500 para o Mercado Pago tentar novamente.
@@ -76,7 +92,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`[LOG MP] Tipo de notificação não é 'payment': ${body.type}`);
+    console.log(`[LOG MP] Tipo de notificação não é 'payment' ou ID do pagamento não encontrado na URL. Tipo: ${type}, ID: ${paymentId}`);
     return NextResponse.json({ status: 'Notificação não relevante' });
   } catch (error) {
     console.error('[ERRO MP] Falha catastrófica ao processar webhook:', error);
