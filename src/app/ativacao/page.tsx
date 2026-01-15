@@ -118,7 +118,7 @@ function PlanSelectionTab() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ plan: plan, userId: user.uid }),
+            body: JSON.stringify({ plan: plan, userId: user.uid, userEmail: user.email }),
         });
         const data = await response.json();
         if (response.ok) {

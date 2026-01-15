@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/load-env'; // Carrega as variáveis de ambiente
 
@@ -17,7 +18,7 @@ const plans: Record<Plan, PlanDetails> = {
 };
 
 export async function POST(request: NextRequest) {
-  const { plan, userId } = await request.json() as { plan: Plan; userId: string };
+  const { plan, userId, userEmail } = await request.json() as { plan: Plan; userId: string; userEmail?: string };
 
   if (!plan || !plans[plan] || !userId) {
     return NextResponse.json({ error: 'Plano ou ID de usuário inválido' }, { status: 400 });
@@ -41,8 +42,10 @@ export async function POST(request: NextRequest) {
         currency_id: 'BRL',
       },
     ],
+    payer: {
+      email: userEmail,
+    },
     external_reference: userId,
-    purpose: 'wallet_purchase', // Essencial para sinalizar que não é de um marketplace
     back_urls: {
       success: `${process.env.NEXT_PUBLIC_APP_URL}/`,
       failure: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
