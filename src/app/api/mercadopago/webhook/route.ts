@@ -24,16 +24,16 @@ const getDurationFromPlan = (planIdentifier: PlanIdentifier): { value: number, u
 
 export async function POST(request: NextRequest) {
   console.log('[LOG MP] Webhook recebido.');
+  const body = await request.json();
+  console.log('[LOG MP] Corpo do Webhook:', body);
+
   const { searchParams } = new URL(request.url);
-  const paymentId = searchParams.get('data.id');
   const type = searchParams.get('type');
 
   try {
-    const body = await request.json();
-    console.log('[LOG MP] Corpo do Webhook:', body);
-
-    if (type === 'payment' && paymentId) {
-      console.log(`[LOG MP] ID do pagamento recebido da URL: ${paymentId}`);
+    if (type === 'payment' && body.data?.id) {
+      const paymentId = body.data.id;
+      console.log(`[LOG MP] ID do pagamento recebido do corpo: ${paymentId}`);
 
       const paymentInfo = await payment.get({ id: paymentId });
       console.log('[LOG MP] Informações do pagamento obtidas:', JSON.stringify(paymentInfo, null, 2));
@@ -84,18 +84,20 @@ export async function POST(request: NextRequest) {
         // --- Fim da lógica de ativação ---
 
         console.log(`[LOG MP] Ativação para ${userId} concluída com sucesso.`);
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true }, { status: 200 });
 
       } else {
         console.log(`[LOG MP] Status do pagamento não é 'approved' ou faltam dados. Status: ${paymentInfo.status}`);
-        return NextResponse.json({ status: 'Pagamento não aprovado ou dados incompletos' });
+        return NextResponse.json({ status: 'Pagamento não aprovado ou dados incompletos' }, { status: 200 });
       }
     }
 
-    console.log(`[LOG MP] Tipo de notificação não é 'payment' ou ID do pagamento não encontrado na URL. Tipo: ${type}, ID: ${paymentId}`);
-    return NextResponse.json({ status: 'Notificação não relevante' });
-  } catch (error) {
+    console.log(`[LOG MP] Tipo de notificação não é 'payment' ou ID do pagamento não encontrado no corpo. Tipo: ${type}`);
+    // Respondemos com 200 OK para que o Mercado Pago não tente reenviar notificações que não nos interessam.
+    return NextResponse.json({ status: 'Notificação não relevante' }, { status: 200 });
+  } catch (error: any) {
     console.error('[ERRO MP] Falha catastrófica ao processar webhook:', error);
-    return NextResponse.json({ error: 'Falha interna ao processar o webhook.' }, { status: 500 });
+    // Retornamos 500 para que o Mercado Pago tente reenviar a notificação em caso de falha inesperada.
+    return NextResponse.json({ error: 'Falha interna ao processar o webhook.', message: error.message }, { status: 500 });
   }
 }
