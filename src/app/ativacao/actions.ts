@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { activateAccount } from '@/lib/activation';
+import { redeemActivationToken } from '@/lib/activation';
 
 type Plan = 'mensal' | 'trimestral' | 'anual';
 
@@ -25,7 +25,8 @@ function CodeActivationTab() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const { auth, db } = useFirebase();
+  const { auth } = useFirebase();
+  const user = auth.currentUser;
 
   const handleActivation = async () => {
     if (!token.trim()) {
@@ -37,7 +38,7 @@ function CodeActivationTab() {
       return;
     }
     
-    if (!auth.currentUser) {
+    if (!user) {
         toast({
             variant: 'destructive',
             title: 'Erro',
@@ -48,7 +49,7 @@ function CodeActivationTab() {
 
     setIsLoading(true);
     try {
-      await activateAccount(db, auth.currentUser, token);
+      await redeemActivationToken(user, token);
       toast({
         title: 'Conta Ativada!',
         description: 'Sua conta foi ativada com sucesso. Bem-vindo!',

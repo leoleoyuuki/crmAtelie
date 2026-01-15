@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -27,7 +26,8 @@ function CodeActivationTab() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const { auth, db } = useFirebase();
+  const { auth } = useFirebase();
+  const user = auth.currentUser;
 
   const handleActivation = async () => {
     if (!token.trim()) {
@@ -39,7 +39,7 @@ function CodeActivationTab() {
       return;
     }
     
-    if (!auth.currentUser) {
+    if (!user) {
         toast({
             variant: 'destructive',
             title: 'Erro',
@@ -51,7 +51,7 @@ function CodeActivationTab() {
     setIsLoading(true);
     try {
       // Use a função centralizada para resgatar o token
-      await redeemActivationToken(db, auth.currentUser, token);
+      await redeemActivationToken(user, token);
       toast({
         title: 'Conta Ativada!',
         description: 'Sua conta foi ativada com sucesso. Bem-vindo!',
