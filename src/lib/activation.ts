@@ -1,8 +1,8 @@
 
 'use client';
 
-import { doc, getDoc, writeBatch, Firestore, User } from 'firebase/firestore';
-import { add, addMonths, addYears } from 'date-fns';
+import { doc, getDoc, writeBatch, Firestore, User, updateDoc } from 'firebase/firestore';
+import { add } from 'date-fns';
 
 type PlanIdentifier = 'mensal' | 'trimestral' | 'anual' | number;
 
