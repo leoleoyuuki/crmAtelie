@@ -1,17 +1,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { MercadoPagoConfig, Payment } from 'mercadopago';
-import { doc, getDoc, runTransaction, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { add } from 'date-fns';
-
-// Inicialize o SDK do Mercado Pago fora da função de requisição
-const accessToken = process.env.MP_ACCESS_TOKEN;
-if (!accessToken) {
-  console.error("[ERRO MP] Access Token não encontrado nas variáveis de ambiente.");
-}
-const client = new MercadoPagoConfig({ accessToken: accessToken || '' });
-const payment = new Payment(client);
+import '@/lib/load-env'; // Carrega as variáveis de ambiente
 
 type PlanIdentifier = 'mensal' | 'trimestral' | 'anual';
 
@@ -31,12 +23,30 @@ export async function POST(request: NextRequest) {
   const type = searchParams.get('type');
 
   try {
-    // Verificamos se o tipo é 'payment' e se o corpo da requisição contém o ID.
     if (type === 'payment' && body.data?.id) {
-      const paymentId = body.data.id; // Usamos o ID do corpo da requisição!
+      const paymentId = body.data.id;
       console.log(`[LOG MP] ID do pagamento obtido do corpo: ${paymentId}`);
 
-      const paymentInfo = await payment.get({ id: paymentId });
+      const accessToken = process.env.MP_ACCESS_TOKEN;
+      if (!accessToken) {
+        console.error('[ERRO MP] Access Token não encontrado.');
+        return NextResponse.json({ error: 'Erro de configuração no servidor.' }, { status: 500 });
+      }
+
+      const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        }
+      });
+      
+      const paymentInfo = await paymentResponse.json();
+
+      if (!paymentResponse.ok) {
+        console.error('[ERRO MP] Falha ao buscar informações do pagamento:', paymentInfo);
+        // Retornamos 200 para o MP não ficar reenviando, mas logamos o erro.
+        return NextResponse.json({ status: 'Falha ao buscar pagamento' }, { status: 200 });
+      }
+
       console.log('[LOG MP] Informações do pagamento obtidas:', JSON.stringify(paymentInfo, null, 2));
 
       if (paymentInfo.status === 'approved' && paymentInfo.external_reference) {
