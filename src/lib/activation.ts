@@ -1,6 +1,6 @@
 'use client';
 
-import { doc, getDoc, writeBatch, Firestore, User, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, Firestore, User, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { add } from 'date-fns';
 import { db } from '@/firebase/config';
 
