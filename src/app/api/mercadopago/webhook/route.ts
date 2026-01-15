@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   console.log('[LOG MP] Corpo do Webhook:', JSON.stringify(body, null, 2));
 
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type');
+  const type = body.type || searchParams.get('type');
 
   try {
     if (type === 'payment' && body.data?.id) {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
       if (paymentInfo.status === 'approved' && paymentInfo.external_reference) {
         const userId = paymentInfo.external_reference;
-        const planIdentifier = paymentInfo.items?.[0]?.id as PlanIdentifier;
+        const planIdentifier = paymentInfo.additional_info?.items?.[0]?.id as PlanIdentifier;
         
         if (!userId || !planIdentifier) {
            console.error('[ERRO MP] ID do usuário ou do plano não encontrado no pagamento.');
