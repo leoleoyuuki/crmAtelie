@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
@@ -155,6 +155,16 @@ function PlanSelectionTab() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const walletContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (preferenceId && walletContainerRef.current) {
+      setTimeout(() => {
+        walletContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100); // Small delay to ensure the component is rendered
+    }
+  }, [preferenceId]);
+
 
   const createPreference = async (plan: Plan) => {
     if (!user) {
@@ -239,7 +249,7 @@ function PlanSelectionTab() {
             </p>
 
             {preferenceId && (
-                <div className="mt-6 pt-6 border-t">
+                <div ref={walletContainerRef} className="mt-6 pt-6 border-t">
                     <h3 className="text-center font-semibold mb-4">Finalize seu pagamento</h3>
                     <Wallet initialization={{ preferenceId: preferenceId }} customization={{ texts: { valueProp: 'smart_option'}}} />
                 </div>
