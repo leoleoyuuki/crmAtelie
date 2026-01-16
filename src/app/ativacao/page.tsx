@@ -115,9 +115,8 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
 }) => {
   return (
     <div
-      onClick={onSelect}
       className={cn(
-        "rounded-xl border bg-card text-card-foreground cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 relative flex flex-col",
+        "rounded-xl border bg-card text-card-foreground transition-all hover:shadow-lg hover:-translate-y-1 relative flex flex-col",
         isHighlighted ? "border-primary ring-2 ring-primary/50" : "hover:border-muted-foreground/30"
       )}
     >
@@ -140,7 +139,7 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
         )}
       </CardContent>
       <CardFooter className="p-4 mt-auto">
-        <Button className="w-full" variant={isHighlighted ? "default" : "outline"} disabled={isLoading}>
+        <Button className="w-full" variant={isHighlighted ? "default" : "outline"} disabled={isLoading} onClick={onSelect}>
           {isLoading ? <Loader2 className="animate-spin" /> : "Assinar Agora"}
         </Button>
       </CardFooter>
