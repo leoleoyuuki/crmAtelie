@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Key, CheckCircle, BadgeCheck } from 'lucide-react';
+import { MessageSquare, LogOut, Loader2, Key } from 'lucide-react';
 import { Wallet, initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
@@ -103,15 +103,15 @@ function CodeActivationTab() {
   )
 }
 
-const PlanCard = ({ title, price, period, subtitle, isHighlighted, onSelect, isLoading, features }: {
+const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSelect, isLoading }: {
   title: string,
   price: string,
   period: string,
   subtitle: string,
+  benefit?: string;
   isHighlighted?: boolean,
   onSelect: () => void,
   isLoading?: boolean,
-  features?: string[]
 }) => {
   return (
     <div
@@ -135,18 +135,11 @@ const PlanCard = ({ title, price, period, subtitle, isHighlighted, onSelect, isL
           <span className="text-lg text-muted-foreground">/{period}</span>
         </div>
         <p className="text-sm text-muted-foreground mt-2">{subtitle}</p>
-        {features && (
-          <ul className="text-left text-sm mt-4 space-y-2 text-muted-foreground">
-            {features.map((feature, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
+        {benefit && (
+          <p className="text-sm font-semibold text-primary mt-1">{benefit}</p>
         )}
       </CardContent>
-      <CardFooter className="p-4 mt-4">
+      <CardFooter className="p-4 mt-auto">
         <Button className="w-full" variant={isHighlighted ? "default" : "outline"} disabled={isLoading}>
           {isLoading ? <Loader2 className="animate-spin" /> : "Assinar Agora"}
         </Button>
@@ -197,53 +190,54 @@ function PlanSelectionTab() {
     }
   };
 
-  const allFeatures = [
-    "Gestão de Pedidos e Clientes",
-    "Dashboard com Gráficos",
-    "Controle de Tarefas",
-    "Tabela de Preços Editável",
-    "Impressão de Comprovantes",
-    "Controle de Estoque e Custos",
-  ];
-
   return (
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-2xl">Acesso Ilimitado para Transformar seu Ateliê</CardTitle>
           <CardDescription>
-            Todos os planos dão acesso a 100% dos recursos. Escolha o que melhor se adapta a você.
+            Escolha o plano que melhor se adapta a você.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-              <PlanCard 
-                title="Plano Mensal"
-                price="R$62,90"
-                period="mês"
-                subtitle="Ideal para começar."
-                onSelect={() => createPreference('mensal')}
-                isLoading={isLoading && selectedPlan === 'mensal'}
-              />
-              <PlanCard 
-                title="Plano Anual"
-                price="R$490"
-                period="ano"
-                subtitle="ou 12x de R$49,86"
-                isHighlighted
-                onSelect={() => createPreference('anual')}
-                isLoading={isLoading && selectedPlan === 'anual'}
-                features={allFeatures}
-              />
-              <PlanCard 
-                title="Plano Trimestral"
-                price="R$149,90"
-                period="trimestre"
-                subtitle="ou 3x de R$55,58"
-                onSelect={() => createPreference('trimestral')}
-                isLoading={isLoading && selectedPlan === 'trimestral'}
-              />
+        <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+                <div className="md:order-2">
+                    <PlanCard 
+                        title="Plano Anual"
+                        price="R$490"
+                        period="ano"
+                        subtitle="ou 12x de R$49,86"
+                        benefit="Melhor custo-benefício"
+                        isHighlighted
+                        onSelect={() => createPreference('anual')}
+                        isLoading={isLoading && selectedPlan === 'anual'}
+                    />
+                </div>
+                 <div className="md:order-3">
+                    <PlanCard 
+                        title="Plano Trimestral"
+                        price="R$149,90"
+                        period="trimestre"
+                        subtitle="ou 3x de R$55,58"
+                        onSelect={() => createPreference('trimestral')}
+                        isLoading={isLoading && selectedPlan === 'trimestral'}
+                    />
+                </div>
+                <div className="md:order-1">
+                     <PlanCard 
+                        title="Plano Mensal"
+                        price="R$62,90"
+                        period="mês"
+                        subtitle="Ideal para começar."
+                        onSelect={() => createPreference('mensal')}
+                        isLoading={isLoading && selectedPlan === 'mensal'}
+                    />
+                </div>
             </div>
             
+            <p className="text-center text-sm text-muted-foreground !mt-6">
+                Todos os planos incluem acesso completo ao sistema.
+            </p>
+
             {preferenceId && (
                 <div className="mt-6 pt-6 border-t">
                     <h3 className="text-center font-semibold mb-4">Finalize seu pagamento</h3>
@@ -251,13 +245,6 @@ function PlanSelectionTab() {
                 </div>
             )}
 
-            {!preferenceId && (
-              <div className="text-center pt-4">
-                  <p className="text-xs text-muted-foreground">
-                      Prefere negociar ou pagar de outra forma? <br/> Fale conosco no WhatsApp para receber um código de ativação.
-                  </p>
-              </div>
-            )}
         </CardContent>
     </Card>
   )
@@ -298,7 +285,7 @@ export default function AtivacaoPage() {
             <div className="w-full text-center max-w-md mx-auto">
                 <Separator className="my-4" />
                 <p className="text-sm text-muted-foreground mb-2">
-                  Precisa de ajuda, quer negociar um plano ou sugerir uma funcionalidade? <br/> Nosso contato é direto e rápido.
+                  Precisa de outra forma de pagamento? Fale conosco no WhatsApp.
                 </p>
                 <Button variant="outline" className="w-full" onClick={handleWhatsAppClick}>
                     <MessageSquare className="mr-2 h-4 w-4" />
