@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase } from '@/firebase';
 import { MessageSquare, LogOut, Loader2, Key } from 'lucide-react';
-import { Wallet, initMercadoPago } from '@mercadopago/sdk-react';
+import { initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -151,20 +151,9 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
 
 function PlanSelectionTab() {
   const { user } = useUser();
-  const [preferenceId, setPreferenceId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const walletContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (preferenceId && walletContainerRef.current) {
-      setTimeout(() => {
-        walletContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100); // Small delay to ensure the component is rendered
-    }
-  }, [preferenceId]);
-
 
   const createPreference = async (plan: Plan) => {
     if (!user) {
@@ -186,17 +175,16 @@ function PlanSelectionTab() {
             body: JSON.stringify({ plan: plan, userId: user.uid, userEmail: userEmail }),
         });
         const data = await response.json();
-        if (response.ok) {
-            setPreferenceId(data.id);
+        if (response.ok && data.init_point) {
+            window.location.href = data.init_point;
         } else {
-            throw new Error(data.error || 'Erro ao criar preferência');
+            throw new Error(data.error || 'Erro ao criar preferência de pagamento.');
         }
     } catch (error: any) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erro de Pagamento', description: error.message || 'Não foi possível iniciar o pagamento. Tente novamente.' });
         setSelectedPlan(null);
-    } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Stop loading on error
     }
   };
 
@@ -247,13 +235,6 @@ function PlanSelectionTab() {
             <p className="text-center text-sm text-muted-foreground !mt-6">
                 Todos os planos incluem acesso completo ao sistema.
             </p>
-
-            {preferenceId && (
-                <div ref={walletContainerRef} className="mt-6 pt-6 border-t">
-                    <h3 className="text-center font-semibold mb-4">Finalize seu pagamento</h3>
-                    <Wallet initialization={{ preferenceId: preferenceId }} customization={{ texts: { valueProp: 'smart_option'}}} />
-                </div>
-            )}
 
         </CardContent>
     </Card>

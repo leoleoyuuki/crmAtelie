@@ -72,13 +72,13 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok || !data.init_point) {
         console.error('[ERRO MP] Falha ao criar preferência (HTTP):', data);
         throw new Error(data.message || 'Erro da API do Mercado Pago');
     }
 
-    console.log('[LOG MP] Preferência criada com sucesso. ID:', data.id);
-    return NextResponse.json({ id: data.id });
+    console.log('[LOG MP] Preferência criada com sucesso. Redirecionando para:', data.init_point);
+    return NextResponse.json({ init_point: data.init_point });
 
   } catch (error) {
     console.error('[ERRO MP] Falha catastrófica ao criar preferência:', error);
