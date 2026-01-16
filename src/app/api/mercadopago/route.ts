@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/load-env'; // Carrega as variáveis de ambiente
 
@@ -12,9 +11,9 @@ interface PlanDetails {
 
 // Detalhes dos planos (preços e títulos)
 const plans: Record<Plan, PlanDetails> = {
-  mensal: { title: 'Plano Mensal - AtelierFlow', price: 29.90 },
-  trimestral: { title: 'Plano Trimestral - AtelierFlow', price: 79.90 },
-  anual: { title: 'Plano Anual - AtelierFlow', price: 299.90 },
+  mensal: { title: 'Plano Mensal - AtelierFlow', price: 62.90 },
+  trimestral: { title: 'Plano Trimestral - AtelierFlow', price: 149.90 },
+  anual: { title: 'Plano Anual - AtelierFlow', price: 490.00 },
 };
 
 export async function POST(request: NextRequest) {
