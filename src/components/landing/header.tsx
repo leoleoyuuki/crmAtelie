@@ -1,4 +1,3 @@
-
 'use client';
 import Link from 'next/link';
 import { Button } from '../ui/button';
@@ -19,7 +18,7 @@ export function Header() {
             <Link href="/login">Acessar o Sistema</Link>
           </Button>
           <Button asChild>
-            <Link href="/login">Começar Agora</Link>
+            <Link href="/login">Organizar meu ateliê</Link>
           </Button>
         </nav>
       </div>

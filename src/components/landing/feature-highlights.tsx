@@ -1,23 +1,22 @@
-
 'use client';
 import { motion } from 'framer-motion';
-import { StickyNote, BarChart3, ListChecks } from 'lucide-react';
+import { ShieldCheck, TrendingUp, Clock } from 'lucide-react';
 
 const highlights = [
   {
-    icon: StickyNote,
-    title: 'Organização que Liberta',
-    description: 'Centralize todos os pedidos, clientes e serviços. Crie ordens de serviço detalhadas em segundos e saiba exatamente o que precisa ser feito, sem o estresse da desorganização.',
+    icon: ShieldCheck,
+    title: 'Nunca mais perca um pedido ou prazo',
+    description: 'Centralize todas as ordens de serviço e clientes em um painel que prioriza automaticamente o que é mais urgente.',
   },
   {
-    icon: BarChart3,
-    title: 'Decisões Inteligentes com um Olhar',
-    description: 'Nosso dashboard visual transforma dados complexos em insights claros. Acompanhe o faturamento, identifique os serviços mais lucrativos e planeje o futuro com confiança.',
+    icon: TrendingUp,
+    title: 'Veja exatamente quanto entra e sai',
+    description: 'O dashboard financeiro mostra seu faturamento e custos de forma clara, ajudando você a tomar decisões baseadas em dados.',
   },
   {
-    icon: ListChecks,
-    title: 'Produtividade Sem Esforço',
-    description: 'A agenda de tarefas prioriza automaticamente os trabalhos por urgência, garantindo que você e sua equipe foquem no que realmente importa: cumprir prazos.',
+    icon: Clock,
+    title: 'Tenha tudo do ateliê em um só lugar',
+    description: 'Substitua cadernos, planilhas e anotações. Gerencie pedidos, clientes, preços e finanças de forma integrada e profissional.',
   },
 ];
 
@@ -47,7 +46,7 @@ const itemVariants = {
 
 export function FeatureHighlights() {
   return (
-    <div className="py-20 sm:py-28">
+    <div className="py-20 sm:py-28 bg-card">
       <div className="container mx-auto px-4 md:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
