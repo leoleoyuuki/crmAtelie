@@ -83,7 +83,7 @@ export function HeroSection() {
           >
             <Button size="lg" asChild className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105">
               <a href="/login">
-                Comece agora →
+                Organizar meu ateliê agora
               </a>
             </Button>
             <Button size="lg" variant="ghost" asChild className="w-full sm:w-auto text-lg px-8 py-6 hover:bg-primary/5 transition-all">
