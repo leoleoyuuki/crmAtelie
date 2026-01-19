@@ -41,14 +41,8 @@ export function MobileAccessSection() {
                 <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[124px] rounded-l-lg"></div>
                 <div className="h-[46px] w-[3px] bg-gray-800 absolute -left-[17px] top-[178px] rounded-l-lg"></div>
                 <div className="h-[64px] w-[3px] bg-gray-800 absolute -right-[17px] top-[142px] rounded-r-lg"></div>
-                <div className="rounded-[2rem] overflow-hidden w-full h-full bg-black relative">
-                    <Image
-                        fill
-                        src="https://images.unsplash.com/photo-1587399439169-e713606c5475?q=80&w=1887"
-                        alt="Phone wallpaper"
-                        className="object-cover -z-10 opacity-70"
-                        data-ai-hint="fabric texture"
-                    />
+                <div className="rounded-[2rem] overflow-hidden w-full h-full bg-gradient-to-r from-gray-200 to-orange-200 relative">
+                    
 
                     {/* Status Bar */}
                     <div className="absolute top-0 left-0 right-0 px-5 pt-3 flex justify-between items-center text-xs font-bold text-white">
