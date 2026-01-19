@@ -30,7 +30,7 @@ const itemVariants = {
 const benefits = [
     {
         icon: Headset,
-        text: "Contato direto com Criador"
+        text: "Suporte dedicado"
     },
     {
         icon: Clock,
