@@ -1,7 +1,9 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { add } from 'date-fns';
 import '@/lib/load-env'; // Carrega as variáveis de ambiente
+import { createHash } from 'crypto'; // For Facebook Conversions API
 
 type PlanIdentifier = 'mensal' | 'trimestral' | 'anual';
 
@@ -95,6 +97,56 @@ export async function POST(request: NextRequest) {
            // Não retorne o erro do banco de dados para o cliente
            return NextResponse.json({ error: 'Falha ao atualizar banco de dados.' }, { status: 500 });
       }
+      
+      // --- Início: Facebook Conversions API ---
+      const fbCapiToken = process.env.FB_CONVERSIONS_API_TOKEN;
+      const pixelId = '25321081740913131';
+
+      if (!fbCapiToken) {
+        console.log('[LOG FB CAPI] FB_CONVERSIONS_API_TOKEN não configurado. Pulando evento de Purchase.');
+      } else {
+        try {
+          const hash = (data: string) => createHash('sha256').update(data.toLowerCase()).digest('hex');
+          const payer = paymentInfo.payer || {};
+          
+          const userData = {
+            em: payer.email ? hash(payer.email) : undefined,
+            ph: payer.phone?.number ? hash(payer.phone.number) : undefined,
+            fn: payer.first_name ? hash(payer.first_name) : undefined,
+            ln: payer.last_name ? hash(payer.last_name) : undefined,
+            client_ip_address: request.ip,
+            client_user_agent: request.headers.get('user-agent'),
+          };
+
+          const eventData = {
+            data: [
+              {
+                event_name: 'Purchase',
+                event_time: Math.floor(Date.now() / 1000),
+                action_source: 'website',
+                event_id: paymentId.toString(),
+                user_data: userData,
+                custom_data: {
+                  value: paymentInfo.transaction_amount,
+                  currency: 'BRL',
+                },
+              },
+            ],
+          };
+
+          await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${fbCapiToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(eventData),
+          });
+          
+          console.log(`[LOG FB CAPI] Evento de Purchase para o pagamento ${paymentId} enviado com sucesso.`);
+
+        } catch (fbError) {
+          console.error('[ERRO FB CAPI] Falha ao enviar o evento de Purchase:', fbError);
+        }
+      }
+      // --- Fim: Facebook Conversions API ---
 
       console.log(`[LOG MP] Ativação para ${userId} concluída com sucesso.`);
       return NextResponse.json({ success: true }, { status: 200 });
