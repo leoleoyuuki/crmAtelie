@@ -67,7 +67,7 @@ export function HeroSection() {
             variants={itemVariants}
             className="text-4xl font-bold font-headline tracking-tight text-foreground sm:text-5xl md:text-6xl leading-tight"
           >
-            A gestão do seu <span className="text-primary">ateliê</span>, elevada a <span className="text-primary">outro nível</span>
+            Organize <span className="text-primary">pedidos, prazos e pagamentos</span> do seu ateliê em um só lugar
           </motion.h1>
 
           <motion.p
@@ -94,7 +94,7 @@ export function HeroSection() {
           </motion.div>
 
           <motion.div variants={itemVariants} className="mt-12">
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 text-sm text-muted-foreground">
+            <div className="hidden sm:flex sm:flex-row justify-center items-center gap-4 sm:gap-8 text-sm text-muted-foreground">
                 {benefits.map((benefit) => (
                     <div key={benefit.text} className="flex items-center gap-2">
                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500/10 text-green-700">
