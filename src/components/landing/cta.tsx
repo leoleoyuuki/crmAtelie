@@ -2,8 +2,13 @@
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { motion } from 'framer-motion';
+import { trackFbqEvent } from '@/lib/fpixel';
 
 export function Cta() {
+  const handleLeadClick = () => {
+    trackFbqEvent('Lead');
+  };
+
   return (
     <div className="py-20 sm:py-28">
       <div className="container mx-auto px-4 md:px-6 text-center">
@@ -20,7 +25,7 @@ export function Cta() {
             Comece com um plano flexível e tenha acesso a todas as ferramentas para profissionalizar seu negócio e ganhar mais tempo para criar.
           </p>
           <div className="mt-8">
-            <Button size="lg" asChild>
+            <Button size="lg" asChild onClick={handleLeadClick}>
               <Link href="/login">Organizar meu ateliê agora</Link>
             </Button>
           </div>

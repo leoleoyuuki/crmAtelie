@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { redeemActivationToken } from '@/lib/activation';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { trackFbqEvent } from '@/lib/fpixel';
 
 
 type Plan = 'mensal' | 'trimestral' | 'anual';
@@ -116,7 +117,7 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card text-card-foreground transition-all hover:shadow-lg hover:-translate-y-1 relative flex flex-col",
+        "rounded-xl border bg-card text-card-foreground transition-all hover:shadow-lg relative flex flex-col",
         isHighlighted ? "border-primary ring-2 ring-primary/50" : "hover:border-muted-foreground/30"
       )}
     >
@@ -147,6 +148,11 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
   );
 };
 
+const planDetails = {
+    mensal: { price: 62.90 },
+    trimestral: { price: 149.90 },
+    anual: { price: 490.00 },
+};
 
 function PlanSelectionTab() {
   const { user } = useUser();
@@ -155,6 +161,12 @@ function PlanSelectionTab() {
   const { toast } = useToast();
 
   const createPreference = async (plan: Plan) => {
+    trackFbqEvent('InitiateCheckout', {
+        content_name: plan,
+        currency: 'BRL',
+        value: planDetails[plan].price,
+    });
+
     if (!user) {
         toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado para iniciar um pagamento.' });
         return;

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import { Headset, Clock, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { trackFbqEvent } from '@/lib/fpixel';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -44,17 +45,17 @@ const benefits = [
 ];
 
 const images = [
-    { 
-        src: "/images/dashboard.png", 
-        alt: "Dashboard principal do AtelierFlow mostrando gráficos de faturamento e pedidos." 
+    {
+        src: "/images/dashboard.png",
+        alt: "Dashboard principal do AtelierFlow mostrando gráficos de faturamento e pedidos."
     },
-    { 
-        src: "/images/print.png", 
-        alt: "Tela de impressão de comprovante de pedido do AtelierFlow." 
+    {
+        src: "/images/print.png",
+        alt: "Tela de impressão de comprovante de pedido do AtelierFlow."
     },
-    { 
-        src: "/images/costs.png", 
-        alt: "Tela de controle de custos e compras do AtelierFlow." 
+    {
+        src: "/images/costs.png",
+        alt: "Tela de controle de custos e compras do AtelierFlow."
     }
 ];
 
@@ -69,6 +70,9 @@ export function HeroSection() {
         return () => clearInterval(interval);
     }, []);
 
+    const handleLeadClick = () => {
+        trackFbqEvent('Lead');
+    };
 
   return (
     <div className="relative overflow-hidden">
@@ -105,8 +109,7 @@ export function HeroSection() {
             variants={itemVariants}
             className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl leading-relaxed"
           >
-            Sistema feito exclusivamente para ateliês de costura, bordado e
-            personalizados. Substitui planilhas, cadernos e anotações soltas.
+            Substitui planilhas, cadernos e anotações soltas. Sistema feito exclusivamente para ateliês de costura, bordado e personalizados.
           </motion.p>
 
           <motion.div
@@ -117,6 +120,7 @@ export function HeroSection() {
               size="lg"
               asChild
               className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+              onClick={handleLeadClick}
             >
               <a href="/login">Organizar meu ateliê agora</a>
             </Button>
