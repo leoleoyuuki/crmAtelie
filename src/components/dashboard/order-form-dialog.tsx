@@ -211,6 +211,7 @@ interface OrderFormDialogProps {
   order?: Order;
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
+  trigger?: React.ReactNode;
   onOrderCreated?: () => void;
   onOrderUpdated?: () => void;
 }
@@ -219,6 +220,7 @@ export function OrderFormDialog({
   order,
   isOpen: controlledIsOpen,
   setIsOpen: setControlledIsOpen,
+  trigger,
   onOrderCreated,
   onOrderUpdated,
 }: OrderFormDialogProps) {
@@ -356,159 +358,157 @@ export function OrderFormDialog({
     if(onOrderCreated) onOrderCreated();
   };
 
-  return (
-    <>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        {!isEditing && (
-          <DialogTrigger asChild>
-             <Button size="icon" className="md:w-auto md:px-4">
-              <PlusCircle className="md:mr-2" />
-              <span className="hidden md:inline">Novo Pedido</span>
-            </Button>
-          </DialogTrigger>
-        )}
-        <DialogContent className="sm:max-w-3xl flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="font-headline">{isEditing ? "Editar Pedido" : "Criar Novo Pedido"}</DialogTitle>
-            <DialogDescription>
-              {isEditing ? "Atualize os detalhes deste pedido." : "Preencha os detalhes para o novo pedido do cliente."}
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
-              <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4">
-                <div className="space-y-2">
-                  <FormLabel>Cliente</FormLabel>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1 space-y-2">
-                        <Input
-                          placeholder="Buscar cliente por nome ou telefone..."
-                          value={customerSearch}
-                          onChange={(e) => setCustomerSearch(e.target.value)}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="customerId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                open={isCustomerSelectOpen}
-                                onOpenChange={setIsCustomerSelectOpen}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um cliente da lista" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {filteredCustomers.length > 0 ? (
-                                    filteredCustomers.map(c => (
-                                      <SelectItem key={c.id} value={c.id}>
-                                        {c.name} - {c.phone}
-                                      </SelectItem>
-                                    ))
-                                  ) : (
-                                    <div className="p-4 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                    </div>
-                      <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}>
-                          <UserPlus className="h-4 w-4" />
-                      </Button>
-                  </div>
-                </div>
-
-                <Separator />
-                
-                <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <OrderItemForm
-                        key={field.id}
-                        index={index}
-                        control={control}
-                        remove={remove}
-                        priceTableItems={priceTableItems}
-                        setValue={setValue}
+   const dialogContent = (
+    <DialogContent className="sm:max-w-3xl flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
+        <DialogHeader>
+        <DialogTitle className="font-headline">{isEditing ? "Editar Pedido" : "Criar Novo Pedido"}</DialogTitle>
+        <DialogDescription>
+            {isEditing ? "Atualize os detalhes deste pedido." : "Preencha os detalhes para o novo pedido do cliente."}
+        </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto pr-6 -mr-6 space-y-4">
+            <div className="space-y-2">
+                <FormLabel>Cliente</FormLabel>
+                <div className="flex items-start gap-2">
+                <div className="flex-1 space-y-2">
+                    <Input
+                        placeholder="Buscar cliente por nome ou telefone..."
+                        value={customerSearch}
+                        onChange={(e) => setCustomerSearch(e.target.value)}
                     />
-                  ))}
+                    <FormField
+                        control={form.control}
+                        name="customerId"
+                        render={({ field }) => (
+                        <FormItem>
+                            <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            open={isCustomerSelectOpen}
+                            onOpenChange={setIsCustomerSelectOpen}
+                            >
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Selecione um cliente da lista" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {filteredCustomers.length > 0 ? (
+                                filteredCustomers.map(c => (
+                                    <SelectItem key={c.id} value={c.id}>
+                                    {c.name} - {c.phone}
+                                    </SelectItem>
+                                ))
+                                ) : (
+                                <div className="p-4 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>
+                                )}
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' })}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
-                </Button>
+                    <Button type="button" variant="outline" size="icon" onClick={() => setIsCustomerDialogOpen(true)}>
+                        <UserPlus className="h-4 w-4" />
+                    </Button>
+                </div>
+            </div>
 
-                <Separator />
+            <Separator />
+            
+            <div className="space-y-4">
+                {fields.map((field, index) => (
+                <OrderItemForm
+                    key={field.id}
+                    index={index}
+                    control={control}
+                    remove={remove}
+                    priceTableItems={priceTableItems}
+                    setValue={setValue}
+                />
+                ))}
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
+            </Button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
+            <Separator />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                control={form.control}
+                name="dueDate"
+                render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                    <FormLabel className="mb-1.5">Data de Entrega</FormLabel>
+                    <DatePickerWithDialog
+                        date={field.value}
+                        setDate={field.onChange}
+                    />
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
                     control={form.control}
-                    name="dueDate"
+                    name="status"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel className="mb-1.5">Data de Entrega</FormLabel>
-                        <DatePickerWithDialog
-                            date={field.value}
-                            setDate={field.onChange}
-                        />
+                    <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {statuses.map(status => (
+                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
                         <FormMessage />
-                      </FormItem>
+                    </FormItem>
                     )}
-                  />
-                  <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                      <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                              <SelectTrigger>
-                              <SelectValue placeholder="Selecione o status" />
-                              </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                              {statuses.map(status => (
-                              <SelectItem key={status} value={status}>{status}</SelectItem>
-                              ))}
-                          </SelectContent>
-                          </Select>
-                          <FormMessage />
-                      </FormItem>
-                      )}
-                  />
-                </div>
-              </div>
-              
-              <DialogFooter className="pt-4 mt-4 border-t">
-                  <DialogClose asChild>
-                      <Button type="button" variant="outline" disabled={isSubmitting}>
-                          Cancelar
-                      </Button>
-                  </DialogClose>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Pedido')}
-                  </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-      <CustomerFormDialog 
-        isOpen={isCustomerDialogOpen} 
-        setIsOpen={setIsCustomerDialogOpen}
-        onCustomerCreated={handleCustomerCreated}
-        onCustomerUpdated={handleCustomerCreated} // Also refresh on update
-      />
-    </>
+                />
+            </div>
+            </div>
+            
+            <DialogFooter className="pt-4 mt-4 border-t">
+                <DialogClose asChild>
+                    <Button type="button" variant="outline" disabled={isSubmitting}>
+                        Cancelar
+                    </Button>
+                </DialogClose>
+                <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Criar Pedido')}
+                </Button>
+            </DialogFooter>
+        </form>
+        </Form>
+    </DialogContent>
+  );
+
+  if (trigger) {
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>{trigger}</DialogTrigger>
+            {dialogContent}
+        </Dialog>
+    );
+  }
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        {dialogContent}
+    </Dialog>
   );
 }
 
     
 
     
+

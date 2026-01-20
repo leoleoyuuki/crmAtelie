@@ -17,12 +17,13 @@ import { useUser } from '@/firebase/auth/use-user';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfitChart } from '@/components/dashboard/profit-chart';
 import { ProfitStatsCards } from '@/components/dashboard/profit-stats-cards';
+import { WelcomeGuide } from '@/components/dashboard/welcome-guide';
 
 
 export default function DashboardPage() {
   const { user } = useUser();
   const { data: summary, loading: summaryLoading } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
-  const { data: recentOrders, loading: ordersLoading } = useCollection<Order>('orders', {
+  const { data: recentOrders, loading: ordersLoading, refresh } = useCollection<Order>('orders', {
     limit: 5,
     orderBy: ['createdAt', 'desc']
   });
@@ -58,9 +59,13 @@ export default function DashboardPage() {
   }, [recentOrders, summary]);
 
   const loading = summaryLoading || ordersLoading;
+  
+  const handleDataMutation = () => {
+    refresh();
+  }
 
   const renderDashboardContent = () => {
-    if (loading) {
+    if (loading && !recentOrders?.length) {
       return (
         <div className="space-y-8">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -79,6 +84,7 @@ export default function DashboardPage() {
     if (isPrivacyMode) {
       return (
         <div className="space-y-8">
+          <WelcomeGuide />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Skeleton className="h-[126px] w-full" />
             <Skeleton className="h-[126px] w-full" />
@@ -89,7 +95,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
             <div className="xl:col-span-2">
-              <OrderTableShell data={recentOrders || []} />
+              <OrderTableShell data={recentOrders || []} onDataMutated={handleDataMutation} />
             </div>
             <div>
               <ServiceDistributionChart data={serviceDistributionData} />
@@ -101,6 +107,7 @@ export default function DashboardPage() {
 
     return (
        <Tabs defaultValue="revenue" className="space-y-4">
+        <WelcomeGuide />
           <TabsList>
             <TabsTrigger value="revenue">Faturamento</TabsTrigger>
             <TabsTrigger value="profit">Lucro</TabsTrigger>
@@ -134,7 +141,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
             <div className="xl:col-span-2">
-                <OrderTableShell data={recentOrders || []} />
+                <OrderTableShell data={recentOrders || []} onDataMutated={handleDataMutation}/>
             </div>
             <div>
                 <ServiceDistributionChart data={serviceDistributionData} />

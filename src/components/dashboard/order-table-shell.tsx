@@ -226,7 +226,7 @@ export default function OrderTableShell({
                     variant="outline"
                     size="sm"
                     onClick={onPrevPage}
-                    disabled={!hasPrevPage || loading}
+                    disabled={!hasNextPage || loading}
                 >
                     Anterior
                 </Button>
