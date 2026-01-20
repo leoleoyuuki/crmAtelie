@@ -358,6 +358,12 @@ export function OrderFormDialog({
     if(onOrderCreated) onOrderCreated();
   };
 
+  const handleCustomerUpdated = (updatedCustomer: Customer) => {
+    setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+    // Re-select the customer in case their details changed
+    form.setValue('customerId', updatedCustomer.id);
+  };
+
    const dialogContent = (
     <DialogContent className="sm:max-w-3xl flex flex-col h-full sm:h-auto sm:max-h-[90vh]">
         <DialogHeader>
@@ -494,21 +500,32 @@ export function OrderFormDialog({
 
   if (trigger) {
     return (
+      <>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
             {dialogContent}
         </Dialog>
+        <CustomerFormDialog
+            isOpen={isCustomerDialogOpen}
+            setIsOpen={setIsCustomerDialogOpen}
+            onCustomerCreated={handleCustomerCreated}
+            onCustomerUpdated={handleCustomerUpdated}
+        />
+      </>
     );
   }
   
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        {dialogContent}
-    </Dialog>
+    <>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            {dialogContent}
+        </Dialog>
+         <CustomerFormDialog
+            isOpen={isCustomerDialogOpen}
+            setIsOpen={setIsCustomerDialogOpen}
+            onCustomerCreated={handleCustomerCreated}
+            onCustomerUpdated={handleCustomerUpdated}
+        />
+    </>
   );
 }
-
-    
-
-    
-
