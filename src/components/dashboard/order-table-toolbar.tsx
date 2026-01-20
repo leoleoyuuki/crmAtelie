@@ -1,4 +1,3 @@
-
 "use client"
 
 import { Table } from "@tanstack/react-table"
@@ -14,6 +13,8 @@ import {
 } from "@/components/ui/select"
 import { CardHeader, CardTitle, CardDescription } from "../ui/card"
 import { getMonths } from "@/lib/data"
+import { Button } from "../ui/button"
+import { PlusCircle } from "lucide-react"
 
 interface OrderTableToolbarProps<TData> {
   table: Table<TData>
@@ -112,7 +113,15 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
           </Select>
         </div>
         <div className="pl-2">
-            <OrderFormDialog onOrderCreated={onOrderCreated} />
+            <OrderFormDialog
+                onOrderCreated={onOrderCreated}
+                trigger={
+                    <Button size="icon" className="md:w-auto md:px-4 flex-shrink-0">
+                        <PlusCircle className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Novo Pedido</span>
+                    </Button>
+                }
+            />
         </div>
       </div>
     </>
