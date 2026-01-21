@@ -39,8 +39,28 @@ const tutorials = [
     embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
   },
   {
+    title: 'Concluindo um Pedido',
+    description: 'Aprenda a finalizar um pedido, dar baixa no estoque e atualizar seus relatórios financeiros.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Usando o Painel de Tarefas',
+    description: 'Descubra como o painel de tarefas organiza seu dia para você nunca mais perder um prazo.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Entendendo seu Financeiro',
+    description: 'Uma análise do seu dashboard para você entender de onde vem e para onde vai seu dinheiro.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
     title: 'Controle de Custos e Compras',
     description: 'Veja como registrar compras de materiais e custos fixos para um financeiro preciso.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Tabela de Preços',
+    description: 'Cadastre seus serviços e agilize a criação de novos pedidos com preços padronizados.',
     embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
   },
 ];
