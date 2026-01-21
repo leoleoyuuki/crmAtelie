@@ -10,58 +10,59 @@ import { useFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 // Estrutura de dados para os tutoriais
 const tutorials = [
   {
     title: 'Visão Geral do Sistema',
     description: 'Um tour rápido pelas principais funcionalidades do AtelierFlow.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/VgI4RJox96Q',
   },
   {
     title: 'Instalando o App no Celular',
     description: 'Aprenda a adicionar o AtelierFlow à tela de início do seu celular (iPhone e Android).',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/SjkhJcIDqP4',
   },
   {
     title: 'Cadastrando um Cliente',
     description: 'Veja como é fácil e rápido adicionar um novo cliente no sistema.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/Eu4QhFOacng',
   },
   {
     title: 'Criando seu Primeiro Pedido',
     description: 'Guia completo para registrar um pedido, adicionar itens e definir prazos.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/mZZTcv9yDIs',
   },
   {
     title: 'Editando e Atualizando Pedidos',
     description: 'Aprenda a modificar um pedido existente e alterar seu status no fluxo de trabalho.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/fnd5sCOXVos',
   },
   {
     title: 'Concluindo um Pedido',
     description: 'Aprenda a finalizar um pedido, dar baixa no estoque e atualizar seus relatórios financeiros.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/5mQFgeuiSaU',
   },
   {
     title: 'Usando o Painel de Tarefas',
     description: 'Descubra como o painel de tarefas organiza seu dia para você nunca mais perder um prazo.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/SbKFY28grnc',
   },
   {
     title: 'Entendendo seu Financeiro',
     description: 'Uma análise do seu dashboard para você entender de onde vem e para onde vai seu dinheiro.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/nZzQp_Md860',
   },
   {
     title: 'Controle de Custos e Compras',
     description: 'Veja como registrar compras de materiais e custos fixos para um financeiro preciso.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/kKNjJWs0a2U',
   },
   {
     title: 'Tabela de Preços',
     description: 'Cadastre seus serviços e agilize a criação de novos pedidos com preços padronizados.',
-    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+    embedUrl: 'https://www.youtube.com/embed/3vAevdW8Ob0',
   },
 ];
 
@@ -135,33 +136,37 @@ export default function AjudaPage() {
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Main Content: Videos */}
         <div className="lg:col-span-2 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {tutorials.map((tutorial, index) => (
-                <Card key={index} className="flex flex-col">
-                    <CardHeader>
-                        <div className="flex items-center gap-2">
-                            <PlayCircle className="h-5 w-5 text-primary" />
-                            <CardTitle className="font-headline text-base leading-tight">{tutorial.title}</CardTitle>
+            <Accordion type="single" collapsible className="w-full">
+              {tutorials.map((tutorial, index) => (
+                <AccordionItem value={`item-${index}`} key={index}>
+                  <AccordionTrigger>
+                    <div className="flex items-center gap-3 text-left">
+                      <PlayCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="font-headline text-lg">{tutorial.title}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start p-4">
+                        <div className="md:col-span-1">
+                            <div className="aspect-[9/16] w-full max-w-[260px] mx-auto rounded-xl overflow-hidden shadow-lg border">
+                                <iframe
+                                    src={tutorial.embedUrl}
+                                    title={tutorial.title}
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                    className="w-full h-full"
+                                ></iframe>
+                            </div>
                         </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow flex flex-col">
-                        <div className="aspect-[9/16] w-full max-w-[260px] mx-auto rounded-xl overflow-hidden shadow-lg border">
-                            <iframe
-                                src={tutorial.embedUrl}
-                                title={tutorial.title}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                                className="w-full h-full"
-                            ></iframe>
+                        <div className="md:col-span-2">
+                            <p className="text-muted-foreground text-sm">{tutorial.description}</p>
                         </div>
-                    </CardContent>
-                    <CardFooter>
-                        <CardDescription className="text-xs text-center w-full">{tutorial.description}</CardDescription>
-                    </CardFooter>
-                </Card>
-                ))}
-            </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
         </div>
 
         {/* Sidebar: Suggestion Box */}
