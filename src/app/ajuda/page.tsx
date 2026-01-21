@@ -20,9 +20,14 @@ const tutorials = [
     embedUrl: 'https://www.youtube.com/embed/VgI4RJox96Q',
   },
   {
-    title: 'Instalando o App no Celular',
-    description: 'Aprenda a adicionar o AtelierFlow à tela de início do seu celular (iPhone e Android).',
-    embedUrl: 'https://www.youtube.com/embed/SjkhJcIDqP4',
+    title: 'Instalando o App no iPhone',
+    description: 'Aprenda a adicionar o AtelierFlow à tela de início do seu celular (iPhone).',
+    embedUrl: 'https://www.youtube.com/embed/naJ2vvul9CQ',
+  },
+  {
+    title: 'Instalando o App no Android',
+    description: 'Aprenda a adicionar o AtelierFlow à tela de início do seu celular (Android).',
+    embedUrl: 'https://www.youtube.com/embed/RMVnjdAQwjc',
   },
   {
     title: 'Cadastrando um Cliente',
