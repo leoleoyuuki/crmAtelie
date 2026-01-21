@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -6,11 +5,46 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Lightbulb, Send } from 'lucide-react';
+import { Lightbulb, Send, PlayCircle } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+
+// Estrutura de dados para os tutoriais
+const tutorials = [
+  {
+    title: 'Visão Geral do Sistema',
+    description: 'Um tour rápido pelas principais funcionalidades do AtelierFlow.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Instalando o App no Celular',
+    description: 'Aprenda a adicionar o AtelierFlow à tela de início do seu celular (iPhone e Android).',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Cadastrando um Cliente',
+    description: 'Veja como é fácil e rápido adicionar um novo cliente no sistema.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Criando seu Primeiro Pedido',
+    description: 'Guia completo para registrar um pedido, adicionar itens e definir prazos.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Editando e Atualizando Pedidos',
+    description: 'Aprenda a modificar um pedido existente e alterar seu status no fluxo de trabalho.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+  {
+    title: 'Controle de Custos e Compras',
+    description: 'Veja como registrar compras de materiais e custos fixos para um financeiro preciso.',
+    embedUrl: 'https://www.youtube.com/embed/COLOQUE_O_ID_DO_SEU_VIDEO_AQUI',
+  },
+];
+
 
 export default function AjudaPage() {
   const [suggestion, setSuggestion] = useState('');
@@ -81,40 +115,32 @@ export default function AjudaPage() {
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
         {/* Main Content: Videos */}
         <div className="lg:col-span-2 space-y-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="font-headline text-2xl">Como "Instalar" o App no iPhone (iOS)</CardTitle>
-                    <CardDescription>Aprenda a adicionar o AtelierFlow à tela de início do seu iPhone para uma experiência de app nativo.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex justify-center p-4 md:p-6">
-                    <div className="w-full max-w-[280px] rounded-2xl border-4 border-gray-300 bg-gray-300 overflow-hidden shadow-xl">
-                        <video 
-                            src="https://mgvwmiwtvzxacw2r.public.blob.vercel-storage.com/AtelierFlowTutorial.mp4" 
-                            controls 
-                            className="w-full h-full"
-                        >
-                            Seu navegador não suporta a tag de vídeo.
-                        </video>
-                    </div>
-                </CardContent>
-                 <CardFooter>
-                    <p className="text-xs text-muted-foreground">Em breve: tutorial para Android e outros vídeos sobre as funcionalidades do sistema.</p>
-                </CardFooter>
-            </Card>
-
-             {/* Placeholder for more videos */}
-             <div className="space-y-4">
-                <h3 className="text-xl font-bold font-headline">Mais Vídeos</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="flex flex-col items-center justify-center p-6 bg-muted/50 text-center">
-                        <CardTitle className="text-lg font-semibold">Tutorial Android</CardTitle>
-                        <CardDescription className="mt-2">Em breve...</CardDescription>
-                    </Card>
-                     <Card className="flex flex-col items-center justify-center p-6 bg-muted/50 text-center">
-                        <CardTitle className="text-lg font-semibold">Dominando o Dashboard</CardTitle>
-                        <CardDescription className="mt-2">Em breve...</CardDescription>
-                    </Card>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tutorials.map((tutorial, index) => (
+                <Card key={index} className="flex flex-col">
+                    <CardHeader>
+                        <div className="flex items-center gap-2">
+                            <PlayCircle className="h-5 w-5 text-primary" />
+                            <CardTitle className="font-headline text-base leading-tight">{tutorial.title}</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="flex-grow flex flex-col">
+                        <div className="aspect-[9/16] w-full max-w-[260px] mx-auto rounded-xl overflow-hidden shadow-lg border">
+                            <iframe
+                                src={tutorial.embedUrl}
+                                title={tutorial.title}
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                                className="w-full h-full"
+                            ></iframe>
+                        </div>
+                    </CardContent>
+                    <CardFooter>
+                        <CardDescription className="text-xs text-center w-full">{tutorial.description}</CardDescription>
+                    </CardFooter>
+                </Card>
+                ))}
             </div>
         </div>
 
