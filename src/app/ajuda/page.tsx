@@ -1,16 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Lightbulb, Send, PlayCircle } from 'lucide-react';
+import { Lightbulb, Send, PlayCircle, Instagram, MessageSquare } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
 
 // Estrutura de dados para os tutoriais
 const tutorials = [
@@ -127,6 +129,14 @@ export default function AjudaPage() {
     });
   };
 
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const phoneNumber = "5511921494313";
+    const message = "Olá! Gostaria de tirar uma dúvida sobre o sistema AtelierFlow.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
       <div className="flex items-center justify-between space-y-2">
@@ -180,29 +190,44 @@ export default function AjudaPage() {
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Lightbulb className="h-6 w-6 text-primary" />
-                <CardTitle className="font-headline text-xl">Tem uma Ideia?</CardTitle>
+                <CardTitle className="font-headline text-xl">Suporte e Sugestões</CardTitle>
               </div>
               <CardDescription>
-                Peça um novo tutorial ou sugira uma funcionalidade que você gostaria de ver no AtelierFlow.
+                Precisa de ajuda ou tem uma ideia? Use os canais abaixo.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="font-semibold">Deixe uma sugestão</Label>
                 <Textarea
-                  placeholder="Ex: Gostaria de um tutorial sobre como editar um pedido ou uma funcionalidade para controlar estoque de tecidos..."
+                  placeholder="Ex: Gostaria de um tutorial sobre..."
                   value={suggestion}
                   onChange={(e) => setSuggestion(e.target.value)}
-                  className="min-h-[150px]"
+                  className="min-h-[120px] mt-2"
                   disabled={isLoading}
                 />
+                <Button onClick={handleSendSuggestion} className="w-full mt-2" disabled={isLoading}>
+                    <Send className="mr-2 h-4 w-4" />
+                    {isLoading ? 'Enviando...' : 'Enviar Sugestão'}
+                </Button>
+              </div>
+              <Separator />
+              <div>
+                  <p className="text-sm font-medium mb-2">Fale conosco</p>
+                  <div className="flex flex-col gap-2">
+                    <Button variant="outline" onClick={handleWhatsAppClick}>
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Falar no WhatsApp
+                    </Button>
+                     <Button variant="outline" asChild>
+                        <a href="https://www.instagram.com/atelierflow.app" target="_blank" rel="noopener noreferrer">
+                            <Instagram className="mr-2 h-4 w-4" />
+                            Mensagem no Instagram
+                        </a>
+                    </Button>
+                  </div>
               </div>
             </CardContent>
-            <CardFooter>
-              <Button onClick={handleSendSuggestion} className="w-full" disabled={isLoading}>
-                <Send className="mr-2 h-4 w-4" />
-                {isLoading ? 'Enviando...' : 'Enviar Sugestão'}
-              </Button>
-            </CardFooter>
           </Card>
         </div>
       </div>
