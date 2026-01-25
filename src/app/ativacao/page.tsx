@@ -172,7 +172,7 @@ function PlanSelectionTab() {
     setIsTrialLoading(true);
     try {
         await startFreeTrial(user);
-        toast({ title: 'Período de teste ativado!', description: 'Aproveite o acesso completo por 7 dias. Bem-vindo(a)!' });
+        toast({ title: 'Período de teste ativado!', description: 'Aproveite o acesso completo por 3 dias. Bem-vindo(a)!' });
         router.push('/');
     } catch (error: any) {
         toast({ variant: 'destructive', title: 'Falha na ativação do teste', description: error.message });
@@ -228,7 +228,7 @@ function PlanSelectionTab() {
                 <CardHeader className="text-center">
                 <CardTitle className="font-headline text-2xl text-primary">Novo por aqui?</CardTitle>
                 <CardDescription>
-                    Comece com um teste gratuito de 7 dias e explore todos os recursos, sem compromisso.
+                    Comece com um teste gratuito de 3 dias e explore todos os recursos, sem compromisso.
                 </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -241,7 +241,7 @@ function PlanSelectionTab() {
                     {isTrialLoading ? <Loader2 className="animate-spin" /> : (
                         <>
                             <Star className="mr-2 h-4 w-4" />
-                            Ativar 7 Dias Grátis
+                            Ativar 3 Dias Grátis
                         </>
                     )}
                 </Button>
@@ -317,7 +317,7 @@ export default function AtivacaoPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-       <div className="absolute top-5 left-5">
+       <div className="absolute top-5 left-5 hidden sm:block">
           <Logo className="h-8 w-8 text-primary" />
         </div>
         <div className="w-full max-w-4xl space-y-6">
