@@ -166,6 +166,10 @@
                 "type": "string",
                 "format": "date-time",
                 "description": "The date when the user's subscription expires."
+            },
+            "trialStarted": {
+              "type": "boolean",
+              "description": "Flag indicating if the user has started their free trial."
             }
         },
         "required": ["displayName", "email", "status"]

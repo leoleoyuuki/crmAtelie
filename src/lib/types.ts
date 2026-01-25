@@ -56,6 +56,7 @@ export interface UserProfile {
   photoURL?: string;
   status: UserStatus;
   expiresAt?: Date;
+  trialStarted?: boolean;
 }
 
 export interface AccessToken {

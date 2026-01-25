@@ -81,3 +81,41 @@ export async function redeemActivationToken(user: User, token: string): Promise<
     throw new Error('Ocorreu um erro ao ativar a conta. Verifique o código e tente novamente.');
   }
 }
+
+
+/**
+ * Starts a free trial for a user, activating their account for 7 days.
+ * @param user The authenticated user object.
+ */
+export async function startFreeTrial(user: User): Promise<void> {
+    const userRef = doc(db, 'users', user.uid);
+
+    try {
+        const userDoc = await getDoc(userRef);
+
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.trialStarted) {
+                throw new Error("Você já utilizou seu período de teste.");
+            }
+            if (userData.status === 'active') {
+                throw new Error("Sua conta já está ativa com um plano.");
+            }
+        }
+        
+        const expiresAt = add(new Date(), { days: 7 });
+
+        await updateDoc(userRef, {
+            status: 'active',
+            expiresAt: Timestamp.fromDate(expiresAt),
+            trialStarted: true,
+        });
+
+    } catch (error) {
+        console.error("Error starting free trial:", error);
+        if (error instanceof Error) {
+            throw error; // Re-throw known errors
+        }
+        throw new Error('Ocorreu um erro ao iniciar seu período de teste. Tente novamente.');
+    }
+}

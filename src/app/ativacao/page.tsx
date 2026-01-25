@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
-import { useFirebase } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Key } from 'lucide-react';
+import { useFirebase, useDocument } from '@/firebase';
+import { MessageSquare, LogOut, Loader2, Key, Star } from 'lucide-react';
 import { initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
@@ -13,10 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { redeemActivationToken } from '@/lib/activation';
+import { redeemActivationToken, startFreeTrial } from '@/lib/activation';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { trackFbqEvent } from '@/lib/fpixel';
+import type { UserProfile } from '@/lib/types';
 
 
 type Plan = 'mensal' | 'trimestral' | 'anual';
@@ -156,9 +157,29 @@ const planDetails = {
 
 function PlanSelectionTab() {
   const { user } = useUser();
+  const { data: profile, loading: profileLoading } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTrialLoading, setIsTrialLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
+  
+  const handleStartTrial = async () => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado para iniciar um teste.' });
+        return;
+    }
+    setIsTrialLoading(true);
+    try {
+        await startFreeTrial(user);
+        toast({ title: 'Período de teste ativado!', description: 'Aproveite o acesso completo por 7 dias. Bem-vindo(a)!' });
+        router.push('/');
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Falha na ativação do teste', description: error.message });
+    } finally {
+        setIsTrialLoading(false);
+    }
+  };
 
   const createPreference = async (plan: Plan) => {
     trackFbqEvent('InitiateCheckout', {
@@ -200,6 +221,36 @@ function PlanSelectionTab() {
   };
 
   return (
+    <>
+      {profile?.status !== 'active' && !profile?.trialStarted && (
+        <>
+            <Card className="border-primary/50 bg-primary/5">
+                <CardHeader className="text-center">
+                <CardTitle className="font-headline text-2xl text-primary">Novo por aqui?</CardTitle>
+                <CardDescription>
+                    Comece com um teste gratuito de 7 dias e explore todos os recursos, sem compromisso.
+                </CardDescription>
+                </CardHeader>
+                <CardContent>
+                <Button
+                    size="lg"
+                    className="w-full"
+                    onClick={handleStartTrial}
+                    disabled={profileLoading || isTrialLoading}
+                >
+                    {isTrialLoading ? <Loader2 className="animate-spin" /> : (
+                        <>
+                            <Star className="mr-2 h-4 w-4" />
+                            Ativar 7 Dias Grátis
+                        </>
+                    )}
+                </Button>
+                </CardContent>
+            </Card>
+            <Separator className="my-6" />
+        </>
+      )}
+
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="font-headline text-2xl">Acesso Ilimitado para Transformar seu Ateliê</CardTitle>
@@ -249,6 +300,7 @@ function PlanSelectionTab() {
 
         </CardContent>
     </Card>
+    </>
   )
 }
 
@@ -271,7 +323,7 @@ export default function AtivacaoPage() {
         <div className="w-full max-w-4xl space-y-6">
             <Tabs defaultValue="plan" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="plan">Pagar Assinatura</TabsTrigger>
+                    <TabsTrigger value="plan">Assinatura / Teste Grátis</TabsTrigger>
                     <TabsTrigger value="code">Usar Código</TabsTrigger>
                 </TabsList>
                 <TabsContent value="plan" className="mt-4">

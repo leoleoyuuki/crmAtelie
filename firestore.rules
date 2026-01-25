@@ -35,6 +35,12 @@ service cloud.firestore {
         return request.resource.data.userId == resource.data.userId;
     }
 
+    function isNotResettingTrial() {
+      // A user cannot change trialStarted from true to false.
+      // This prevents re-activating a trial period.
+      return !(resource.data.trialStarted == true && request.resource.data.trialStarted == false);
+    }
+
     // ======= COLLECTION RULES =======
 
     match /users/{userId} {
@@ -45,9 +51,7 @@ service cloud.firestore {
       allow create: if isOwner(userId) && request.resource.data.email == request.auth.token.email;
       
       // Um usuário pode atualizar seu próprio perfil. O webhook de pagamento também pode atualizar.
-      // O webhook não é autenticado, então `isOwner` seria falso.
-      // A segurança aqui é que o webhook só é chamado pelo Mercado Pago e só atualiza `status` e `expiresAt`.
-      allow update: if isOwner(userId) || request.auth == null;
+      allow update: if (isOwner(userId) && isNotResettingTrial()) || request.auth == null;
       
       // Perfis não são listáveis ou deletáveis pelos clientes.
       allow list, delete: if false; 
