@@ -218,12 +218,6 @@ export default function GenerateActivationPage() {
               disabled={isLoading}
             >
                <div>
-                <RadioGroupItem value="0.1" id="d01" className="peer sr-only" />
-                <Label htmlFor="d01" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                  3 Dias (Trial)
-                </Label>
-              </div>
-               <div>
                 <RadioGroupItem value="0.25" id="d025" className="peer sr-only" />
                 <Label htmlFor="d025" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                   7 Dias (Trial)

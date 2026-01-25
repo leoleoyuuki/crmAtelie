@@ -84,7 +84,7 @@ export async function redeemActivationToken(user: User, token: string): Promise<
 
 
 /**
- * Starts a free trial for a user, activating their account for 3 days.
+ * Starts a free trial for a user, activating their account for 7 days.
  * @param user The authenticated user object.
  */
 export async function startFreeTrial(user: User): Promise<void> {
@@ -103,7 +103,7 @@ export async function startFreeTrial(user: User): Promise<void> {
             }
         }
         
-        const expiresAt = add(new Date(), { days: 3 });
+        const expiresAt = add(new Date(), { days: 7 });
 
         await updateDoc(userRef, {
             status: 'active',
