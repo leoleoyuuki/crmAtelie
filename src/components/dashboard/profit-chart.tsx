@@ -1,6 +1,7 @@
 "use client"
 
 import { Area, AreaChart, Bar, BarChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
+import { EyeOff } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -19,6 +20,7 @@ import {
 
 type ProfitChartProps = {
   data: { month: string; revenue: number; cost: number; profit: number }[];
+  isPrivacyMode?: boolean;
 }
 
 const chartConfig = {
@@ -36,7 +38,7 @@ const chartConfig = {
   },
 }
 
-export function ProfitChart({ data }: ProfitChartProps) {
+export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -46,6 +48,13 @@ export function ProfitChart({ data }: ProfitChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {isPrivacyMode ? (
+            <div className="h-[250px] w-full flex flex-col items-center justify-center bg-muted/50 rounded-lg">
+                <EyeOff className="h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">Dados financeiros ocultos</p>
+                <p className="text-xs text-muted-foreground">Desative o modo de privacidade para visualizar</p>
+            </div>
+        ) : (
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <ComposedChart
                 data={data}
@@ -120,6 +129,7 @@ export function ProfitChart({ data }: ProfitChartProps) {
                 <Line dataKey="profit" type="monotone" stroke="var(--color-profit)" strokeWidth={2} dot={false} />
             </ComposedChart>
         </ChartContainer>
+        )}
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="leading-none text-muted-foreground">

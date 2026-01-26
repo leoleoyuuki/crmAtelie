@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useEffect, useState, useContext, useMemo } from 'react';
@@ -81,30 +79,6 @@ export default function DashboardPage() {
       );
     }
 
-    if (isPrivacyMode) {
-      return (
-        <div className="space-y-8">
-          <WelcomeGuide />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Skeleton className="h-[126px] w-full" />
-            <Skeleton className="h-[126px] w-full" />
-            <Skeleton className="h-[126px] w-full" />
-          </div>
-          <div className="grid grid-cols-1 gap-8">
-            <Skeleton className="h-[415px] w-full" />
-          </div>
-          <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-            <div className="xl:col-span-2">
-              <OrderTableShell data={recentOrders || []} onDataMutated={handleDataMutation} />
-            </div>
-            <div>
-              <ServiceDistributionChart data={serviceDistributionData} />
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
        <Tabs defaultValue="revenue" className="space-y-4">
         <WelcomeGuide />
@@ -119,10 +93,11 @@ export default function DashboardPage() {
                 totalOrders={summary?.totalOrders || 0}
                 totalRevenue={summary?.totalRevenue || 0}
                 pendingCount={summary?.pendingOrders || 0}
+                isPrivacyMode={isPrivacyMode}
               />
             </div>
             <div className="grid grid-cols-1 gap-8">
-                <RevenueChart data={revenueData} />
+                <RevenueChart data={revenueData} isPrivacyMode={isPrivacyMode} />
             </div>
           </TabsContent>
 
@@ -132,16 +107,17 @@ export default function DashboardPage() {
                     totalProfit={totalProfit}
                     totalRevenue={summary?.totalRevenue || 0}
                     totalCosts={totalCosts}
+                    isPrivacyMode={isPrivacyMode}
                 />
             </div>
              <div className="grid grid-cols-1 gap-8">
-                <ProfitChart data={profitData} />
+                <ProfitChart data={profitData} isPrivacyMode={isPrivacyMode} />
             </div>
           </TabsContent>
 
             <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
             <div className="xl:col-span-2">
-                <OrderTableShell data={recentOrders || []} onDataMutated={handleDataMutation}/>
+                <OrderTableShell data={recentOrders || []} onDataMutated={handleDataMutation} isPrivacyMode={isPrivacyMode} />
             </div>
             <div>
                 <ServiceDistributionChart data={serviceDistributionData} />

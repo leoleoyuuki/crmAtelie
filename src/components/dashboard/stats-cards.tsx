@@ -1,28 +1,31 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ClipboardList, DollarSign, Package } from "lucide-react";
+import { ClipboardList, DollarSign, Package, EyeOff } from "lucide-react";
 
 type StatsCardsProps = {
     totalOrders: number;
     totalRevenue: number;
     pendingCount: number;
+    isPrivacyMode?: boolean;
 }
 
-export function StatsCards({ totalOrders, totalRevenue, pendingCount }: StatsCardsProps) {
-    const formattedRevenue = new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-    }).format(totalRevenue);
+export function StatsCards({ totalOrders, totalRevenue, pendingCount, isPrivacyMode = false }: StatsCardsProps) {
+    const formattedRevenue = isPrivacyMode
+        ? 'R$ ●●●,●●'
+        : new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(totalRevenue);
 
     return (
         <>
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    {isPrivacyMode ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <DollarSign className="h-4 w-4 text-muted-foreground" />}
                 </CardHeader>
                 <CardContent>
                     <div className="text-2xl font-bold">{formattedRevenue}</div>
-                    <p className="text-xs text-muted-foreground">de todos os pedidos concluídos</p>
+                    <p className="text-xs text-muted-foreground">{isPrivacyMode ? "Modo de privacidade ativado" : "de todos os pedidos concluídos"}</p>
                 </CardContent>
             </Card>
             <Card>

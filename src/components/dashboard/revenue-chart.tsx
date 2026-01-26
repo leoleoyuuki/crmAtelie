@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
+import { TrendingUp, EyeOff } from "lucide-react"
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
@@ -19,6 +19,7 @@ import {
 
 type RevenueChartProps = {
   data: { month: string; revenue: number }[];
+  isPrivacyMode?: boolean;
 }
 
 const chartConfig = {
@@ -28,7 +29,7 @@ const chartConfig = {
   },
 }
 
-export function RevenueChart({ data }: RevenueChartProps) {
+export function RevenueChart({ data, isPrivacyMode = false }: RevenueChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -38,6 +39,13 @@ export function RevenueChart({ data }: RevenueChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {isPrivacyMode ? (
+            <div className="h-[250px] w-full flex flex-col items-center justify-center bg-muted/50 rounded-lg">
+                <EyeOff className="h-8 w-8 text-muted-foreground mb-2" />
+                <p className="text-sm font-medium text-muted-foreground">Dados financeiros ocultos</p>
+                <p className="text-xs text-muted-foreground">Desative o modo de privacidade para visualizar</p>
+            </div>
+        ) : (
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
           <LineChart
             accessibilityLayer
@@ -86,6 +94,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
             />
           </LineChart>
         </ChartContainer>
+        )}
       </CardContent>
       <CardFooter className="flex-col items-start gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">

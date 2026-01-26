@@ -46,6 +46,7 @@ interface OrderTableShellProps {
   hasPrevPage?: boolean;
   loading?: boolean;
   onDataMutated?: () => void;
+  isPrivacyMode?: boolean;
 }
 
 
@@ -81,6 +82,7 @@ export default function OrderTableShell({
     hasPrevPage,
     loading,
     onDataMutated,
+    isPrivacyMode = false,
 }: OrderTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
@@ -126,6 +128,9 @@ export default function OrderTableShell({
         accessorKey: "totalValue",
         header: () => <div className="text-right">Total</div>,
         cell: ({ row }) => {
+          if (isPrivacyMode) {
+              return <div className="text-right font-medium">R$ ●●●,●●</div>;
+          }
           const amount = parseFloat(row.getValue("totalValue"));
           const formatted = new Intl.NumberFormat("pt-BR", {
             style: "currency",
@@ -192,7 +197,7 @@ export default function OrderTableShell({
         ),
       },
     ],
-    [onDataMutated]
+    [onDataMutated, isPrivacyMode]
   );
 
   const table = useReactTable({
@@ -289,6 +294,7 @@ export default function OrderTableShell({
                         row={row as Row<Order>}
                         onUpdate={handleUpdate}
                         onDelete={handleUpdate}
+                        isPrivacyMode={isPrivacyMode}
                     />
                 ))
             ) : (

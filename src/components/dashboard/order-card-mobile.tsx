@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { Order, OrderStatus } from '@/lib/types';
@@ -16,6 +14,7 @@ interface OrderCardMobileProps {
     row: Row<Order>;
     onUpdate: () => void;
     onDelete: () => void;
+    isPrivacyMode?: boolean;
 }
 
 const getStatusBadge = (status: OrderStatus) => {
@@ -28,14 +27,17 @@ const getStatusBadge = (status: OrderStatus) => {
     return <Badge className={cn("text-xs", colorClass)} variant="outline">{status}</Badge>;
 }
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number, isPrivacyMode: boolean) => {
+    if (isPrivacyMode) {
+        return 'R$ ●●●,●●';
+    }
     return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
     }).format(value);
 }
 
-export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProps) {
+export function OrderCardMobile({ row, onUpdate, onDelete, isPrivacyMode = false }: OrderCardMobileProps) {
     const order = row.original;
     const dueDate = order.dueDate;
     const isDueSoon = dueDate && isBefore(dueDate, addDays(new Date(), 3)) && !isBefore(dueDate, new Date());
@@ -74,7 +76,7 @@ export function OrderCardMobile({ row, onUpdate, onDelete }: OrderCardMobileProp
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-muted-foreground">Total</span>
-                        <span className="font-bold text-base">{formatCurrency(order.totalValue)}</span>
+                        <span className="font-bold text-base">{formatCurrency(order.totalValue, isPrivacyMode)}</span>
                     </div>
                 </div>
 
