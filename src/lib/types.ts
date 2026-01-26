@@ -57,6 +57,7 @@ export interface UserProfile {
   status: UserStatus;
   expiresAt?: Date;
   trialStarted?: boolean;
+  passwordHash?: string;
 }
 
 export interface AccessToken {

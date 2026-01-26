@@ -1,5 +1,3 @@
-
-
 'use client';
 import {
   addDoc,
@@ -853,4 +851,18 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     await setDoc(summaryRef, newSummaryData, { merge: true });
 
     return { id: userId, ...newSummaryData };
+}
+
+export async function setUserPrivacyPassword(userId: string, passwordHash: string): Promise<void> {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { passwordHash })
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'update',
+            requestResourceData: { passwordHash: '***' }, // Don't leak hash in error
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
 }

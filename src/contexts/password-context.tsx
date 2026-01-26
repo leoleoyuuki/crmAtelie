@@ -1,8 +1,10 @@
-
 'use client';
 
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { PasswordDialog } from '@/components/password-dialog';
+import { useUser, useDocument } from '@/firebase';
+import { setUserPrivacyPassword } from '@/lib/data';
+import type { UserProfile } from '@/lib/types';
 
 interface PasswordContextType {
   isPrivacyMode: boolean;
@@ -24,27 +26,13 @@ export const PasswordContext = createContext<PasswordContextType>({
 
 export const PasswordProvider = ({ children }: { children: ReactNode }) => {
   const [isPrivacyMode, setIsPrivacyMode] = useState(true);
-  const [isPasswordSet, setIsPasswordSet] = useState(false);
-  const [passwordHash, setPasswordHash] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
-  // This effect runs only on the client
-  useEffect(() => {
-    try {
-      const storedHash = localStorage.getItem('atelier_password_hash');
-      if (storedHash) {
-        setPasswordHash(storedHash);
-        setIsPasswordSet(true);
-      } else {
-        setIsPasswordSet(false);
-      }
-    } catch (error) {
-        console.error("Could not access localStorage. Privacy mode will be enforced.");
-        // If localStorage is not available, we default to privacy mode on.
-        setIsPasswordSet(false);
-        setIsPrivacyMode(true);
-    }
-  }, []);
+  const { user } = useUser();
+  const { data: profile } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
+  
+  const isPasswordSet = !!profile?.passwordHash;
+  const passwordHash = profile?.passwordHash || null;
 
   const simpleHash = (str: string) => {
     let hash = 0;
@@ -57,11 +45,15 @@ export const PasswordProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setPassword = (password: string) => {
+    if (!user) return;
     const hash = simpleHash(password);
-    localStorage.setItem('atelier_password_hash', hash);
-    setPasswordHash(hash);
-    setIsPasswordSet(true);
-    setIsPrivacyMode(false); // Unlock after setting password
+    setUserPrivacyPassword(user.uid, hash)
+      .then(() => {
+        setIsPrivacyMode(false); // Unlock after setting password
+      })
+      .catch((error) => {
+        console.error("Failed to set privacy password:", error);
+      });
   };
 
   const verifyPassword = (password: string): boolean => {
