@@ -6,6 +6,7 @@ import { FeatureHighlights } from '@/components/landing/feature-highlights';
 import { MobileAccessSection } from '@/components/landing/mobile-access-section';
 import { Cta } from '@/components/landing/cta';
 import { Footer } from '@/components/landing/footer';
+import { TutorialsSection } from '@/components/landing/tutorials-section';
 
 export default function LandingPage() {
   return (
@@ -17,6 +18,7 @@ export default function LandingPage() {
          <FeatureHighlights />
         </div>
         <MobileAccessSection />
+        <TutorialsSection />
         <Cta />
       </main>
       <Footer />
