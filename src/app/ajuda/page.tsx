@@ -14,6 +14,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 
+
 // Estrutura de dados para os tutoriais
 const tutorials = [
   {
