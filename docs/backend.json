@@ -152,6 +152,10 @@
                 "format": "email",
                 "description": "The user's email address."
             },
+            "phone": {
+                "type": "string",
+                "description": "The user's WhatsApp number."
+            },
             "photoURL": {
                 "type": "string",
                 "format": "uri",
@@ -170,6 +174,10 @@
             "trialStarted": {
               "type": "boolean",
               "description": "Flag indicating if the user has started their free trial."
+            },
+            "passwordHash": {
+              "type": "string",
+              "description": "The hash of the user's privacy mode password."
             }
         },
         "required": ["displayName", "email", "status"]

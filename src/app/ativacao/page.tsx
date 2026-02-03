@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase, useDocument } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Key, Star } from 'lucide-react';
+import { MessageSquare, LogOut, Loader2, Key, Star, Phone } from 'lucide-react';
 import { initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
@@ -18,12 +18,69 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { trackFbqEvent } from '@/lib/fpixel';
 import type { UserProfile } from '@/lib/types';
+import { Label } from '@/components/ui/label';
+import { updateUserProfilePhone } from '@/lib/data';
 
 
 type Plan = 'mensal' | 'trimestral' | 'anual';
 
-// A chave pública de teste é usada aqui para inicializar o SDK do MP no frontend.
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
+
+
+function PhoneCollectionStep({ onComplete, user }: { onComplete: (phone: string) => void, user: any }) {
+    const [phone, setPhone] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+
+    const handleSavePhone = async () => {
+        const cleanedPhone = phone.replace(/\D/g, '');
+        if (cleanedPhone.length < 10) {
+            toast({ variant: 'destructive', title: 'Número Inválido', description: 'Por favor, informe seu número de WhatsApp completo com DDD.' });
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await updateUserProfilePhone(user.uid, phone);
+            onComplete(phone);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível salvar seu número. Tente novamente.' });
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <Card className="border-primary ring-1 ring-primary/20">
+            <CardHeader>
+                <CardTitle className="font-headline text-2xl flex items-center gap-2">
+                    <Phone className="h-6 w-6 text-primary" />
+                    Complete seu cadastro
+                </CardTitle>
+                <CardDescription>
+                    Informe seu número de WhatsApp para receber notificações de suporte e novidades do sistema.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <Label htmlFor="phone">WhatsApp (com DDD)</Label>
+                    <Input 
+                        id="phone"
+                        placeholder="(11) 99999-9999"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        disabled={isLoading}
+                    />
+                </div>
+            </CardContent>
+            <CardFooter>
+                <Button onClick={handleSavePhone} className="w-full" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="animate-spin" /> : "Continuar para o AtelierFlow"}
+                </Button>
+            </CardFooter>
+        </Card>
+    )
+}
 
 
 function CodeActivationTab() {
@@ -55,7 +112,6 @@ function CodeActivationTab() {
 
     setIsLoading(true);
     try {
-      // Use a função centralizada para resgatar o token
       await redeemActivationToken(user, token);
       toast({
         title: 'Conta Ativada!',
@@ -306,6 +362,8 @@ function PlanSelectionTab() {
 
 export default function AtivacaoPage() {
   const { auth } = useFirebase();
+  const { user } = useUser();
+  const { data: profile, loading: profileLoading } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
 
   const handleWhatsAppClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -315,26 +373,42 @@ export default function AtivacaoPage() {
     window.open(whatsappUrl, '_blank');
   };
 
+  if (profileLoading) {
+      return (
+          <div className="flex min-h-screen items-center justify-center">
+              <Loader2 className="animate-spin h-8 w-8 text-primary" />
+          </div>
+      )
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
        <div className="absolute top-5 left-5 hidden sm:block">
           <Logo className="h-8 w-8 text-primary" />
         </div>
         <div className="w-full max-w-4xl space-y-6">
-            <Tabs defaultValue="plan" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="plan">Assinatura / Teste Grátis</TabsTrigger>
-                    <TabsTrigger value="code">Usar Código</TabsTrigger>
-                </TabsList>
-                <TabsContent value="plan" className="mt-4">
-                    <PlanSelectionTab />
-                </TabsContent>
-                <TabsContent value="code" className="mt-4">
-                  <div className="max-w-md mx-auto">
-                    <CodeActivationTab />
-                  </div>
-                </TabsContent>
-            </Tabs>
+            
+            {/* ETAPA OBRIGATÓRIA: Coleta de Telefone */}
+            {!profile?.phone ? (
+                <div className="max-w-md mx-auto w-full">
+                    <PhoneCollectionStep user={user} onComplete={() => {}} />
+                </div>
+            ) : (
+                <Tabs defaultValue="plan" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="plan">Assinatura / Teste Grátis</TabsTrigger>
+                        <TabsTrigger value="code">Usar Código</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="plan" className="mt-4">
+                        <PlanSelectionTab />
+                    </TabsContent>
+                    <TabsContent value="code" className="mt-4">
+                    <div className="max-w-md mx-auto">
+                        <CodeActivationTab />
+                    </div>
+                    </TabsContent>
+                </Tabs>
+            )}
 
             <div className="w-full text-center max-w-md mx-auto">
                 <Separator className="my-4" />

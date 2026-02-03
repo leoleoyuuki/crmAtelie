@@ -866,3 +866,17 @@ export async function setUserPrivacyPassword(userId: string, passwordHash: strin
         throw serverError;
     });
 }
+
+export async function updateUserProfilePhone(userId: string, phone: string): Promise<void> {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { phone })
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'update',
+            requestResourceData: { phone },
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}

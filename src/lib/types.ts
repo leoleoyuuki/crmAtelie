@@ -1,5 +1,4 @@
 
-
 export type OrderStatus = 'Novo' | 'Em Processo' | 'Aguardando Retirada' | 'Concluído';
 export type ServiceType = 'Ajuste' | 'Design Personalizado' | 'Reparo' | 'Lavagem a Seco';
 export type UserStatus = 'active' | 'inactive';
@@ -53,6 +52,7 @@ export interface UserProfile {
   id: string;
   displayName: string;
   email: string;
+  phone?: string;
   photoURL?: string;
   status: UserStatus;
   expiresAt?: Date;
