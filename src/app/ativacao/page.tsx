@@ -27,12 +27,13 @@ type Plan = 'mensal' | 'trimestral' | 'anual';
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
 
 
-function PhoneCollectionStep({ onComplete, user }: { onComplete: (phone: string) => void, user: any }) {
+function PhoneCollectionStep({ user }: { user: any }) {
     const [phone, setPhone] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
-    const handleSavePhone = async () => {
+    const handleActivateFreeTrial = async () => {
         const cleanedPhone = phone.replace(/\D/g, '');
         if (cleanedPhone.length < 10) {
             toast({ variant: 'destructive', title: 'Número Inválido', description: 'Por favor, informe seu número de WhatsApp completo com DDD.' });
@@ -41,24 +42,29 @@ function PhoneCollectionStep({ onComplete, user }: { onComplete: (phone: string)
 
         setIsLoading(true);
         try {
+            // 1. Save Phone
             await updateUserProfilePhone(user.uid, phone);
-            onComplete(phone);
-        } catch (error) {
-            toast({ variant: 'destructive', title: 'Erro ao salvar', description: 'Não foi possível salvar seu número. Tente novamente.' });
+            // 2. Start Trial immediately
+            await startFreeTrial(user);
+            
+            toast({ title: 'Sucesso!', description: 'Seu período de 7 dias grátis começou. Bem-vindo(a)!' });
+            router.push('/');
+        } catch (error: any) {
+            toast({ variant: 'destructive', title: 'Erro', description: error.message || 'Não foi possível completar seu cadastro.' });
         } finally {
             setIsLoading(false);
         }
     }
 
     return (
-        <Card className="border-primary ring-1 ring-primary/20">
-            <CardHeader>
-                <CardTitle className="font-headline text-2xl flex items-center gap-2">
-                    <Phone className="h-6 w-6 text-primary" />
-                    Complete seu cadastro
-                </CardTitle>
+        <Card className="border-primary ring-1 ring-primary/20 shadow-xl">
+            <CardHeader className="text-center">
+                <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Star className="h-6 w-6 text-primary fill-current" />
+                </div>
+                <CardTitle className="font-headline text-2xl">Ative seus 7 dias Grátis</CardTitle>
                 <CardDescription>
-                    Informe seu número de WhatsApp para receber notificações de suporte e novidades do sistema.
+                    Informe seu WhatsApp para completar o cadastro e acessar o sistema agora mesmo.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -70,12 +76,13 @@ function PhoneCollectionStep({ onComplete, user }: { onComplete: (phone: string)
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         disabled={isLoading}
+                        className="text-lg py-6"
                     />
                 </div>
             </CardContent>
             <CardFooter>
-                <Button onClick={handleSavePhone} className="w-full" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin" /> : "Continuar para o AtelierFlow"}
+                <Button onClick={handleActivateFreeTrial} className="w-full text-lg py-6" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="animate-spin" /> : "Ativar meu Teste Grátis"}
                 </Button>
             </CardFooter>
         </Card>
@@ -211,9 +218,8 @@ const planDetails = {
     anual: { price: 490.00 },
 };
 
-function PlanSelectionTab() {
+function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
   const { user } = useUser();
-  const { data: profile, loading: profileLoading } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTrialLoading, setIsTrialLoading] = useState(false);
@@ -276,43 +282,49 @@ function PlanSelectionTab() {
     }
   };
 
-  return (
-    <>
-      {profile?.status !== 'active' && !profile?.trialStarted && (
-        <>
-            <Card className="border-primary/50 bg-primary/5">
-                <CardHeader className="text-center">
-                <CardTitle className="font-headline text-2xl text-primary">Novo por aqui?</CardTitle>
-                <CardDescription>
-                    Comece com um teste gratuito de 7 dias e explore todos os recursos, sem compromisso.
+  // Se o usuário NUNCA começou um teste, mostramos APENAS o card de trial
+  if (!profile?.trialStarted) {
+      return (
+        <Card className="border-primary bg-primary/5 shadow-xl max-w-md mx-auto">
+            <CardHeader className="text-center">
+                <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Star className="h-8 w-8 text-primary fill-current" />
+                </div>
+                <CardTitle className="font-headline text-3xl text-primary">Tudo Pronto!</CardTitle>
+                <CardDescription className="text-base">
+                    Você está a um passo de organizar seu ateliê. Comece agora com seu acesso gratuito por 7 dias.
                 </CardDescription>
-                </CardHeader>
-                <CardContent>
+            </CardHeader>
+            <CardContent className="pt-4">
                 <Button
                     size="lg"
-                    className="w-full"
+                    className="w-full text-lg py-8 shadow-lg hover:scale-105 transition-transform"
                     onClick={handleStartTrial}
-                    disabled={profileLoading || isTrialLoading}
+                    disabled={isTrialLoading}
                 >
                     {isTrialLoading ? <Loader2 className="animate-spin" /> : (
                         <>
-                            <Star className="mr-2 h-4 w-4" />
-                            Ativar 7 Dias Grátis
+                            <Star className="mr-2 h-5 w-5 fill-current" />
+                            Começar Meus 7 Dias Grátis
                         </>
                     )}
                 </Button>
-                </CardContent>
-            </Card>
-            <Separator className="my-6" />
-        </>
-      )}
+                <p className="text-center text-xs text-muted-foreground mt-4">
+                    Sem compromisso. Explore todos os recursos liberados.
+                </p>
+            </CardContent>
+        </Card>
+      );
+  }
 
-      <Card>
+  // Se o usuário JÁ começou o teste (ou ele expirou), mostramos os planos
+  return (
+    <Card>
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-2xl">Acesso Ilimitado para Transformar seu Ateliê</CardTitle>
-          <CardDescription>
-            Escolha o plano que melhor se adapta a você.
-          </CardDescription>
+            <CardTitle className="font-headline text-2xl">Assine o AtelierFlow</CardTitle>
+            <CardDescription>
+                Seu período de teste terminou ou você decidiu profissionalizar seu negócio. Escolha o melhor plano:
+            </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
@@ -328,7 +340,7 @@ function PlanSelectionTab() {
                         isLoading={isLoading && selectedPlan === 'anual'}
                     />
                 </div>
-                 <div className="md:order-3">
+                    <div className="md:order-3">
                     <PlanCard 
                         title="Plano Trimestral"
                         price="R$149,90"
@@ -339,7 +351,7 @@ function PlanSelectionTab() {
                     />
                 </div>
                 <div className="md:order-1">
-                     <PlanCard 
+                        <PlanCard 
                         title="Plano Mensal"
                         price="R$62,90"
                         period="mês"
@@ -349,14 +361,11 @@ function PlanSelectionTab() {
                     />
                 </div>
             </div>
-            
             <p className="text-center text-sm text-muted-foreground !mt-6">
                 Todos os planos incluem acesso completo ao sistema.
             </p>
-
         </CardContent>
     </Card>
-    </>
   )
 }
 
@@ -388,19 +397,20 @@ export default function AtivacaoPage() {
         </div>
         <div className="w-full max-w-4xl space-y-6">
             
-            {/* ETAPA OBRIGATÓRIA: Coleta de Telefone */}
             {!profile?.phone ? (
                 <div className="max-w-md mx-auto w-full">
-                    <PhoneCollectionStep user={user} onComplete={() => {}} />
+                    <PhoneCollectionStep user={user} />
                 </div>
             ) : (
                 <Tabs defaultValue="plan" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="plan">Assinatura / Teste Grátis</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+                        <TabsTrigger value="plan">
+                            {!profile.trialStarted ? "Ativar Teste" : "Assinatura"}
+                        </TabsTrigger>
                         <TabsTrigger value="code">Usar Código</TabsTrigger>
                     </TabsList>
                     <TabsContent value="plan" className="mt-4">
-                        <PlanSelectionTab />
+                        <PlanSelectionTab profile={profile} />
                     </TabsContent>
                     <TabsContent value="code" className="mt-4">
                     <div className="max-w-md mx-auto">
@@ -413,11 +423,11 @@ export default function AtivacaoPage() {
             <div className="w-full text-center max-w-md mx-auto">
                 <Separator className="my-4" />
                 <p className="text-sm text-muted-foreground mb-2">
-                  Precisa de outra forma de pagamento? Fale conosco no WhatsApp.
+                  Dúvidas? Fale conosco no WhatsApp.
                 </p>
                 <Button variant="outline" className="w-full" onClick={handleWhatsAppClick}>
                     <MessageSquare className="mr-2 h-4 w-4" />
-                    Fale conosco no WhatsApp
+                    Falar com Suporte
                 </Button>
             </div>
             <div className="text-center">

@@ -28,7 +28,7 @@ export function Header() {
             <Link href="/login">Acessar o Sistema</Link>
           </Button>
           <Button asChild onClick={handleLeadClick}>
-            <Link href="/login">Organizar meu ateliê</Link>
+            <Link href="/login">Testar 7 dias grátis</Link>
           </Button>
         </nav>
       </div>

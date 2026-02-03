@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { Headset, Clock, Users } from 'lucide-react';
+import { Headset, Clock, Users, Star } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { trackFbqEvent } from '@/lib/fpixel';
 
@@ -122,7 +122,10 @@ export function HeroSection() {
               className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-all hover:scale-105"
               onClick={handleLeadClick}
             >
-              <a href="/login">Organizar meu ateliê agora</a>
+              <a href="/login">
+                <Star className="mr-2 h-5 w-5 fill-current" />
+                Testar 7 dias grátis
+              </a>
             </Button>
             <Button
               size="lg"
