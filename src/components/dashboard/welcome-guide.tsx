@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, UserPlus, PlusCircle, Smartphone, CheckCircle2 } from 'lucide-react';
+import { X, UserPlus, PlusCircle, Smartphone, CheckCircle2, Monitor } from 'lucide-react';
 import { OrderFormDialog } from './order-form-dialog';
 import { CustomerFormDialog } from './customer-form-dialog';
 import Link from 'next/link';
@@ -85,15 +84,15 @@ export function WelcomeGuide() {
             <div className="bg-primary/10 p-4 rounded-xl border border-primary/20 flex flex-col gap-3 ring-2 ring-primary/20 animate-pulse-slow">
                 <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold shrink-0">3</div>
-                    <h3 className="font-bold">Instale no Celular</h3>
+                    <h3 className="font-bold">Multitela: PC e Celular</h3>
                 </div>
               <p className="text-sm font-medium text-primary flex-grow">
-                Use o sistema como um App! Clique no ícone de "Compartilhar" do seu navegador e selecione "Adicionar à Tela de Início".
+                Use no PC para imprimir comprovantes e no celular para o dia a dia. Instale como App clicando em "Compartilhar".
               </p>
                <Button asChild variant="default" size="sm" className="w-full">
                   <Link href="/ajuda">
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    Ver como instalar
+                    <Monitor className="mr-2 h-4 w-4" />
+                    Ver Guia de Acesso
                   </Link>
                 </Button>
             </div>
