@@ -13,20 +13,19 @@ import {
   SidebarLogout
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign, Plus } from "lucide-react";
 import React, { useContext } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/firebase/auth/use-user";
 import { PasswordContext } from "@/contexts/password-context";
 import { PasswordDialog } from "./password-dialog";
 import { Badge } from "./ui/badge";
 import type { UserProfile } from "@/lib/types";
-import { differenceInDays, formatDistanceToNowStrict } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { differenceInDays } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
 
@@ -61,7 +60,6 @@ function SubscriptionBadge({ expiresAt }: { expiresAt?: Date }) {
 
 
 function AppHeader({ profile }: { profile: UserProfile | null }) {
-    const { isMobile } = useSidebar();
     const { user } = useUser();
     const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
@@ -100,6 +98,38 @@ function AppHeader({ profile }: { profile: UserProfile | null }) {
             )}
         </header>
 
+    );
+}
+
+function BottomNavigation() {
+    const pathname = usePathname();
+    
+    const navItems = [
+        { href: "/", label: "Início", icon: LayoutDashboard },
+        { href: "/pedidos", label: "Pedidos", icon: ShoppingCart },
+        { href: "/tarefas", label: "Tarefas", icon: ListChecks },
+        { href: "/ajuda", label: "Ajuda", icon: BookOpen },
+    ];
+
+    return (
+        <div className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-card/95 backdrop-blur-md md:hidden flex items-center justify-around px-2">
+            {navItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                    <Link 
+                        key={item.href} 
+                        href={item.href}
+                        className={cn(
+                            "flex flex-col items-center justify-center gap-1 w-full h-full transition-colors",
+                            isActive ? "text-primary font-bold" : "text-muted-foreground"
+                        )}
+                    >
+                        <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                        <span className="text-[10px] uppercase tracking-wider">{item.label}</span>
+                    </Link>
+                );
+            })}
+        </div>
     );
 }
 
@@ -209,9 +239,10 @@ export default function AppShell({ children, profile }: { children: React.ReactN
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
-        <div className="flex flex-col">
+        <div className="flex flex-col pb-16 md:pb-0">
             <AppHeader profile={profile} />
             {children}
+            <BottomNavigation />
         </div>
       </div>
   );

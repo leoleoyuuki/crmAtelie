@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Lightbulb, Send, PlayCircle, Instagram, MessageSquare } from 'lucide-react';
+import { Lightbulb, Send, PlayCircle, Instagram, MessageSquare, Smartphone, Laptop } from 'lucide-react';
 import { useFirebase } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -139,32 +140,118 @@ export default function AjudaPage() {
   };
 
   return (
-    <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
-      <div className="flex items-center justify-between space-y-2">
+    <div className="flex-1 space-y-8 px-4 pt-6 md:px-8 pb-20">
+      <div className="flex flex-col gap-2">
         <h2 className="text-3xl font-bold tracking-tight font-headline">
           Central de Ajuda
         </h2>
+        <p className="text-muted-foreground">
+            Aprenda a usar o sistema e leve seu ateliê para o próximo nível.
+        </p>
       </div>
-      <p className="text-muted-foreground">
-        Tutoriais, dicas e um espaço para você nos ajudar a construir o melhor sistema para o seu ateliê.
-      </p>
 
-      <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-        {/* Main Content: Videos */}
-        <div className="lg:col-span-2 space-y-8">
-            <Accordion type="single" collapsible className="w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Quick Links / Common tasks */}
+        <div className="lg:col-span-4 space-y-6">
+            <Card className="border-primary/20 bg-primary/5">
+                <CardHeader>
+                    <CardTitle className="text-lg font-headline flex items-center gap-2">
+                        <Smartphone className="h-5 w-5 text-primary" />
+                        Acesso Rápido (Celular)
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                        Para acessar o AtelierFlow como se fosse um aplicativo nativo:
+                    </p>
+                    <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                            <div className="bg-primary/20 p-1 rounded font-bold text-xs text-primary shrink-0">iOS</div>
+                            <p className="text-xs text-muted-foreground">No Safari, clique no ícone de <strong>Compartilhar</strong> e selecione <strong>Adicionar à Tela de Início</strong>.</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <div className="bg-secondary/20 p-1 rounded font-bold text-xs text-secondary shrink-0 font-body">AND</div>
+                            <p className="text-xs text-muted-foreground">No Chrome, clique nos <strong>três pontinhos</strong> e selecione <strong>Instalar Aplicativo</strong>.</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg font-headline flex items-center gap-2">
+                        <Laptop className="h-5 w-5 text-primary" />
+                        Acesso no Computador
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                        Para imprimir comprovantes, recomendamos o uso pelo computador através do site: <br/>
+                        <code className="bg-muted p-1 rounded text-xs font-mono select-all">app.atelierflow.com.br</code>
+                    </p>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                <div className="flex items-center gap-3">
+                    <Lightbulb className="h-6 w-6 text-primary" />
+                    <CardTitle className="font-headline text-xl">Sugestões</CardTitle>
+                </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                <div>
+                    <Label className="font-semibold">O que podemos melhorar?</Label>
+                    <Textarea
+                    placeholder="Ex: Gostaria de uma forma de gerar relatórios em PDF..."
+                    value={suggestion}
+                    onChange={(e) => setSuggestion(e.target.value)}
+                    className="min-h-[100px] mt-2"
+                    disabled={isLoading}
+                    />
+                    <Button onClick={handleSendSuggestion} className="w-full mt-2" disabled={isLoading}>
+                        <Send className="mr-2 h-4 w-4" />
+                        {isLoading ? 'Enviando...' : 'Enviar Sugestão'}
+                    </Button>
+                </div>
+                <Separator />
+                <div className="flex flex-col gap-2 pt-2">
+                    <Button variant="outline" onClick={handleWhatsAppClick} className="justify-start">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Suporte no WhatsApp
+                    </Button>
+                    <Button variant="outline" asChild className="justify-start">
+                        <a href="https://www.instagram.com/atelierflow.app" target="_blank" rel="noopener noreferrer">
+                            <Instagram className="mr-2 h-4 w-4" />
+                            Siga no Instagram
+                        </a>
+                    </Button>
+                </div>
+                </CardContent>
+            </Card>
+        </div>
+
+        {/* Tutorials */}
+        <div className="lg:col-span-8 space-y-6">
+            <h3 className="text-xl font-bold font-headline mb-4 flex items-center gap-2">
+                <PlayCircle className="h-6 w-6 text-primary" />
+                Tutoriais em Vídeo
+            </h3>
+            <Accordion type="single" collapsible className="w-full bg-card rounded-xl border px-4 shadow-sm">
               {tutorials.map((tutorial, index) => (
-                <AccordionItem value={`item-${index}`} key={index}>
-                  <AccordionTrigger>
-                    <div className="flex items-center gap-3 text-left">
-                      <PlayCircle className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="font-headline text-lg">{tutorial.title}</span>
+                <AccordionItem value={`item-${index}`} key={index} className="border-b last:border-0">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-3 text-left py-2">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <PlayCircle className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="font-bold text-base">{tutorial.title}</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start p-4">
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start py-4">
                         <div className="md:col-span-1">
-                            <div className="aspect-[9/16] w-full max-w-[260px] mx-auto rounded-xl overflow-hidden shadow-lg border">
+                            <div className="aspect-[9/16] w-full max-w-[240px] mx-auto rounded-2xl overflow-hidden shadow-xl border-4 border-muted">
                                 <iframe
                                     src={tutorial.embedUrl}
                                     title={tutorial.title}
@@ -175,61 +262,18 @@ export default function AjudaPage() {
                                 ></iframe>
                             </div>
                         </div>
-                        <div className="md:col-span-2">
-                            <p className="text-muted-foreground text-sm">{tutorial.description}</p>
+                        <div className="md:col-span-2 space-y-4">
+                            <p className="text-muted-foreground text-sm leading-relaxed">{tutorial.description}</p>
+                            <div className="bg-muted/50 p-4 rounded-lg">
+                                <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Dica Pro</p>
+                                <p className="text-xs text-muted-foreground italic">Assista até o final para não perder os atalhos de cada tela.</p>
+                            </div>
                         </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
-        </div>
-
-        {/* Sidebar: Suggestion Box */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-20">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <Lightbulb className="h-6 w-6 text-primary" />
-                <CardTitle className="font-headline text-xl">Suporte e Sugestões</CardTitle>
-              </div>
-              <CardDescription>
-                Precisa de ajuda ou tem uma ideia? Use os canais abaixo.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="font-semibold">Deixe uma sugestão</Label>
-                <Textarea
-                  placeholder="Ex: Gostaria de um tutorial sobre..."
-                  value={suggestion}
-                  onChange={(e) => setSuggestion(e.target.value)}
-                  className="min-h-[120px] mt-2"
-                  disabled={isLoading}
-                />
-                <Button onClick={handleSendSuggestion} className="w-full mt-2" disabled={isLoading}>
-                    <Send className="mr-2 h-4 w-4" />
-                    {isLoading ? 'Enviando...' : 'Enviar Sugestão'}
-                </Button>
-              </div>
-              <Separator />
-              <div>
-                  <p className="text-sm font-medium mb-2">Fale conosco</p>
-                  <div className="flex flex-col gap-2">
-                    <Button variant="outline" onClick={handleWhatsAppClick}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Falar no WhatsApp
-                    </Button>
-                     <Button variant="outline" asChild>
-                        <a href="https://www.instagram.com/atelierflow.app" target="_blank" rel="noopener noreferrer">
-                            <Instagram className="mr-2 h-4 w-4" />
-                            Mensagem no Instagram
-                        </a>
-                    </Button>
-                  </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
