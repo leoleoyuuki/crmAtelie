@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -187,7 +186,7 @@ export default function AjudaPage() {
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
                         Para imprimir comprovantes, recomendamos o uso pelo computador através do site: <br/>
-                        <code className="bg-muted p-1 rounded text-xs font-mono select-all">app.atelierflow.com.br</code>
+                        <code className="bg-muted p-1 rounded text-xs font-mono select-all">atelierflow.com.br</code>
                     </p>
                 </CardContent>
             </Card>
