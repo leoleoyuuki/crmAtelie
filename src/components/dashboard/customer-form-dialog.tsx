@@ -32,8 +32,8 @@ import { Customer } from "@/lib/types";
 
 const customerFormSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
-  phone: z.string().min(10, "O número de telefone parece muito curto."),
-  email: z.string().email("Formato de email inválido.").optional().or(z.literal('')),
+  phone: z.string().min(10, "Informe o DDD e o número completo."),
+  email: z.string().email("E-mail inválido.").optional().or(z.literal('')),
 });
 
 type CustomerFormValues = z.infer<typeof customerFormSchema>;
@@ -92,17 +92,11 @@ export function CustomerFormDialog({
       if (isEditing && customer) {
         const updatedCustomer = await updateCustomer(customer.id, data);
         onCustomerUpdated(updatedCustomer);
-        toast({
-          title: "Cliente Atualizado",
-          description: `Os dados de ${updatedCustomer.name} foram atualizados.`,
-        });
+        toast({ title: "Cadastro Atualizado" });
       } else {
         const newCustomer = await addCustomer(data);
         onCustomerCreated(newCustomer);
-        toast({
-          title: "Cliente Criado",
-          description: `O cliente ${newCustomer.name} foi adicionado.`,
-        });
+        toast({ title: "Cliente Cadastrado!" });
       }
       setIsOpen(false);
       form.reset(defaultValues);
@@ -110,67 +104,68 @@ export function CustomerFormDialog({
       toast({
         variant: "destructive",
         title: "Erro",
-        description: isEditing ? "Não foi possível atualizar o cliente." : "Não foi possível criar o cliente.",
+        description: "Não foi possível salvar os dados.",
       });
     }
   };
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-[425px]">
-      <DialogHeader>
-        <DialogTitle className="font-headline">{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+    <DialogContent className="sm:max-w-[425px] h-auto max-h-[90dvh] flex flex-col p-0 overflow-hidden">
+      <DialogHeader className="p-6 pb-2">
+        <DialogTitle className="font-headline text-2xl">{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
         <DialogDescription>
-          {isEditing ? 'Atualize os detalhes deste cliente.' : 'Preencha os detalhes para adicionar um novo cliente.'}
+          {isEditing ? 'Atualize as informações de contato.' : 'Cadastre um novo cliente para seu ateliê.'}
         </DialogDescription>
       </DialogHeader>
+      
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nome Completo</FormLabel>
-                <FormControl>
-                  <Input placeholder="ex: João da Silva" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telefone</FormLabel>
-                <FormControl>
-                  <Input placeholder="ex: (11) 99999-9999" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email (Opcional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="ex: joao@email.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button type="button" variant="outline">
-                Cancelar
-              </Button>
-            </DialogClose>
-            <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Salvar Cliente'}</Button>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome Completo</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ex: Maria Souza" {...field} className="h-12 text-base" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>WhatsApp / Telefone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ex: (11) 99999-9999" {...field} className="h-12 text-base" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ex: maria@email.com" {...field} className="h-12 text-base" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <DialogFooter className="p-6 border-t bg-muted/20">
+            <Button type="submit" className="w-full h-12 text-base font-bold shadow-md">
+                {isEditing ? 'Salvar Alterações' : 'Salvar Cliente'}
+            </Button>
           </DialogFooter>
         </form>
       </Form>
