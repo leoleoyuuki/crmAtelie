@@ -67,9 +67,6 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedServiceSearch(serviceSearch);
-            if (serviceSearch) {
-                setIsServiceSelectOpen(true);
-            }
         }, 500);
         return () => clearTimeout(handler);
     }, [serviceSearch]);
@@ -91,6 +88,10 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
             setValue(`items.${index}.serviceType`, matchedServiceType);
             setValue(`items.${index}.description`, selectedItem.description || selectedItem.serviceName);
             setValue(`items.${index}.value`, selectedItem.price);
+            
+            // Update search input text and close menu
+            setServiceSearch(selectedItem.serviceName);
+            setIsServiceSelectOpen(false);
         }
     };
 
@@ -108,7 +109,13 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
                 <div className="flex gap-2">
                     <Input
                         placeholder="Nome do serviço..."
-                        onChange={(e) => setServiceSearch(e.target.value)}
+                        value={serviceSearch}
+                        onChange={(e) => {
+                            setServiceSearch(e.target.value);
+                            if (e.target.value.trim() !== "") {
+                                setIsServiceSelectOpen(true);
+                            }
+                        }}
                         className="h-9"
                     />
                     <Select
