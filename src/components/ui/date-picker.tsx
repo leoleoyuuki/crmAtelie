@@ -95,9 +95,9 @@ export function DatePickerWithDialog({ date, setDate, className }: { date?: Date
             <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-none bg-transparent shadow-none focus-visible:outline-none">
                 <div className="flex justify-center p-4 bg-popover rounded-xl border shadow-2xl mx-auto animate-in fade-in zoom-in-95 duration-200">
                     <div className="flex flex-col gap-4">
-                        <div className="px-2 pt-2 text-center border-b pb-2">
-                            <h4 className="font-semibold text-sm font-headline">Selecionar Data de Entrega</h4>
-                        </div>
+                        <DialogHeader className="px-2 pt-2 text-center border-b pb-2 space-y-0">
+                            <DialogTitle className="font-semibold text-sm font-headline text-center">Selecionar Data de Entrega</DialogTitle>
+                        </DialogHeader>
                         <Calendar
                             mode="single"
                             selected={date}
