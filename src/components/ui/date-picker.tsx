@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -25,8 +24,10 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 
 export function DatePicker({ date, setDate, className }: { date?: Date, setDate: (date?: Date) => void, className?: string }) {
+  const [open, setOpen] = React.useState(false);
+
   return (
-    <Popover modal={false}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant={"outline"}
@@ -40,11 +41,14 @@ export function DatePicker({ date, setDate, className }: { date?: Date, setDate:
           {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
+      <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
           selected={date}
-          onSelect={setDate}
+          onSelect={(newDate) => {
+            setDate(newDate);
+            setOpen(false);
+          }}
           initialFocus
           locale={ptBR}
         />
@@ -77,23 +81,25 @@ export function DatePickerWithDialog({ date, setDate, className }: { date?: Date
                     <DialogHeader>
                         <DialogTitle>Escolha uma data</DialogTitle>
                     </DialogHeader>
-                    <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(newDate) => {
-                            setDate(newDate);
-                            setOpen(false);
-                        }}
-                        initialFocus
-                        locale={ptBR}
-                    />
+                    <div className="flex justify-center p-0">
+                        <Calendar
+                            mode="single"
+                            selected={date}
+                            onSelect={(newDate) => {
+                                setDate(newDate);
+                                setOpen(false);
+                            }}
+                            initialFocus
+                            locale={ptBR}
+                        />
+                    </div>
                 </DialogContent>
             </Dialog>
         );
     }
 
     return (
-        <Popover open={open} onOpenChange={setOpen} modal={false}>
+        <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     variant={"outline"}
@@ -107,7 +113,7 @@ export function DatePickerWithDialog({ date, setDate, className }: { date?: Date
                     {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                     mode="single"
                     selected={date}
@@ -122,5 +128,3 @@ export function DatePickerWithDialog({ date, setDate, className }: { date?: Date
         </Popover>
     );
 }
-
-    
