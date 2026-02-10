@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -20,7 +21,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { useIsMobile } from "@/hooks/use-mobile"
 
 
 export function DatePicker({ date, setDate, className }: { date?: Date, setDate: (date?: Date) => void, className?: string }) {
@@ -30,18 +30,23 @@ export function DatePicker({ date, setDate, className }: { date?: Date, setDate:
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant={"outline"}
           className={cn(
             "w-full justify-start text-left font-normal",
             !date && "text-muted-foreground",
             className
           )}
+          onPointerDown={(e) => {
+            // Fix for Safari focus management inside nested containers
+            if (e.pointerType === 'mouse') e.preventDefault();
+          }}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0" align="start" side="bottom" sideOffset={4}>
         <Calendar
           mode="single"
           selected={date}
@@ -57,31 +62,42 @@ export function DatePicker({ date, setDate, className }: { date?: Date, setDate:
   )
 }
 
+/**
+ * DatePickerWithDialog - A more robust date picker that uses a Modal (Dialog)
+ * instead of a Popover. This is significantly more reliable in Safari/macOS
+ * when used inside other modals or complex forms.
+ */
 export function DatePickerWithDialog({ date, setDate, className }: { date?: Date, setDate: (date?: Date) => void, className?: string }) {
-    const isMobile = useIsMobile();
     const [open, setOpen] = React.useState(false);
 
-    if (isMobile) {
-        return (
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                    <Button
-                        variant={"outline"}
-                        className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !date && "text-muted-foreground",
-                            className
-                        )}
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    type="button"
+                    variant={"outline"}
+                    className={cn(
+                        "w-full justify-start text-left font-normal h-10 px-3 py-2 transition-all",
+                        !date && "text-muted-foreground",
+                        className
+                    )}
+                    onPointerDown={(e) => {
+                        // Crucial fix for Safari: prevent pointer events from interfering with focus trap
+                        if (e.pointerType === 'mouse') e.preventDefault();
+                    }}
+                >
+                    <CalendarIcon className="mr-2 h-4 w-4 shrink-0 opacity-70" />
+                    <span className="truncate">
                         {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Escolha uma data</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex justify-center p-0">
+                    </span>
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-none bg-transparent shadow-none focus-visible:outline-none">
+                <div className="flex justify-center p-4 bg-popover rounded-xl border shadow-2xl mx-auto animate-in fade-in zoom-in-95 duration-200">
+                    <div className="flex flex-col gap-4">
+                        <div className="px-2 pt-2 text-center border-b pb-2">
+                            <h4 className="font-semibold text-sm font-headline">Selecionar Data de Entrega</h4>
+                        </div>
                         <Calendar
                             mode="single"
                             selected={date}
@@ -92,39 +108,19 @@ export function DatePickerWithDialog({ date, setDate, className }: { date?: Date
                             initialFocus
                             locale={ptBR}
                         />
+                        <div className="p-2 border-t flex justify-end">
+                            <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setOpen(false)}
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
                     </div>
-                </DialogContent>
-            </Dialog>
-        );
-    }
-
-    return (
-        <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-                <Button
-                    variant={"outline"}
-                    className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground",
-                        className
-                    )}
-                >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(newDate) => {
-                        setDate(newDate);
-                        setOpen(false);
-                    }}
-                    initialFocus
-                    locale={ptBR}
-                />
-            </PopoverContent>
-        </Popover>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
