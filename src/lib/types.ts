@@ -18,6 +18,7 @@ export interface OrderItem {
   serviceType: ServiceType;
   description?: string;
   value: number;
+  quantity: number;
   assignedTo?: string;
 }
 

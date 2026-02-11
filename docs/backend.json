@@ -32,8 +32,7 @@
       "properties": {
         "serviceType": {
           "type": "string",
-          "description": "The type of service for this item.",
-          "enum": ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]
+          "description": "The custom type of service for this item (e.g., 'Ajuste', 'Customização')."
         },
         "description": {
           "type": "string",
@@ -41,14 +40,18 @@
         },
         "value": {
           "type": "number",
-          "description": "The value of this specific item."
+          "description": "The unit value of this specific item."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The amount of items of this type."
         },
         "assignedTo": {
           "type": "string",
           "description": "The professional assigned to work on this item."
         }
       },
-      "required": ["serviceType", "value"]
+      "required": ["serviceType", "value", "quantity"]
     },
     "Order": {
       "title": "Order",
@@ -71,7 +74,7 @@
         },
         "totalValue": {
           "type": "number",
-          "description": "The total value of the order (sum of all items)."
+          "description": "The total value of the order (sum of all items: value * quantity)."
         },
         "dueDate": {
           "type": "string",

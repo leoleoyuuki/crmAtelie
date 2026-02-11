@@ -44,6 +44,7 @@ const orderItemSchema = z.object({
   serviceType: z.string().min(1, "O tipo de serviço é obrigatório."),
   description: z.string().optional(),
   value: z.coerce.number().min(0, "O valor deve ser positivo."),
+  quantity: z.coerce.number().min(1, "Mínimo 1."),
   assignedTo: z.string().optional(),
 });
 
@@ -81,6 +82,7 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
             setValue(`items.${index}.serviceType`, selectedItem.serviceName);
             setValue(`items.${index}.description`, selectedItem.description || "");
             setValue(`items.${index}.value`, selectedItem.price);
+            setValue(`items.${index}.quantity`, 1);
             
             // Update search input text and close menu
             setServiceSearch(selectedItem.serviceName);
@@ -140,15 +142,30 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
                 <Separator className="flex-1" />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-2">
+                    <FormField
+                        control={control}
+                        name={`items.${index}.serviceType`}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Tipo de Serviço</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Ex: Ajuste, Customização..." {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                 <FormField
                     control={control}
-                    name={`items.${index}.serviceType`}
+                    name={`items.${index}.quantity`}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Tipo de Serviço</FormLabel>
+                            <FormLabel>Qtd.</FormLabel>
                             <FormControl>
-                                <Input placeholder="Ex: Ajuste, Customização, etc." {...field} />
+                                <Input type="number" min="1" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -159,9 +176,9 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
                     name={`items.${index}.value`}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Valor (R$)</FormLabel>
+                            <FormLabel>Vlr Unit. (R$)</FormLabel>
                             <FormControl>
-                                <Input type="number" placeholder="0,00" {...field} />
+                                <Input type="number" step="0.01" placeholder="0,00" {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -255,7 +272,7 @@ export function OrderFormDialog({
   
   const defaultValues: Partial<OrderFormValues> = {
     customerId: '',
-    items: [{ serviceType: '', value: 0, description: '', assignedTo: '' }],
+    items: [{ serviceType: '', value: 0, quantity: 1, description: '', assignedTo: '' }],
     dueDate: new Date(),
     status: 'Novo',
   };
@@ -280,7 +297,12 @@ export function OrderFormDialog({
           form.reset({
             ...order,
             items: order.items 
-                ? order.items.map(item => ({...item, description: item.description ?? '', assignedTo: item.assignedTo ?? ''})) 
+                ? order.items.map(item => ({
+                    ...item, 
+                    description: item.description ?? '', 
+                    assignedTo: item.assignedTo ?? '',
+                    quantity: item.quantity ?? 1
+                  })) 
                 : defaultValues.items,
           });
       } else {
@@ -299,7 +321,7 @@ export function OrderFormDialog({
     }
     
     try {
-      const totalValue = data.items.reduce((sum, item) => sum + item.value, 0);
+      const totalValue = data.items.reduce((sum, item) => sum + (item.value * item.quantity), 0);
       const orderData = {
         ...data,
         customerName: selectedCustomer.name,
@@ -404,7 +426,7 @@ export function OrderFormDialog({
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Itens do Pedido</h3>
-                            <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: '', value: 0, description: '', assignedTo: '' })}>
+                            <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: '', value: 0, quantity: 1, description: '', assignedTo: '' })}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
                             </Button>
                         </div>
