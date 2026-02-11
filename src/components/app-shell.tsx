@@ -112,7 +112,7 @@ function BottomNavigation() {
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 h-16 border-t bg-card/95 backdrop-blur-md md:hidden flex items-center justify-around px-2">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden flex items-start justify-around px-2 pb-[env(safe-area-inset-bottom,16px)] h-[calc(64px+env(safe-area-inset-bottom,16px))]">
             {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -120,7 +120,7 @@ function BottomNavigation() {
                         key={item.href} 
                         href={item.href}
                         className={cn(
-                            "flex flex-col items-center justify-center gap-1 w-full h-full transition-colors",
+                            "flex flex-col items-center justify-center gap-1 w-full h-16 transition-colors",
                             isActive ? "text-primary font-bold" : "text-muted-foreground"
                         )}
                     >
@@ -239,7 +239,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
-        <div className="flex flex-col pb-16 md:pb-0">
+        <div className="flex flex-col pb-[calc(64px+env(safe-area-inset-bottom,16px))] md:pb-0">
             <AppHeader profile={profile} />
             {children}
             <BottomNavigation />

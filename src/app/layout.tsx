@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { Metadata } from 'next';
@@ -182,6 +181,7 @@ export default function RootLayout({
       <head>
         <title>AtelierFlow</title>
         <meta name="description" content="Otimize seu fluxo de trabalho de alfaiataria e artesanato." />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
