@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -55,7 +56,20 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
               content={
                 <ChartTooltipContent 
                   hideLabel 
-                  formatter={(value) => `${value} itens`}
+                  formatter={(value, name, item) => (
+                    <div className="flex items-center gap-2 w-full">
+                      <div 
+                        className="h-2.5 w-2.5 shrink-0 rounded-[2px]" 
+                        style={{ backgroundColor: (item as any).payload.fill }} 
+                      />
+                      <div className="flex flex-1 justify-between gap-4 leading-none">
+                        <span className="text-muted-foreground">{name}</span>
+                        <span className="font-mono font-medium tabular-nums text-foreground">
+                          {value} itens
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 />
               }
             />
