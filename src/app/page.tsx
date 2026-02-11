@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useEffect, useState, useContext, useMemo } from 'react';
 import { useCollection, useDocument } from '@/firebase';
 import { Order, UserSummary } from '@/lib/types';
-import { getServiceDistribution, getRevenueChartDataFromSummary, getProfitChartDataFromSummary } from '@/lib/data';
+import { getServiceDistributionData, getRevenueChartDataFromSummary, getProfitChartDataFromSummary } from '@/lib/data';
 import { RevenueTotalCard, TotalOrdersCard, PendingOrdersCard } from '@/components/dashboard/stats-cards';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { ServiceDistributionChart } from '@/components/dashboard/service-distribution-chart';
@@ -52,14 +53,12 @@ export default function DashboardPage() {
   }, [user, summary, summaryLoading]);
   
   useEffect(() => {
-    if (recentOrders) {
-        setServiceDistributionData(getServiceDistribution(recentOrders));
-    }
     if (summary) {
+        setServiceDistributionData(getServiceDistributionData(summary.serviceDistribution));
         setRevenueData(getRevenueChartDataFromSummary(summary));
         setProfitData(getProfitChartDataFromSummary(summary));
     }
-  }, [recentOrders, summary]);
+  }, [summary]);
 
   const loading = summaryLoading || ordersLoading;
   
@@ -87,7 +86,6 @@ export default function DashboardPage() {
 
     return (
        <div className="space-y-6">
-          {/* Quick Actions for Mobile Retainability */}
           <div className="grid grid-cols-2 gap-3 md:hidden">
              <Button 
                 variant="default" 

@@ -18,7 +18,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, ServiceType, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost } from '@/lib/types';
+import { Order, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -61,9 +61,7 @@ export async function getCustomerById(customerId: string): Promise<Customer | nu
     }
     const data = fromFirebase(docSnap.data(), docSnap.id) as Customer;
     
-    // Security check: ensure the fetched customer belongs to the current user
     if (data.userId !== user.uid) {
-        // You can throw an error or return null based on your app's security policy
         console.error("Permission denied: User trying to access another user's customer.");
         return null;
     }
@@ -86,7 +84,7 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
             requestResourceData: newCustomerData,
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
-        throw serverError; // Re-throw to allow the caller to handle UI state
+        throw serverError;
     });
 
   const newDoc = await getDoc(docRef);
@@ -95,7 +93,6 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
 
 export async function updateCustomer(customerId: string, customer: Partial<Omit<Customer, 'id' | 'createdAt' | 'userId'>>): Promise<Customer> {
     const docRef = doc(db, 'customers', customerId);
-    // TODO: Add a check to ensure the user owns this document before updating.
     await updateDoc(docRef, customer)
       .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -120,7 +117,6 @@ export async function deleteCustomer(customerId: string) {
         throw new Error("Não é possível excluir clientes com pedidos existentes.");
     }
     const docRef = doc(db, 'customers', customerId);
-    // TODO: Add a check to ensure the user owns this document before deleting.
     await deleteDoc(docRef)
         .catch(async (serverError) => {
             const permissionError = new FirestorePermissionError({
@@ -148,7 +144,6 @@ export async function getOrderById(orderId: string): Promise<Order | null> {
         return null;
     }
      const data = fromFirebase(docSnap.data(), docSnap.id) as Order;
-    // Security check: ensure the fetched order belongs to the current user
     if (data.userId !== user.uid) {
         console.error("Permission denied: User trying to access another user's order.");
         return null;
@@ -165,19 +160,7 @@ export async function getOrders(): Promise<Order[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Order);
 }
 
-export function getServiceDistribution(orders: Order[]) {
-  if (!orders || orders.length === 0) return [];
-
-  const distribution = orders.reduce((acc, order) => {
-    if (order.items && Array.isArray(order.items)) {
-      order.items.forEach(item => {
-        const type = item.serviceType || 'Outros';
-        acc[type] = (acc[type] || 0) + 1;
-      });
-    }
-    return acc;
-  }, {} as Record<string, number>);
-
+export function getServiceDistributionData(distribution: Record<string, number> = {}) {
   const colors = [
     "hsl(var(--chart-1))",
     "hsl(var(--chart-2))",
@@ -186,11 +169,14 @@ export function getServiceDistribution(orders: Order[]) {
     "hsl(var(--chart-5))",
   ];
 
-  return Object.entries(distribution).map(([service, count], index) => ({
-    service,
-    count,
-    fill: colors[index % colors.length]
-  }));
+  return Object.entries(distribution)
+    .filter(([_, count]) => count > 0)
+    .map(([service, count], index) => ({
+        service,
+        count,
+        fill: colors[index % colors.length]
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export function getMonths() {
@@ -223,14 +209,27 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
             transaction.set(orderRef, newOrderData);
 
             const summaryRef = doc(db, 'summaries', user.uid);
-            transaction.set(summaryRef, {
+            
+            const summaryUpdates: any = {
                 totalOrders: increment(1),
                 pendingOrders: increment(1),
-            }, { merge: true });
+            };
+
+            // Distribution Map Increments
+            const distMap: Record<string, number> = {};
+            order.items.forEach(item => {
+                const type = item.serviceType || 'Outros';
+                distMap[type] = (distMap[type] || 0) + 1;
+            });
+
+            Object.entries(distMap).forEach(([type, count]) => {
+                summaryUpdates[`serviceDistribution.${type}`] = increment(count);
+            });
+
+            transaction.set(summaryRef, summaryUpdates, { merge: true });
         });
     } catch (error) {
         console.error("Add order transaction failed: ", error);
-        // Optionally, re-throw a more user-friendly error
         throw new Error("Falha ao criar o pedido. Tente novamente.");
     }
 }
@@ -241,6 +240,7 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
     if (!user) throw new Error("Usuário não autenticado.");
 
     const orderRef = doc(db, 'orders', orderId);
+    const summaryRef = doc(db, 'summaries', user.uid);
 
     try {
         await runTransaction(db, async (transaction) => {
@@ -253,11 +253,37 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
             const currentStatus = currentOrder.status;
             const newStatus = updatedData.status;
 
-            // --- Case: Reverting from "Concluído" ---
-            if (currentStatus === 'Concluído' && newStatus && newStatus !== 'Concluído') {
-                const summaryRef = doc(db, 'summaries', user.uid);
+            // --- 1. Handle Service Distribution Changes if items updated ---
+            if (updatedData.items) {
+                const currentDist: Record<string, number> = {};
+                currentOrder.items.forEach(item => {
+                    const type = item.serviceType || 'Outros';
+                    currentDist[type] = (currentDist[type] || 0) + 1;
+                });
 
-                // 1. Revert summary calculations
+                const newDist: Record<string, number> = {};
+                updatedData.items.forEach(item => {
+                    const type = item.serviceType || 'Outros';
+                    newDist[type] = (newDist[type] || 0) + 1;
+                });
+
+                const distUpdates: any = {};
+                const allKeys = new Set([...Object.keys(currentDist), ...Object.keys(newDist)]);
+                
+                allKeys.forEach(type => {
+                    const diff = (newDist[type] || 0) - (currentDist[type] || 0);
+                    if (diff !== 0) {
+                        distUpdates[`serviceDistribution.${type}`] = increment(diff);
+                    }
+                });
+
+                if (Object.keys(distUpdates).length > 0) {
+                    transaction.set(summaryRef, distUpdates, { merge: true });
+                }
+            }
+
+            // --- 2. Handle status change logic ---
+            if (currentStatus === 'Concluído' && newStatus && newStatus !== 'Concluído') {
                 const orderMonthKey = format(currentOrder.createdAt, 'yyyy-MM');
                 const revenueDecrement = currentOrder.totalValue;
 
@@ -269,7 +295,6 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
                     }
                 }, { merge: true });
 
-                // 2. Revert stock
                 if (currentOrder.materialsUsed && currentOrder.materialsUsed.length > 0) {
                     for (const used of currentOrder.materialsUsed) {
                         const materialRef = doc(db, 'materials', used.materialId);
@@ -280,11 +305,9 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
                     }
                 }
                 
-                // 3. Clear the materialsUsed from the order and update status
                  transaction.update(orderRef, { ...updatedData, materialsUsed: [] });
 
             } else {
-                 // --- Standard update ---
                 const updatePayload: any = { ...updatedData };
                 if (updatedData.dueDate && !(updatedData.dueDate instanceof Timestamp)) {
                     updatePayload.dueDate = Timestamp.fromDate(updatedData.dueDate);
@@ -321,24 +344,31 @@ export async function deleteOrder(orderId: string) {
             const revenueDecrement = orderData.totalValue;
             const orderMonthKey = format(orderData.createdAt, 'yyyy-MM');
 
-            // --- Update Summary ---
+            const summaryUpdate: any = {
+                totalOrders: increment(-1),
+            };
+
             if (orderData.status === 'Concluído') {
-                transaction.set(summaryRef, {
-                    totalRevenue: increment(-revenueDecrement),
-                    totalOrders: increment(-1),
-                    monthlyRevenue: {
-                        [orderMonthKey]: increment(-revenueDecrement)
-                    }
-                }, { merge: true });
+                summaryUpdate.totalRevenue = increment(-revenueDecrement);
+                summaryUpdate.monthlyRevenue = { [orderMonthKey]: increment(-revenueDecrement) };
             } else {
-                // It was a pending order
-                transaction.set(summaryRef, {
-                    totalOrders: increment(-1),
-                    pendingOrders: increment(-1)
-                }, { merge: true });
+                summaryUpdate.pendingOrders = increment(-1);
             }
 
-            // --- Revert Stock if necessary ---
+            // Decrement Distribution
+            if (orderData.items) {
+                const distMap: Record<string, number> = {};
+                orderData.items.forEach(item => {
+                    const type = item.serviceType || 'Outros';
+                    distMap[type] = (distMap[type] || 0) + 1;
+                });
+                Object.entries(distMap).forEach(([type, count]) => {
+                    summaryUpdate[`serviceDistribution.${type}`] = increment(-count);
+                });
+            }
+
+            transaction.set(summaryRef, summaryUpdate, { merge: true });
+
             if (orderData.materialsUsed && orderData.materialsUsed.length > 0) {
                  for (const used of orderData.materialsUsed) {
                     const materialRef = doc(db, 'materials', used.materialId);
@@ -349,7 +379,6 @@ export async function deleteOrder(orderId: string) {
                 }
             }
             
-            // --- Delete Order ---
             transaction.delete(orderRef);
         });
     } catch (error) {
@@ -393,7 +422,6 @@ export async function addPriceTableItem(item: Omit<PriceTableItem, 'id' | 'userI
 
 export async function updatePriceTableItem(itemId: string, item: Partial<Omit<PriceTableItem, 'id' | 'userId'>>): Promise<PriceTableItem> {
   const docRef = doc(db, 'priceTable', itemId);
-  // TODO: Add a check to ensure the user owns this document before updating.
   await updateDoc(docRef, item)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -410,7 +438,6 @@ export async function updatePriceTableItem(itemId: string, item: Partial<Omit<Pr
 
 export async function deletePriceTableItem(itemId: string): Promise<{ success: boolean }> {
   const docRef = doc(db, 'priceTable', itemId);
-  // TODO: Add a check to ensure the user owns this document before deleting.
   await deleteDoc(docRef)
     .catch(async (serverError) => {
         const permissionError = new FirestorePermissionError({
@@ -483,7 +510,6 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
         const purchaseMonthKey = format(new Date(), 'yyyy-MM');
         const costIncrement = standardizedPurchaseData.cost;
 
-        // 1. Create the immutable purchase record
         const newPurchaseData = {
             ...standardizedPurchaseData,
             userId: user.uid,
@@ -492,7 +518,6 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
         const purchaseRef = doc(collection(db, 'purchases'));
         transaction.set(purchaseRef, newPurchaseData);
 
-        // 2. Update summary document
         const summaryRef = doc(db, 'summaries', user.uid);
         transaction.set(summaryRef, {
             monthlyCosts: {
@@ -500,7 +525,6 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
             }
         }, { merge: true });
 
-        // 3. Find and update the corresponding material in the inventory
         const materialQuery = query(
             collection(db, 'materials'),
             where('name', '==', standardizedMaterialName),
@@ -551,14 +575,12 @@ export async function deletePurchase(purchaseId: string): Promise<{ success: boo
         const purchaseMonthKey = format(purchaseData.createdAt, 'yyyy-MM');
         const costDecrement = purchaseData.cost;
 
-        // Decrement summary
         transaction.set(summaryRef, {
             monthlyCosts: {
                 [purchaseMonthKey]: increment(-costDecrement)
             }
         }, { merge: true });
 
-        // Delete purchase record
         transaction.delete(purchaseRef);
 
     }).catch(error => {
@@ -660,26 +682,6 @@ export function getInventoryValue(materials: Material[]) {
   return materials.reduce((acc, material) => acc + (material.stock * (material.costPerUnit || 0)), 0);
 }
 
-export function getMonthlyCostOfGoodsSold(orders: Order[], month: number, year: number) {
-    const monthlyOrders = orders.filter(o => {
-        const createdAt = o.createdAt;
-        return o.status === 'Concluído' && createdAt && isValid(createdAt) && getMonth(createdAt) === month && getYear(createdAt) === year;
-    });
-
-    // This is a simplified calculation. A real-world scenario would be much more complex,
-    // requiring historical cost data for each material.
-    const totalCost = monthlyOrders.reduce((acc, order) => {
-        if (order.materialsUsed) {
-            // Here we would ideally get the cost of the material at the time of use.
-            // For simplicity, we can't do that without significant data model changes.
-            // This will be inaccurate if material costs change.
-        }
-        return acc;
-    }, 0);
-
-    return totalCost;
-}
-
 export function getRevenueChartDataFromSummary(summary: UserSummary) {
     const data: { month: string; revenue: number }[] = [];
     const now = new Date();
@@ -742,7 +744,6 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
             const orderRef = doc(db, 'orders', orderId);
             const summaryRef = doc(db, 'summaries', user.uid);
             
-            // 1. All reads first
             const orderDoc = await transaction.get(orderRef);
             if (!orderDoc.exists()) {
                 throw new Error("Pedido não encontrado.");
@@ -752,7 +753,6 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
             const materialRefs = usedMaterials.map(used => doc(db, 'materials', used.materialId));
             const materialDocs = await Promise.all(materialRefs.map(ref => transaction.get(ref)));
 
-            // 2. All writes last
             for (let i = 0; i < usedMaterials.length; i++) {
                 const materialDoc = materialDocs[i];
                 const used = usedMaterials[i];
@@ -774,7 +774,6 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
                 });
             }
             
-            // --- Update Summary ---
             const orderMonthKey = format(new Date(), 'yyyy-MM');
             const revenueIncrement = orderData.totalValue;
 
@@ -787,7 +786,6 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
             }, { merge: true });
 
 
-            // --- Update Order ---
             transaction.update(orderRef, {
                 status: 'Concluído',
                 materialsUsed: usedMaterials,
@@ -805,11 +803,10 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     const summaryRef = doc(db, 'summaries', userId);
     const summarySnap = await getDoc(summaryRef);
 
-    if (summarySnap.exists() && summarySnap.data()?.monthlyCosts) {
+    if (summarySnap.exists() && summarySnap.data()?.serviceDistribution) {
         return fromFirebase(summarySnap.data(), summarySnap.id) as UserSummary;
     }
 
-    // --- Migration Logic ---
     const ordersQuery = query(collection(db, 'orders'), where('userId', '==', userId));
     const purchasesQuery = query(collection(db, 'purchases'), where('userId', '==', userId));
     
@@ -823,10 +820,18 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     let pendingOrders = 0;
     const monthlyRevenue: { [key: string]: number } = {};
     const monthlyCosts: { [key: string]: number } = {};
+    const serviceDistribution: { [key: string]: number } = {};
 
     ordersSnapshot.forEach(orderDoc => {
         const order = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
         totalOrders++;
+
+        if (order.items) {
+            order.items.forEach(item => {
+                const type = item.serviceType || 'Outros';
+                serviceDistribution[type] = (serviceDistribution[type] || 0) + 1;
+            });
+        }
 
         if (order.status === 'Concluído') {
             totalRevenue += order.totalValue;
@@ -838,7 +843,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     });
 
      purchasesSnapshot.forEach(purchaseDoc => {
-        const purchase = fromFirebase(purchaseDoc.data(), 'temp-id') as Purchase; // id is not used here
+        const purchase = fromFirebase(purchaseDoc.data(), 'temp-id') as Purchase;
         const monthKey = format(purchase.createdAt, 'yyyy-MM');
         monthlyCosts[monthKey] = (monthlyCosts[monthKey] || 0) + purchase.cost;
     });
@@ -851,6 +856,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
         pendingOrders,
         monthlyRevenue,
         monthlyCosts,
+        serviceDistribution,
     };
 
     await setDoc(summaryRef, newSummaryData, { merge: true });
@@ -865,7 +871,7 @@ export async function setUserPrivacyPassword(userId: string, passwordHash: strin
         const permissionError = new FirestorePermissionError({
             path: userRef.path,
             operation: 'update',
-            requestResourceData: { passwordHash: '***' }, // Don't leak hash in error
+            requestResourceData: { passwordHash: '***' },
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
         throw serverError;

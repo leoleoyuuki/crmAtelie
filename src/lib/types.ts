@@ -118,4 +118,5 @@ export interface UserSummary {
   pendingOrders: number;
   monthlyRevenue: { [key: string]: number }; // YYYY-MM format
   monthlyCosts: { [key: string]: number }; // YYYY-MM format
+  serviceDistribution?: { [key: string]: number };
 }
