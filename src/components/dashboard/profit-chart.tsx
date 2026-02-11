@@ -81,7 +81,12 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
                 />
                 <ChartTooltip
                     cursor={false}
-                    content={<ChartTooltipContent indicator="line" />}
+                    content={
+                      <ChartTooltipContent 
+                        indicator="line" 
+                        formatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value as number)}
+                      />
+                    }
                 />
                  <ChartLegend content={<ChartLegendContent />} />
                  <defs>

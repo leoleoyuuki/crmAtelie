@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -53,7 +52,12 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={
+                <ChartTooltipContent 
+                  hideLabel 
+                  formatter={(value) => `${value} itens`}
+                />
+              }
             />
             <Pie
               data={data}

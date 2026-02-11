@@ -242,7 +242,7 @@ const ChartTooltipContent = React.forwardRef<
                       </div>
                       {item.value && (
                         <span className="font-mono font-medium tabular-nums text-foreground">
-                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(item.value as number)}
+                          {item.value.toLocaleString()}
                         </span>
                       )}
                     </div>
