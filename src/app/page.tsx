@@ -1,11 +1,10 @@
-
 'use client';
 
 import { useEffect, useState, useContext, useMemo } from 'react';
 import { useCollection, useDocument } from '@/firebase';
 import { Order, UserSummary } from '@/lib/types';
 import { getServiceDistribution, getRevenueChartDataFromSummary, getProfitChartDataFromSummary } from '@/lib/data';
-import { StatsCards } from '@/components/dashboard/stats-cards';
+import { RevenueTotalCard, TotalOrdersCard, PendingOrdersCard } from '@/components/dashboard/stats-cards';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { ServiceDistributionChart } from '@/components/dashboard/service-distribution-chart';
 import OrderTableShell from '@/components/dashboard/order-table-shell';
@@ -15,10 +14,10 @@ import { getOrCreateUserSummary } from '@/lib/data';
 import { useUser } from '@/firebase/auth/use-user';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfitChart } from '@/components/dashboard/profit-chart';
-import { ProfitStatsCards } from '@/components/dashboard/profit-stats-cards';
+import { ProfitTotalCard, GrossRevenueCard, CostsTotalCard } from '@/components/dashboard/profit-stats-cards';
 import { WelcomeGuide } from '@/components/dashboard/welcome-guide';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, UserPlus, Phone } from 'lucide-react';
+import { PlusCircle, UserPlus } from 'lucide-react';
 import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
 import { CustomerFormDialog } from '@/components/dashboard/customer-form-dialog';
 
@@ -117,30 +116,46 @@ export default function DashboardPage() {
             </TabsList>
             
             <TabsContent value="revenue" className="space-y-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                <StatsCards 
-                    totalOrders={summary?.totalOrders || 0}
-                    totalRevenue={summary?.totalRevenue || 0}
-                    pendingCount={summary?.pendingOrders || 0}
-                    isPrivacyMode={isPrivacyMode}
-                />
-                </div>
-                <div className="grid grid-cols-1 gap-8">
-                    <RevenueChart data={revenueData} isPrivacyMode={isPrivacyMode} />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <RevenueTotalCard 
+                        totalRevenue={summary?.totalRevenue || 0} 
+                        isPrivacyMode={isPrivacyMode}
+                        className="order-1"
+                    />
+                    <div className="order-2 md:order-4 md:col-span-2 lg:col-span-3">
+                        <RevenueChart data={revenueData} isPrivacyMode={isPrivacyMode} />
+                    </div>
+                    <TotalOrdersCard 
+                        totalOrders={summary?.totalOrders || 0} 
+                        className="order-3 md:order-2"
+                    />
+                    <PendingOrdersCard 
+                        pendingCount={summary?.pendingOrders || 0} 
+                        className="order-4 md:order-3"
+                    />
                 </div>
             </TabsContent>
 
             <TabsContent value="profit" className="space-y-8">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <ProfitStatsCards
-                        totalProfit={totalProfit}
-                        totalRevenue={summary?.totalRevenue || 0}
-                        totalCosts={totalCosts}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <ProfitTotalCard 
+                        totalProfit={totalProfit} 
                         isPrivacyMode={isPrivacyMode}
+                        className="order-1"
                     />
-                </div>
-                <div className="grid grid-cols-1 gap-8">
-                    <ProfitChart data={profitData} isPrivacyMode={isPrivacyMode} />
+                    <div className="order-2 md:order-4 md:col-span-2 lg:col-span-3">
+                        <ProfitChart data={profitData} isPrivacyMode={isPrivacyMode} />
+                    </div>
+                    <GrossRevenueCard 
+                        totalRevenue={summary?.totalRevenue || 0} 
+                        isPrivacyMode={isPrivacyMode}
+                        className="order-3 md:order-2"
+                    />
+                    <CostsTotalCard 
+                        totalCosts={totalCosts} 
+                        isPrivacyMode={isPrivacyMode}
+                        className="order-4 md:order-3"
+                    />
                 </div>
             </TabsContent>
 
