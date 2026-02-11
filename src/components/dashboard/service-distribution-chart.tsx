@@ -19,7 +19,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { ServiceType } from "@/lib/types"
 
 type ServiceDistributionChartProps = {
   data: { service: string; count: number; fill: string }[];
@@ -28,23 +27,7 @@ type ServiceDistributionChartProps = {
 const chartConfig = {
   count: {
     label: "Pedidos",
-  },
-  Ajuste: {
-    label: "Ajuste",
-    color: "hsl(var(--chart-1))",
-  },
-  "Design Personalizado": {
-    label: "Design Personalizado",
-    color: "hsl(var(--chart-2))",
-  },
-  Reparo: {
-    label: "Reparo",
-    color: "hsl(var(--chart-3))",
-  },
-  "Lavagem a Seco": {
-    label: "Lavagem a Seco",
-    color: "hsl(var(--chart-4))",
-  },
+  }
 }
 
 export function ServiceDistributionChart({ data }: ServiceDistributionChartProps) {
@@ -58,7 +41,7 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
       <CardHeader className="items-center pb-0">
         <CardTitle className="font-headline">Distribuição de Serviços</CardTitle>
         <CardDescription>
-          Detalhamento dos tipos de pedidos no último mês.
+          Detalhamento dos tipos de pedidos no sistema.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
@@ -108,7 +91,7 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
               {totalOrders}
             </span>
             <span className="ml-2 text-sm text-muted-foreground">
-              Pedidos Totais
+              Itens Totais
             </span>
           </div>
         )}

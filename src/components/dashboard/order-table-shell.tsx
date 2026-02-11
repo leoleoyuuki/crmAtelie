@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -94,6 +95,16 @@ export default function OrderTableShell({
     onDataMutated?.();
   }
 
+  const uniqueServiceTypes = useMemo(() => {
+    const types = new Set<string>();
+    data.forEach(order => {
+        order.items?.forEach(item => {
+            if (item.serviceType) types.add(item.serviceType);
+        });
+    });
+    return Array.from(types).sort();
+  }, [data]);
+
   const columns: ColumnDef<Order>[] = useMemo(
     () => [
       {
@@ -119,7 +130,9 @@ export default function OrderTableShell({
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-1">
             {row.original.items && row.original.items.map((item, index) => (
-              <Badge key={index} variant="secondary">{item.serviceType}</Badge>
+              <Badge key={index} variant="secondary" className="px-1 py-0.5 text-[10px] whitespace-nowrap">
+                {item.serviceType}
+              </Badge>
             ))}
           </div>
         )
@@ -231,7 +244,7 @@ export default function OrderTableShell({
                     variant="outline"
                     size="sm"
                     onClick={onPrevPage}
-                    disabled={!hasNextPage || loading}
+                    disabled={!hasPrevPage || loading}
                 >
                     Anterior
                 </Button>
@@ -283,6 +296,7 @@ export default function OrderTableShell({
         table={table} 
         onOrderCreated={handleUpdate}
         isPage={isPage} 
+        serviceTypes={uniqueServiceTypes}
       />
       <CardContent>
         {isMobile ? (

@@ -1,6 +1,6 @@
 
 export type OrderStatus = 'Novo' | 'Em Processo' | 'Aguardando Retirada' | 'Concluído';
-export type ServiceType = 'Ajuste' | 'Design Personalizado' | 'Reparo' | 'Lavagem a Seco';
+export type ServiceType = string;
 export type UserStatus = 'active' | 'inactive';
 export type TokenDuration = number;
 

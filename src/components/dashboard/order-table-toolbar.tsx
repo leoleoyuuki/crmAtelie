@@ -1,9 +1,10 @@
+
 "use client"
 
 import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import { OrderFormDialog } from "./order-form-dialog"
-import { Order, OrderStatus, ServiceType } from "@/lib/types"
+import { Order, OrderStatus } from "@/lib/types"
 import {
   Select,
   SelectContent,
@@ -20,14 +21,19 @@ interface OrderTableToolbarProps<TData> {
   table: Table<TData>
   onOrderCreated?: () => void
   isPage?: boolean;
+  serviceTypes?: string[];
 }
 
 const statuses: OrderStatus[] = ['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído'];
-const serviceTypes: ServiceType[] = ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"];
 const months = getMonths();
 
 
-export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false }: OrderTableToolbarProps<TData>) {
+export function OrderTableToolbar<TData>({ 
+    table, 
+    onOrderCreated, 
+    isPage = false,
+    serviceTypes = []
+}: OrderTableToolbarProps<TData>) {
   return (
     <>
       {!isPage && (
@@ -90,9 +96,13 @@ export function OrderTableToolbar<TData>({ table, onOrderCreated, isPage = false
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os Serviços</SelectItem>
-              {serviceTypes.map(type => (
-                <SelectItem key={type} value={type}>{type}</SelectItem>
-              ))}
+              {serviceTypes.length > 0 ? (
+                  serviceTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))
+              ) : (
+                  <SelectItem value="none" disabled>Nenhum serviço cadastrado</SelectItem>
+              )}
             </SelectContent>
           </Select>
           <Select

@@ -1,3 +1,4 @@
+
 'use client';
 import {
   addDoc,
@@ -165,26 +166,30 @@ export async function getOrders(): Promise<Order[]> {
 }
 
 export function getServiceDistribution(orders: Order[]) {
+  if (!orders || orders.length === 0) return [];
+
   const distribution = orders.reduce((acc, order) => {
     if (order.items && Array.isArray(order.items)) {
       order.items.forEach(item => {
-        acc[item.serviceType] = (acc[item.serviceType] || 0) + 1;
+        const type = item.serviceType || 'Outros';
+        acc[type] = (acc[type] || 0) + 1;
       });
     }
     return acc;
-  }, {} as Record<ServiceType, number>);
+  }, {} as Record<string, number>);
 
-  const serviceTypeToChartMap: Record<ServiceType, number> = {
-    "Ajuste": 1,
-    "Design Personalizado": 2,
-    "Reparo": 3,
-    "Lavagem a Seco": 4
-  }
+  const colors = [
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
+  ];
 
-  return Object.entries(distribution).map(([service, count]) => ({
+  return Object.entries(distribution).map(([service, count], index) => ({
     service,
     count,
-    fill: `var(--chart-${serviceTypeToChartMap[service as ServiceType] || Object.keys(distribution).indexOf(service) + 1})`
+    fill: colors[index % colors.length]
   }));
 }
 

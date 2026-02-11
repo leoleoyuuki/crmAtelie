@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Order, OrderStatus, ServiceType, Customer, PriceTableItem } from "@/lib/types";
+import { Order, OrderStatus, Customer, PriceTableItem } from "@/lib/types";
 import { addOrder, updateOrder, getCustomers, getPriceTableItems } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
@@ -41,7 +41,7 @@ import { Separator } from "../ui/separator";
 import { DatePickerWithDialog } from "../ui/date-picker";
 
 const orderItemSchema = z.object({
-  serviceType: z.enum(["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"]),
+  serviceType: z.string().min(1, "O tipo de serviço é obrigatório."),
   description: z.string().optional(),
   value: z.coerce.number().min(0, "O valor deve ser positivo."),
   assignedTo: z.string().optional(),
@@ -56,7 +56,6 @@ const orderFormSchema = z.object({
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
 
-const serviceTypes: ServiceType[] = ["Ajuste", "Design Personalizado", "Reparo", "Lavagem a Seco"];
 const statuses: OrderStatus[] = ['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído'];
 
 function OrderItemForm({ index, control, remove, priceTableItems, setValue }: any) {
@@ -79,14 +78,8 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
         if (!itemId) return;
         const selectedItem = priceTableItems.find((item: PriceTableItem) => item.id === itemId);
         if (selectedItem) {
-            const serviceNameLower = selectedItem.serviceName.toLowerCase();
-            let matchedServiceType: ServiceType = 'Ajuste';
-            if (serviceNameLower.includes('design')) matchedServiceType = 'Design Personalizado';
-            else if (serviceNameLower.includes('reparo') || serviceNameLower.includes('conserto')) matchedServiceType = 'Reparo';
-            else if (serviceNameLower.includes('lavagem')) matchedServiceType = 'Lavagem a Seco';
-            
-            setValue(`items.${index}.serviceType`, matchedServiceType);
-            setValue(`items.${index}.description`, selectedItem.description || selectedItem.serviceName);
+            setValue(`items.${index}.serviceType`, selectedItem.serviceName);
+            setValue(`items.${index}.description`, selectedItem.description || "");
             setValue(`items.${index}.value`, selectedItem.price);
             
             // Update search input text and close menu
@@ -153,19 +146,10 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
                     name={`items.${index}.serviceType`}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Tipo</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione..." />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {serviceTypes.map(type => (
-                                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <FormLabel>Tipo de Serviço</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Ex: Ajuste, Customização, etc." {...field} />
+                            </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -271,7 +255,7 @@ export function OrderFormDialog({
   
   const defaultValues: Partial<OrderFormValues> = {
     customerId: '',
-    items: [{ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' }],
+    items: [{ serviceType: '', value: 0, description: '', assignedTo: '' }],
     dueDate: new Date(),
     status: 'Novo',
   };
@@ -420,7 +404,7 @@ export function OrderFormDialog({
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Itens do Pedido</h3>
-                            <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: 'Ajuste', value: 0, description: '', assignedTo: '' })}>
+                            <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: '', value: 0, description: '', assignedTo: '' })}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
                             </Button>
                         </div>
