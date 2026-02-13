@@ -1,15 +1,15 @@
+
 import { MetadataRoute } from 'next'
+import { getBlogPosts } from '@/lib/blog'
 
 /**
  * Gerador de Sitemap Dinâmico para o AtelierFlow.
- * 
- * Este arquivo gera automaticamente o sitemap.xml do site em tempo de execução ou build.
- * Ele ajuda motores de busca (Google, Bing) a descobrirem as páginas públicas do seu sistema.
+ * Inclui rotas estáticas e posts do blog automaticamente.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://atelierflow.com.br'
 
-  // Rotas estáticas públicas (páginas institucionais e de entrada)
+  // 1. Rotas estáticas públicas
   const staticRoutes = [
     {
       url: baseUrl,
@@ -35,26 +35,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    },
   ]
 
-  /**
-   * PREPARAÇÃO PARA O BLOG (MDX)
-   * 
-   * Quando você implementar o blog, poderá descomentar e adaptar o código abaixo:
-   * 
-   * // 1. Exemplo de função para obter slugs do sistema de arquivos ou banco
-   * // const posts = await getBlogPosts() 
-   * 
-   * // 2. Mapeamento das rotas do blog
-   * // const blogRoutes = posts.map((post) => ({
-   * //   url: `${baseUrl}/blog/${post.slug}`,
-   * //   lastModified: post.updatedAt || new Date(),
-   * //   changeFrequency: 'monthly' as const,
-   * //   priority: 0.6,
-   * // }))
-   * 
-   * // return [...staticRoutes, ...blogRoutes]
-   */
+  // 2. Rotas dinâmicas do blog
+  const posts = await getBlogPosts();
+  const blogRoutes = posts.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.date),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }))
 
-  return [...staticRoutes]
+  return [...staticRoutes, ...blogRoutes]
 }

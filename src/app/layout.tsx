@@ -18,13 +18,6 @@ import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
 
-
-// Metadata is now static as it's a client component
-// export const metadata: Metadata = {
-//   title: 'AtelierFlow',
-//   description: 'Otimize seu fluxo de trabalho de alfaiataria e artesanato.',
-// };
-
 function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading: userLoading } = useUser();
   const { db } = useFirebase();
@@ -42,19 +35,15 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
           const userProfileData = docSnap.data();
           let userProfile = { ...userProfileData, id: docSnap.id } as UserProfile;
           
-          // Ensure expiresAt is a JS Date object
           if (userProfile.expiresAt && (userProfile.expiresAt as any).toDate) {
              userProfile.expiresAt = (userProfile.expiresAt as any).toDate();
           }
 
-          // Check for expiration if the user is currently active
           if (userProfile.status === 'active' && userProfile.expiresAt) {
             if (new Date() > userProfile.expiresAt) {
-              // Subscription has expired, update status to inactive
               updateDoc(userRef, { status: 'inactive' }).catch(err => {
                   console.error("Failed to update user status to inactive:", err);
               });
-              // The onSnapshot will re-run with the updated profile, so we don't need to do anything else here.
               return; 
             }
           }
@@ -62,14 +51,12 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
           setProfile(userProfile);
 
         } else {
-          // Profile doesn't exist, this is a new user. Create it.
           const newUserProfile: Omit<UserProfile, 'id'> = {
             displayName: user.displayName || '',
             email: user.email || '',
             photoURL: user.photoURL || '',
             status: 'inactive',
           };
-          // We don't await this, as the onSnapshot will pick up the change
           setDoc(userRef, newUserProfile).catch(err => {
               console.error("Failed to create user profile:", err);
           });
@@ -78,7 +65,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
         setProfileLoading(false);
       });
       return () => unsub();
-    } else if (!userLoading) { // Only run if user is confirmed null
+    } else if (!userLoading) {
       setProfile(null);
       setProfileLoading(false);
     }
@@ -88,18 +75,19 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
     if (userLoading || profileLoading) return;
 
     if (!user) {
-      // If the user is not logged in and not on the landing or login page, show the landing page.
-      if (pathname !== '/landing' && pathname !== '/login') {
-          return; // Let the component render LandingPage
+      // Allow public access to Landing, Login and Blog
+      const isPublicPath = pathname === '/landing' || pathname === '/login' || pathname.startsWith('/blog');
+      if (!isPublicPath) {
+          return; 
       }
-      return; // Otherwise, render children (e.g., login page)
+      return;
     }
 
-    // User is logged in
     const isActivationPage = pathname === '/ativacao';
     const isAdminPage = pathname.startsWith('/admin');
+    const isPublicButLoggedIn = pathname === '/landing' || pathname.startsWith('/blog');
 
-    if (profile?.status !== 'active' && !isActivationPage && !isAdminPage) {
+    if (profile?.status !== 'active' && !isActivationPage && !isAdminPage && !isPublicButLoggedIn) {
       setShouldRedirect('/ativacao');
     } else if (profile?.status === 'active' && isActivationPage) {
       setShouldRedirect('/');
@@ -114,8 +102,7 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
     }
   }, [shouldRedirect, router]);
 
-
-  const loading = userLoading || (user && profileLoading); // Only show profile loading if a user is expected
+  const loading = userLoading || (user && profileLoading);
 
   if (loading) {
     return (
@@ -140,25 +127,23 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    // Not logged in, show landing page or login page
     if (pathname === '/login') {
         return <LoginPage />;
+    }
+    if (pathname.startsWith('/blog')) {
+        return <>{children}</>;
     }
     return <LandingPage />;
   }
 
-  // Allow access to admin and activation pages regardless of status
-  if (pathname === '/ativacao' || pathname.startsWith('/admin')) {
+  if (pathname === '/ativacao' || pathname.startsWith('/admin') || pathname.startsWith('/blog')) {
     return <>{children}</>;
   }
 
-  // Handle inactive users
   if (profile?.status !== 'active') {
     return <AtivacaoPage />;
   }
 
-
-  // Normal app flow for active users
   return (
     <SidebarProvider>
       <PasswordProvider>
@@ -169,7 +154,6 @@ function AuthWrapper({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
-
 
 export default function RootLayout({
   children,
@@ -190,7 +174,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
-        {/* Meta Pixel Code */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -215,7 +198,6 @@ export default function RootLayout({
             src="https://www.facebook.com/tr?id=25321081740913131&ev=PageView&noscript=1"
           />
         </noscript>
-        {/* End Meta Pixel Code */}
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>

@@ -1,12 +1,6 @@
+
 import { MetadataRoute } from 'next'
 
-/**
- * Gerador de robots.txt para o AtelierFlow.
- * 
- * Controla o acesso de robôs de busca. Permitimos a indexação das páginas
- * públicas (Home, Landing, Ajuda) e bloqueamos as rotas internas do 
- * dashboard para proteger a privacidade e economizar recursos de rastreamento.
- */
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
@@ -16,8 +10,8 @@ export default function robots(): MetadataRoute.Robots {
         '/landing',
         '/login',
         '/ajuda',
+        '/blog',
       ],
-      // Bloqueia indexação de todas as páginas de gerenciamento e dados sensíveis
       disallow: [
         '/admin/', 
         '/pedidos', 
@@ -28,7 +22,7 @@ export default function robots(): MetadataRoute.Robots {
         '/tabela-precos', 
         '/ativacao',
         '/print/',
-        '/api/' // Protege rotas de API internas
+        '/api/'
       ],
     },
     sitemap: 'https://atelierflow.com.br/sitemap.xml',
