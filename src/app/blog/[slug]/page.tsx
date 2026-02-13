@@ -41,7 +41,7 @@ export default async function BlogPostPage({ params }: PostPageProps) {
   }
 
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="bg-background min-h-screen w-full flex flex-col">
       <Header />
       
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 md:py-16">

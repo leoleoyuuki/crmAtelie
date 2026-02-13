@@ -17,7 +17,7 @@ export default async function BlogPage() {
   const posts = await getBlogPosts();
 
   return (
-    <div className="bg-background min-h-screen flex flex-col">
+    <div className="bg-background min-h-screen w-full flex flex-col">
       <Header />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-12 md:py-20">
         <div className="text-center space-y-4 mb-16">
