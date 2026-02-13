@@ -13,6 +13,7 @@ import { PasswordProvider } from '@/contexts/password-context';
 import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading: userLoading } = useUser();
@@ -102,7 +103,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center w-full">
         <div className="flex flex-col items-center space-y-4">
           <Skeleton className="h-12 w-12 rounded-full" />
           <div className="space-y-2">
@@ -116,7 +117,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   
   if (shouldRedirect) {
       return (
-         <div className="flex h-screen items-center justify-center">
+         <div className="flex h-screen items-center justify-center w-full">
           Redirecionando...
         </div>
       );
@@ -127,13 +128,13 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
         return <LoginPage />;
     }
     if (pathname.startsWith('/blog')) {
-        return <>{children}</>;
+        return <div className="w-full">{children}</div>;
     }
     return <LandingPage />;
   }
 
   if (pathname === '/ativacao' || pathname.startsWith('/admin') || pathname.startsWith('/blog')) {
-    return <>{children}</>;
+    return <div className="w-full">{children}</div>;
   }
 
   if (profile?.status !== 'active') {
@@ -142,9 +143,11 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <PasswordProvider>
-      <AppShell profile={profile}>
-        {children}
-      </AppShell>
+      <SidebarProvider>
+        <AppShell profile={profile}>
+          {children}
+        </AppShell>
+      </SidebarProvider>
     </PasswordProvider>
   );
 }

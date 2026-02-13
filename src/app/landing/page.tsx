@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Header } from '@/components/landing/header';
@@ -12,11 +13,11 @@ import { FaqSection } from '@/components/landing/faq-section';
 
 export default function LandingPage() {
   return (
-    <div className="bg-background text-foreground">
+    <div className="bg-background text-foreground w-full">
       <Header />
-      <main>
+      <main className="w-full">
         <HeroSection />
-        <div id="recursos">
+        <div id="recursos" className="w-full">
          <FeatureHighlights />
         </div>
         <AllFeatures />
