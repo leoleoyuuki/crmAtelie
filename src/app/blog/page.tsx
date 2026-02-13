@@ -1,4 +1,3 @@
-
 import { getBlogPosts } from '@/lib/blog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +19,7 @@ export default async function BlogPage() {
   return (
     <div className="bg-background min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container mx-auto px-4 py-12 md:py-20">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-12 md:py-20">
         <div className="text-center space-y-4 mb-16">
           <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary">Nosso Blog</h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
@@ -50,7 +49,7 @@ export default async function BlogPage() {
                         {format(new Date(post.date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                       </span>
                     </div>
-                    <CardTitle className="font-headline text-xl group-hover:text-primary transition-colors">
+                    <CardTitle className="font-headline text-xl group-hover:text-primary transition-colors line-clamp-2">
                       {post.title}
                     </CardTitle>
                   </CardHeader>
@@ -64,7 +63,7 @@ export default async function BlogPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-card rounded-2xl border dashed">
+          <div className="text-center py-20 bg-card rounded-2xl border-2 border-dashed border-muted">
             <p className="text-muted-foreground italic">Estamos preparando conteúdos incríveis para você. Volte em breve!</p>
           </div>
         )}
