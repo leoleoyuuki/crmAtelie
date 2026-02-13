@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -29,11 +28,14 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
       const slug = fileName.replace(/\.mdx$/, '');
       const fullPath = path.join(postsDirectory, fileName);
       const fileContents = fs.readFileSync(fullPath, 'utf8');
-      const { data, content } = matter(fileContents);
+      
+      // gray-matter handles the parsing of the frontmatter and the content separately
+      // Trimming fileContents ensures markers like --- are at the very beginning
+      const { data, content } = matter(fileContents.trim());
 
       return {
         slug,
-        content,
+        content: content.trim(),
         title: data.title || 'Sem título',
         date: data.date || new Date().toISOString(),
         description: data.description || '',
@@ -52,11 +54,16 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     if (!fs.existsSync(fullPath)) return null;
     
     const fileContents = fs.readFileSync(fullPath, 'utf8');
-    const { data, content } = matter(fileContents);
+    const { data, content } = matter(fileContents.trim());
+
+    if (!data.title) {
+        // If parsing didn't find frontmatter, data might be empty
+        console.warn(`Post ${slug} does not have valid frontmatter header (---).`);
+    }
 
     return {
       slug,
-      content,
+      content: content.trim(),
       title: data.title || 'Sem título',
       date: data.date || new Date().toISOString(),
       description: data.description || '',
@@ -64,6 +71,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       image: data.image || `https://picsum.photos/seed/${slug}/800/450`,
     } as BlogPost;
   } catch (e) {
+    console.error(`Error reading post ${slug}:`, e);
     return null;
   }
 }
