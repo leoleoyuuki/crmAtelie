@@ -19,7 +19,8 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
     return (
       <div ref={ref} className="bg-white text-black font-mono w-[58mm] p-2 text-[10pt] leading-tight">
         <div className="text-center mb-2">
-            <Logo className="h-10 w-10 mx-auto" />
+            {/* Passando width e height explícitos para ajudar o html2canvas */}
+            <Logo width={40} height={40} className="mx-auto" />
             <h1 className="text-[14pt] font-bold mt-1">AtelierFlow</h1>
             <p className="text-[10pt]">Comprovante de Pedido</p>
         </div>
@@ -76,7 +77,6 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
 
         <div className="mt-3 text-center text-[10pt] border-t border-dashed border-black pt-2">
             <p>Obrigado pela sua preferência!</p>
-            <p>AtelierFlow</p>
         </div>
       </div>
     );

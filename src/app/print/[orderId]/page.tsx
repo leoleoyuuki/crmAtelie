@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
@@ -54,12 +55,16 @@ export default function PrintPage() {
     
     setIsGeneratingImage(true);
     try {
+      // Pequeno delay para garantir que todos os recursos (como a logo) estejam prontos
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const canvas = await html2canvas(ticketRef.current, {
-        scale: 3, // High quality
+        scale: 3, // Alta qualidade
         backgroundColor: "#ffffff",
         logging: false,
         useCORS: true,
-        width: 220, // Approx 58mm in px at 96dpi
+        allowTaint: true,
+        width: 220, // Aproximadamente 58mm em pixels
       });
       
       canvas.toBlob(async (blob) => {
@@ -79,7 +84,7 @@ export default function PrintPage() {
             throw new Error("Clipboard API not available");
           }
         } catch (err) {
-          // Fallback: Download the image
+          // Fallback: Download da imagem
           const dataUrl = canvas.toDataURL("image/png");
           const link = document.createElement('a');
           link.download = `comprovante-${order?.customerName.split(' ')[0]}-${orderId.substring(0, 5)}.png`;
@@ -188,7 +193,7 @@ export default function PrintPage() {
                 className="w-full shadow-sm" 
                 onClick={handleCopyAsImage}
                 disabled={isGeneratingImage}
-            >
+            )
                 {isGeneratingImage ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
