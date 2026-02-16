@@ -37,11 +37,11 @@ export default function PrintPage() {
             const fetchedCustomer = await getCustomerById(fetchedOrder.customerId);
             setCustomer(fetchedCustomer);
           } else {
-            setError('Pedido não encontrado ou você não tem permissão para visualizá-lo.');
+            setError('Pedido não encontrado ou sem permissão.');
           }
         } catch (e) {
           console.error(e);
-          setError('Ocorreu um erro ao buscar os detalhes do pedido.');
+          setError('Erro ao carregar detalhes do pedido.');
         } finally {
           setLoading(false);
         }
@@ -55,11 +55,11 @@ export default function PrintPage() {
     
     setIsGeneratingImage(true);
     try {
-      // Delay maior para garantir que o SVG da logo seja renderizado no DOM
+      // Delay para garantir renderização completa antes do canvas
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(ticketRef.current, {
-        scale: 4, // Ultra qualidade para ícones pequenos
+        scale: 3,
         backgroundColor: "#ffffff",
         logging: false,
         useCORS: true,
@@ -67,31 +67,28 @@ export default function PrintPage() {
       });
       
       canvas.toBlob(async (blob) => {
-        if (!blob) {
-            throw new Error("Failed to generate image blob");
-        }
+        if (!blob) throw new Error("Falha ao gerar imagem.");
         
         try {
           if (navigator.clipboard && window.ClipboardItem) {
             const item = new ClipboardItem({ "image/png": blob });
             await navigator.clipboard.write([item]);
             toast({
-                title: "Copiado para o WhatsApp!",
-                description: "Imagem copiada. Agora abra o WhatsApp do cliente e cole (Ctrl+V ou Pressionar e Colar).",
+                title: "Imagem Copiada!",
+                description: "Agora é só colar no WhatsApp do cliente.",
             });
           } else {
-            throw new Error("Clipboard API not available");
+            throw new Error("Clipboard API indesejável.");
           }
         } catch (err) {
-          // Fallback: Download da imagem
           const dataUrl = canvas.toDataURL("image/png");
           const link = document.createElement('a');
-          link.download = `comprovante-${order?.customerName.split(' ')[0]}-${orderId.substring(0, 5)}.png`;
+          link.download = `comprovante-${orderId.substring(0, 5)}.png`;
           link.href = dataUrl;
           link.click();
           toast({
             title: "Download Iniciado",
-            description: "Seu navegador não permitiu a cópia automática. Baixamos a imagem para você enviar.",
+            description: "Não conseguimos copiar automaticamente, então baixamos a imagem.",
           });
         }
       }, "image/png");
@@ -100,7 +97,7 @@ export default function PrintPage() {
       toast({
         variant: "destructive",
         title: "Erro ao gerar imagem",
-        description: "Não foi possível converter o comprovante em imagem.",
+        description: "Tente novamente em alguns instantes.",
       });
     } finally {
       setIsGeneratingImage(false);
@@ -110,16 +107,7 @@ export default function PrintPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
-        <div className="p-10 bg-white shadow-md w-[58mm]">
-          <Skeleton className="h-6 w-6 mx-auto mb-2" />
-          <Skeleton className="h-4 w-32 mx-auto mb-2" />
-          <Skeleton className="h-3 w-24 mx-auto mb-4" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -142,10 +130,10 @@ export default function PrintPage() {
           body, html {
             margin: 0;
             padding: 0;
-            background: white;
+            background: white !important;
           }
           .no-print {
-            display: none;
+            display: none !important;
           }
           body * {
             visibility: hidden;
@@ -157,14 +145,12 @@ export default function PrintPage() {
             position: absolute;
             left: 0;
             top: 0;
-            width: 48mm;
-            height: auto;
+            width: 58mm;
           }
         }
         @page {
-          size: 58mm;
-          height: auto;
-          margin: 5mm;
+          size: 58mm auto;
+          margin: 0;
         }
       `}</style>
       <main className="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8 px-4">
@@ -180,9 +166,6 @@ export default function PrintPage() {
           </Button>
           
           <div className="p-4 bg-white rounded-xl shadow-sm border space-y-3">
-            <p className="text-xs text-center text-muted-foreground font-medium">
-              Ações de Comprovante
-            </p>
             <Button className="w-full shadow-md" onClick={() => window.print()}>
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimir (Papel)
@@ -198,7 +181,7 @@ export default function PrintPage() {
                 ) : (
                     <Share2 className="mr-2 h-4 w-4" />
                 )}
-                {isGeneratingImage ? "Gerando..." : "Copiar para WhatsApp"}
+                {isGeneratingImage ? "Gerando..." : "Copiar p/ WhatsApp"}
             </Button>
           </div>
         </div>
@@ -208,7 +191,7 @@ export default function PrintPage() {
         </div>
         
         <p className="no-print mt-8 text-[10px] text-muted-foreground text-center max-w-[200px]">
-            Dica: Ao copiar para o WhatsApp, a imagem mantém a formatação profissional do seu ateliê.
+            Dica: Ao copiar para o WhatsApp, a imagem mantém a logo e formatação profissional.
         </p>
       </main>
     </>
