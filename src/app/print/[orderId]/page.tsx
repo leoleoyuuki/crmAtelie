@@ -55,16 +55,15 @@ export default function PrintPage() {
     
     setIsGeneratingImage(true);
     try {
-      // Pequeno delay para garantir que todos os recursos (como a logo) estejam prontos
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Delay maior para garantir que o SVG da logo seja renderizado no DOM
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(ticketRef.current, {
-        scale: 3, // Alta qualidade
+        scale: 4, // Ultra qualidade para ícones pequenos
         backgroundColor: "#ffffff",
         logging: false,
         useCORS: true,
         allowTaint: true,
-        width: 220, // Aproximadamente 58mm em pixels
       });
       
       canvas.toBlob(async (blob) => {
@@ -169,7 +168,7 @@ export default function PrintPage() {
         }
       `}</style>
       <main className="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8 px-4">
-        <div className="no-print w-full max-w-[58mm] mb-6 space-y-3">
+        <div className="no-print w-full max-w-[220px] mb-6 space-y-3">
           <Button 
             variant="ghost" 
             size="sm" 

@@ -17,10 +17,10 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
     const formattedCurrency = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
     
     return (
-      <div ref={ref} className="bg-white text-black font-mono w-[58mm] p-2 text-[10pt] leading-tight">
+      <div ref={ref} className="bg-white text-black font-mono w-[220px] p-2 text-[10pt] leading-tight mx-auto">
         <div className="text-center mb-2">
-            {/* Passando width e height explícitos para ajudar o html2canvas */}
-            <Logo width={40} height={40} className="mx-auto" />
+            {/* Stroke explícito para garantir captura no html2canvas */}
+            <Logo width={48} height={48} stroke="#000000" className="mx-auto" />
             <h1 className="text-[14pt] font-bold mt-1">AtelierFlow</h1>
             <p className="text-[10pt]">Comprovante de Pedido</p>
         </div>
