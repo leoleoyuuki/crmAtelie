@@ -1,5 +1,3 @@
-
-
 "use client"
 
 import { useState, useEffect } from "react";
@@ -97,7 +95,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <div className="flex items-center justify-end gap-2">
             <Button asChild variant="ghost" size="icon" className="h-8 w-8 p-0">
-              <Link href={`/print/${order.id}`} target="_blank">
+              <Link href={`/print/${order.id}`}>
                 <Printer className="h-4 w-4" />
                 <span className="sr-only">Imprimir Comprovante</span>
               </Link>
