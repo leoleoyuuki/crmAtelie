@@ -1,3 +1,4 @@
+
 import { getPostBySlug, getBlogPosts } from '@/lib/blog';
 import { notFound } from 'next/navigation';
 import { MDXRemote } from 'next-mdx-remote/rsc';
@@ -9,6 +10,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from 'next/link';
 import { ChevronLeft, Calendar, Clock, User } from 'lucide-react';
+import remarkGfm from 'remark-gfm';
 
 interface PostPageProps {
   params: Promise<{ slug: string }>;
@@ -99,7 +101,14 @@ export default async function BlogPostPage({ params }: PostPageProps) {
             prose-blockquote:border-l-primary prose-blockquote:bg-primary/5 prose-blockquote:p-6 prose-blockquote:rounded-r-2xl prose-blockquote:italic prose-blockquote:text-primary
             prose-li:text-muted-foreground/90
             ">
-            <MDXRemote source={post.content} />
+            <MDXRemote 
+              source={post.content} 
+              options={{
+                mdxOptions: {
+                  remarkPlugins: [remarkGfm],
+                },
+              }}
+            />
           </div>
           
           <div className="mt-16 pt-10 border-t border-primary/10 flex flex-col items-center text-center pb-10">
