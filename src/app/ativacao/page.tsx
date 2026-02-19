@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase, useDocument } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Key, Star, Phone, Printer } from 'lucide-react';
+import { MessageSquare, LogOut, Loader2, Key, Star, Phone, Printer, Check, ArrowRight } from 'lucide-react';
 import { initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
@@ -138,38 +138,51 @@ function CodeActivationTab() {
   };
 
   return (
-       <Card>
-        <CardHeader>
+       <Card className="border-none shadow-none bg-transparent">
+        <CardHeader className="px-0">
           <CardTitle className="font-headline text-2xl">Ativação por Código</CardTitle>
           <CardDescription>
-            Insira o código de ativação que você recebeu para liberar o acesso ao sistema.
+            Insira o código de ativação para liberar o acesso.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0">
           <div className="space-y-2">
             <Input
               id="token"
-              placeholder="Cole seu código aqui"
+              placeholder="Ex: XXXX-XXXX-XXXX"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               disabled={isLoading}
+              className="font-mono text-center text-lg h-12 uppercase"
             />
              <p className="text-xs text-muted-foreground pt-1">
-                Se você não tem um código, fale conosco no WhatsApp para adquirir um ou tirar dúvidas.
+                Adquiriu um código físico ou via suporte? Ative-o acima.
              </p>
           </div>
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleActivation} disabled={isLoading} className="w-full">
+        <CardFooter className="px-0 pb-0">
+          <Button onClick={handleActivation} disabled={isLoading} className="w-full h-12">
             <Key className="mr-2 h-4 w-4" />
-            {isLoading ? 'Ativando...' : 'Ativar Conta'}
+            {isLoading ? 'Ativando...' : 'Ativar Agora'}
           </Button>
         </CardFooter>
       </Card>
   )
 }
 
-const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSelect, isLoading, icon: Icon, buttonText = "Assinar Agora" }: {
+const PlanCard = ({ 
+    title, 
+    price, 
+    period, 
+    subtitle, 
+    benefit, 
+    isHighlighted, 
+    onSelect, 
+    isLoading, 
+    icon: Icon, 
+    buttonText = "Assinar Agora",
+    features = []
+}: {
   title: string,
   price: string,
   period: string,
@@ -180,38 +193,67 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
   isLoading?: boolean,
   icon?: any,
   buttonText?: string;
+  features?: string[];
 }) => {
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card text-card-foreground transition-all hover:shadow-lg relative flex flex-col",
-        isHighlighted ? "border-primary ring-2 ring-primary/50" : "hover:border-muted-foreground/30"
+        "rounded-3xl border bg-card text-card-foreground transition-all duration-300 relative flex flex-col p-6 sm:p-8",
+        isHighlighted 
+            ? "border-primary ring-4 ring-primary/10 shadow-2xl scale-105 z-10" 
+            : "hover:border-muted-foreground/30 shadow-sm"
       )}
     >
       {isHighlighted && (
-        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
-          MAIS VANTAJOSO
-        </Badge>
-      )}
-      <CardHeader className="text-center">
-        {Icon && <div className="mx-auto mb-2 text-primary opacity-80"><Icon className="h-6 w-6" /></div>}
-        <CardTitle className="text-xl font-bold font-headline">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="text-center flex-grow">
-        <div className="flex items-baseline justify-center">
-          <span className="text-3xl font-bold tracking-tighter">{price}</span>
-          <span className="text-lg text-muted-foreground">/{period}</span>
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+            <Badge className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                Recomendado
+            </Badge>
         </div>
-        <p className="text-sm text-muted-foreground mt-2">{subtitle}</p>
+      )}
+      
+      <div className="space-y-2 mb-6">
+        <h3 className="text-lg font-bold font-headline">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-snug">{subtitle}</p>
+      </div>
+
+      <div className="mb-8">
+        <div className="flex items-baseline gap-1">
+          <span className="text-4xl font-black tracking-tight">{price}</span>
+          <span className="text-muted-foreground font-medium">/{period}</span>
+        </div>
         {benefit && (
-          <p className="text-sm font-semibold text-primary mt-1 uppercase tracking-wide">{benefit}</p>
+          <p className="text-sm font-bold text-primary mt-2 uppercase tracking-tight">{benefit}</p>
         )}
-      </CardContent>
-      <CardFooter className="p-4 mt-auto">
-        <Button className="w-full" variant={isHighlighted ? "default" : "outline"} disabled={isLoading} onClick={onSelect}>
-          {isLoading ? <Loader2 className="animate-spin" /> : buttonText}
-        </Button>
-      </CardFooter>
+      </div>
+
+      <div className="space-y-4 flex-grow mb-8">
+        {features.map((feature, i) => (
+            <div key={i} className="flex items-start gap-3">
+                <div className="bg-primary/10 p-0.5 rounded-full mt-0.5">
+                    <Check className="h-3.5 w-3.5 text-primary stroke-[3px]" />
+                </div>
+                <span className="text-sm text-foreground/80 leading-tight">{feature}</span>
+            </div>
+        ))}
+      </div>
+
+      <Button 
+        className={cn(
+            "w-full h-12 rounded-xl font-bold group",
+            isHighlighted ? "bg-primary text-primary-foreground shadow-lg hover:shadow-primary/20" : "variant-outline"
+        )} 
+        variant={isHighlighted ? "default" : "outline"} 
+        disabled={isLoading} 
+        onClick={onSelect}
+      >
+        {isLoading ? <Loader2 className="animate-spin" /> : (
+            <>
+                {buttonText}
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </>
+        )}
+      </Button>
     </div>
   );
 };
@@ -248,7 +290,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
 
   const handleWhatsAppSpecialClick = () => {
     const phoneNumber = "5511921494313";
-    const message = "Olá! Tenho interesse no Plano Especial do AtelierFlow que inclui a impressora térmica e suporte.";
+    const message = "Olá! Tenho interesse no Combo Automação do AtelierFlow que inclui a impressora térmica.";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -298,89 +340,113 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
 
   if (!profile?.trialStarted) {
       return (
-        <Card className="border-primary bg-primary/5 shadow-xl max-w-md mx-auto">
-            <CardHeader className="text-center">
-                <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Card className="border-primary bg-primary/5 shadow-2xl max-w-md mx-auto rounded-3xl p-4 overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Star className="h-32 w-32 fill-primary" />
+            </div>
+            <CardHeader className="text-center relative z-10">
+                <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Star className="h-8 w-8 text-primary fill-current" />
                 </div>
-                <CardTitle className="font-headline text-3xl text-primary">Tudo Pronto!</CardTitle>
-                <CardDescription className="text-base">
-                    Você está a um passo de organizar seu ateliê. Comece agora com seu acesso gratuito por 7 dias.
+                <CardTitle className="font-headline text-3xl text-primary">Teste Grátis</CardTitle>
+                <CardDescription className="text-base font-medium">
+                    Experimente o sistema completo por 7 dias sem pagar nada.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-4 relative z-10">
                 <Button
                     size="lg"
-                    className="w-full text-lg py-8 shadow-lg hover:scale-105 transition-transform"
+                    className="w-full text-lg py-8 shadow-xl hover:scale-105 transition-transform rounded-2xl font-bold"
                     onClick={handleStartTrial}
                     disabled={isTrialLoading}
                 >
                     {isTrialLoading ? <Loader2 className="animate-spin" /> : (
                         <>
-                            <Star className="mr-2 h-5 w-5 fill-current" />
-                            Começar Meus 7 Dias Grátis
+                            Ativar meus 7 Dias Grátis
+                            <ArrowRight className="ml-2 h-5 w-5" />
                         </>
                     )}
                 </Button>
-                <p className="text-center text-xs text-muted-foreground mt-4">
-                    Sem compromisso. Explore todos os recursos liberados.
-                </p>
+                <div className="mt-6 flex flex-col gap-2 items-center">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Check className="h-3 w-3" /> Acesso a todos os recursos
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Check className="h-3 w-3" /> Sem cartão de crédito
+                    </div>
+                </div>
             </CardContent>
         </Card>
       );
   }
 
   return (
-    <Card>
-        <CardHeader className="text-center">
-            <CardTitle className="font-headline text-2xl">Assine o AtelierFlow</CardTitle>
-            <CardDescription>
-                Seu período de teste terminou ou você decidiu profissionalizar seu negócio. Escolha o melhor plano:
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                <div className="md:order-1">
-                        <PlanCard 
-                        title="Plano Mensal"
-                        price="R$62,90"
-                        period="mês"
-                        subtitle="Ideal para começar."
-                        onSelect={() => createPreference('mensal')}
-                        isLoading={isLoading && selectedPlan === 'mensal'}
-                    />
+    <div className="space-y-12">
+        <div className="text-center space-y-4">
+            <div className="inline-flex items-center gap-2 bg-muted px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <div className="flex -space-x-2">
+                    {[1,2,3].map(i => <div key={i} className="h-5 w-5 rounded-full border-2 border-background bg-muted-foreground/20" />)}
                 </div>
-                <div className="md:order-2">
-                    <PlanCard 
-                        title="Plano Anual"
-                        price="12x R$49,86"
-                        period="ano"
-                        subtitle="ou R$ 490,00 à vista"
-                        benefit="2 MESES DE DESCONTO"
-                        isHighlighted
-                        onSelect={() => createPreference('anual')}
-                        isLoading={isLoading && selectedPlan === 'anual'}
-                    />
-                </div>
-                <div className="md:order-3">
-                    <PlanCard 
-                        title="Combo Automação"
-                        price="Sob Consulta"
-                        period="especial"
-                        subtitle="Impressora + Suporte + App"
-                        benefit="SOLUÇÃO COMPLETA"
-                        icon={Printer}
-                        buttonText="Falar com Consultor"
-                        onSelect={() => handleWhatsAppSpecialClick()}
-                        isLoading={false}
-                    />
-                </div>
+                Usado por centenas de artesãos
             </div>
-            <p className="text-center text-sm text-muted-foreground !mt-6">
-                Todos os planos incluem acesso completo ao sistema.
-            </p>
-        </CardContent>
-    </Card>
+            <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tight">Escolha o seu plano</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">Seu período de teste terminou. Selecione o plano que melhor se adapta ao momento do seu ateliê.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+            <PlanCard 
+                title="Plano Mensal"
+                price="R$62,90"
+                period="mês"
+                subtitle="Flexibilidade total para quem está começando agora."
+                features={[
+                    "Gestão de Pedidos",
+                    "Cadastro de Clientes",
+                    "Dashboard Financeiro",
+                    "Suporte via Email",
+                    "Relatórios Básicos"
+                ]}
+                onSelect={() => createPreference('mensal')}
+                isLoading={isLoading && selectedPlan === 'mensal'}
+            />
+            
+            <PlanCard 
+                title="Plano Anual"
+                price="12x R$49,86"
+                period="ano"
+                subtitle="O favorito dos ateliês profissionais que buscam economia."
+                benefit="2 MESES DE DESCONTO"
+                isHighlighted
+                features={[
+                    "Tudo do Plano Mensal",
+                    "Desconto de 2 meses",
+                    "Prioridade no Suporte",
+                    "R$ 490,00 à vista (Opção PIX)",
+                    "Acesso antecipado a recursos"
+                ]}
+                onSelect={() => createPreference('anual')}
+                isLoading={isLoading && selectedPlan === 'anual'}
+            />
+
+            <PlanCard 
+                title="Combo Automação"
+                price="Sob Consulta"
+                period="personalizado"
+                subtitle="Hardware + Software. A solução definitiva para seu balcão."
+                buttonText="Falar com Consultor"
+                icon={Printer}
+                features={[
+                    "Tudo do Plano Anual",
+                    "Impressora Térmica 58mm",
+                    "Configuração Remota",
+                    "Treinamento VIP",
+                    "Garantia Estendida"
+                ]}
+                onSelect={() => createPreference('especial')}
+                isLoading={false}
+            />
+        </div>
+    </div>
   )
 }
 
@@ -399,18 +465,20 @@ export default function AtivacaoPage() {
 
   if (profileLoading) {
       return (
-          <div className="flex min-h-screen items-center justify-center">
+          <div className="flex min-h-screen items-center justify-center bg-background">
               <Loader2 className="animate-spin h-8 w-8 text-primary" />
           </div>
       )
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-       <div className="absolute top-5 left-5 hidden sm:block">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background/50 p-4 md:p-8">
+       <div className="absolute top-8 left-8 hidden sm:flex items-center gap-2">
           <Logo className="h-8 w-8 text-primary" />
+          <span className="font-headline font-bold text-xl">AtelierFlow</span>
         </div>
-        <div className="w-full max-w-4xl space-y-6">
+        
+        <div className="w-full max-w-6xl space-y-12 py-12">
             
             {!profile?.phone ? (
                 <div className="max-w-md mx-auto w-full">
@@ -418,42 +486,51 @@ export default function AtivacaoPage() {
                 </div>
             ) : (
                 <Tabs defaultValue="plan" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
-                        <TabsTrigger value="plan">
-                            {!profile.trialStarted ? "Ativar Teste" : "Assinatura"}
-                        </TabsTrigger>
-                        <TabsTrigger value="code">Usar Código</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="plan" className="mt-4">
+                    <div className="flex justify-center mb-8">
+                        <TabsList className="bg-muted p-1 rounded-xl">
+                            <TabsTrigger value="plan" className="rounded-lg px-8">
+                                {!profile.trialStarted ? "Ativar Teste" : "Planos"}
+                            </TabsTrigger>
+                            <TabsTrigger value="code" className="rounded-lg px-8">Usar Código</TabsTrigger>
+                        </TabsList>
+                    </div>
+                    
+                    <TabsContent value="plan" className="mt-0 outline-none">
                         <PlanSelectionTab profile={profile} />
                     </TabsContent>
-                    <TabsContent value="code" className="mt-4">
-                    <div className="max-w-md mx-auto">
-                        <CodeActivationTab />
-                    </div>
+                    
+                    <TabsContent value="code" className="mt-0 outline-none">
+                        <div className="max-w-md mx-auto">
+                            <Card className="rounded-3xl shadow-xl p-4">
+                                <CodeActivationTab />
+                            </Card>
+                        </div>
                     </TabsContent>
                 </Tabs>
             )}
 
-            <div className="w-full text-center max-w-md mx-auto">
-                <Separator className="my-4" />
-                <p className="text-sm text-muted-foreground mb-2">
-                  Dúvidas? Fale conosco no WhatsApp.
-                </p>
-                <Button variant="outline" className="w-full" onClick={handleWhatsAppClick}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Falar com Suporte
-                </Button>
-            </div>
-            <div className="text-center">
-                 <Button
+            <div className="w-full text-center space-y-6">
+                <div className="max-w-xs mx-auto">
+                    <Separator className="bg-muted-foreground/20" />
+                </div>
+                <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                        Alguma dúvida antes de assinar?
+                    </p>
+                    <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5" onClick={handleWhatsAppClick}>
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Chamar no WhatsApp
+                    </Button>
+                </div>
+                
+                <Button
                     variant="link"
                     size="sm"
-                    className="text-muted-foreground"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => auth.signOut()}
-                    >
+                >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Trocar de conta (Sair)
+                    Sair da conta ({user?.email})
                 </Button>
             </div>
         </div>
