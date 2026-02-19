@@ -200,37 +200,37 @@ const PlanCard = ({
       className={cn(
         "rounded-3xl border bg-card text-card-foreground transition-all duration-300 relative flex flex-col p-6 sm:p-8",
         isHighlighted 
-            ? "border-primary ring-4 ring-primary/10 shadow-2xl scale-105 z-10" 
+            ? "border-primary ring-4 ring-primary/10 shadow-2xl md:scale-105 z-10 pt-10 sm:pt-12" 
             : "hover:border-muted-foreground/30 shadow-sm"
       )}
     >
       {isHighlighted && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-            <Badge className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+            <Badge className="bg-primary text-primary-foreground px-6 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-md">
                 Recomendado
             </Badge>
         </div>
       )}
       
       <div className="space-y-2 mb-6">
-        <h3 className="text-lg font-bold font-headline">{title}</h3>
+        <h3 className="text-xl font-bold font-headline">{title}</h3>
         <p className="text-sm text-muted-foreground leading-snug">{subtitle}</p>
       </div>
 
       <div className="mb-8">
         <div className="flex items-baseline gap-1">
-          <span className="text-4xl font-black tracking-tight">{price}</span>
-          <span className="text-muted-foreground font-medium">/{period}</span>
+          <span className="text-4xl font-black tracking-tighter">{price}</span>
+          <span className="text-muted-foreground font-medium text-sm">/{period}</span>
         </div>
         {benefit && (
-          <p className="text-sm font-bold text-primary mt-2 uppercase tracking-tight">{benefit}</p>
+          <p className="text-sm font-extrabold text-primary mt-2 uppercase tracking-wide">{benefit}</p>
         )}
       </div>
 
       <div className="space-y-4 flex-grow mb-8">
         {features.map((feature, i) => (
             <div key={i} className="flex items-start gap-3">
-                <div className="bg-primary/10 p-0.5 rounded-full mt-0.5">
+                <div className="bg-primary/10 p-0.5 rounded-full mt-0.5 shrink-0">
                     <Check className="h-3.5 w-3.5 text-primary stroke-[3px]" />
                 </div>
                 <span className="text-sm text-foreground/80 leading-tight">{feature}</span>
@@ -382,7 +382,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
 
   return (
     <div className="space-y-12">
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-4 px-4">
             <div className="inline-flex items-center gap-2 bg-muted px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 <div className="flex -space-x-2">
                     {[1,2,3].map(i => <div key={i} className="h-5 w-5 rounded-full border-2 border-background bg-muted-foreground/20" />)}
@@ -390,10 +390,10 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                 Usado por centenas de artesãos
             </div>
             <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tight">Escolha o seu plano</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">Seu período de teste terminou. Selecione o plano que melhor se adapta ao momento do seu ateliê.</p>
+            <p className="text-muted-foreground max-w-xl mx-auto text-sm md:text-base">Seu período de teste terminou. Selecione o plano que melhor se adapta ao momento do seu ateliê.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto px-4 md:px-8">
             <PlanCard 
                 title="Plano Mensal"
                 price="R$62,90"
@@ -431,7 +431,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
             <PlanCard 
                 title="Combo Automação"
                 price="Sob Consulta"
-                period="personalizado"
+                period="especial"
                 subtitle="Hardware + Software. A solução definitiva para seu balcão."
                 buttonText="Falar com Consultor"
                 icon={Printer}
