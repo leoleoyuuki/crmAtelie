@@ -355,8 +355,8 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                         title="Plano Anual"
                         price="12x R$49,86"
                         period="ano"
-                        subtitle="Equivalente a R$40,83/mês"
-                        benefit="2 MESES DE DESCONTO"
+                        subtitle="2 MESES DE DESCONTO"
+                        benefit="ou R$ 490,00 à vista"
                         isHighlighted
                         onSelect={() => createPreference('anual')}
                         isLoading={isLoading && selectedPlan === 'anual'}
