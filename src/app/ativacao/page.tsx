@@ -200,30 +200,35 @@ const PlanCard = ({
       className={cn(
         "rounded-3xl border bg-card text-card-foreground transition-all duration-300 relative flex flex-col p-6 sm:p-8",
         isHighlighted 
-            ? "border-primary ring-4 ring-primary/10 shadow-2xl md:scale-105 z-10 pt-10 sm:pt-12" 
+            ? "border-primary ring-4 ring-primary/10 shadow-2xl md:scale-105 z-10 pt-14 sm:pt-16" 
             : "hover:border-muted-foreground/30 shadow-sm"
       )}
     >
       {isHighlighted && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-            <Badge className="bg-primary text-primary-foreground px-6 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-md">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+            <Badge className="bg-primary text-primary-foreground px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl whitespace-nowrap border-2 border-background">
                 Recomendado
             </Badge>
         </div>
       )}
       
       <div className="space-y-2 mb-6">
-        <h3 className="text-xl font-bold font-headline">{title}</h3>
-        <p className="text-sm text-muted-foreground leading-snug">{subtitle}</p>
+        <h3 className="text-2xl font-bold font-headline">{title}</h3>
+        <p className="text-sm text-muted-foreground leading-snug min-h-[40px]">{subtitle}</p>
       </div>
 
       <div className="mb-8">
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl font-black tracking-tighter">{price}</span>
+        <div className="flex items-baseline flex-wrap gap-1">
+          <span className={cn(
+              "font-black tracking-tighter",
+              price.length > 10 ? "text-2xl" : "text-4xl"
+          )}>{price}</span>
           <span className="text-muted-foreground font-medium text-sm">/{period}</span>
         </div>
         {benefit && (
-          <p className="text-sm font-extrabold text-primary mt-2 uppercase tracking-wide">{benefit}</p>
+          <p className="text-sm font-extrabold text-primary mt-2 uppercase tracking-wide bg-primary/5 inline-block px-2 py-0.5 rounded">
+            {benefit}
+          </p>
         )}
       </div>
 
@@ -241,7 +246,7 @@ const PlanCard = ({
       <Button 
         className={cn(
             "w-full h-12 rounded-xl font-bold group",
-            isHighlighted ? "bg-primary text-primary-foreground shadow-lg hover:shadow-primary/20" : "variant-outline"
+            isHighlighted ? "bg-primary text-primary-foreground shadow-lg hover:shadow-primary/20" : ""
         )} 
         variant={isHighlighted ? "default" : "outline"} 
         disabled={isLoading} 
@@ -419,10 +424,10 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                 isHighlighted
                 features={[
                     "Tudo do Plano Mensal",
-                    "Desconto de 2 meses",
                     "Prioridade no Suporte",
                     "R$ 490,00 à vista (Opção PIX)",
-                    "Acesso antecipado a recursos"
+                    "Acesso antecipado a recursos",
+                    "Menor taxa de renovação"
                 ]}
                 onSelect={() => createPreference('anual')}
                 isLoading={isLoading && selectedPlan === 'anual'}
