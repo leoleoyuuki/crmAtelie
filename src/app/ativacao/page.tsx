@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase, useDocument } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Key, Star, Phone } from 'lucide-react';
+import { MessageSquare, LogOut, Loader2, Key, Star, Phone, Printer } from 'lucide-react';
 import { initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
@@ -22,7 +23,7 @@ import { Label } from '@/components/ui/label';
 import { updateUserProfilePhone } from '@/lib/data';
 
 
-type Plan = 'mensal' | 'trimestral' | 'anual';
+type Plan = 'mensal' | 'anual' | 'especial';
 
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
 
@@ -168,7 +169,7 @@ function CodeActivationTab() {
   )
 }
 
-const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSelect, isLoading }: {
+const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSelect, isLoading, icon: Icon, buttonText = "Assinar Agora" }: {
   title: string,
   price: string,
   period: string,
@@ -177,6 +178,8 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
   isHighlighted?: boolean,
   onSelect: () => void,
   isLoading?: boolean,
+  icon?: any,
+  buttonText?: string;
 }) => {
   return (
     <div
@@ -191,21 +194,22 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
         </Badge>
       )}
       <CardHeader className="text-center">
+        {Icon && <div className="mx-auto mb-2 text-primary opacity-80"><Icon className="h-6 w-6" /></div>}
         <CardTitle className="text-xl font-bold font-headline">{title}</CardTitle>
       </CardHeader>
       <CardContent className="text-center flex-grow">
         <div className="flex items-baseline justify-center">
-          <span className="text-4xl font-bold tracking-tighter">{price}</span>
+          <span className="text-3xl font-bold tracking-tighter">{price}</span>
           <span className="text-lg text-muted-foreground">/{period}</span>
         </div>
         <p className="text-sm text-muted-foreground mt-2">{subtitle}</p>
         {benefit && (
-          <p className="text-sm font-semibold text-primary mt-1">{benefit}</p>
+          <p className="text-sm font-semibold text-primary mt-1 uppercase tracking-wide">{benefit}</p>
         )}
       </CardContent>
       <CardFooter className="p-4 mt-auto">
         <Button className="w-full" variant={isHighlighted ? "default" : "outline"} disabled={isLoading} onClick={onSelect}>
-          {isLoading ? <Loader2 className="animate-spin" /> : "Assinar Agora"}
+          {isLoading ? <Loader2 className="animate-spin" /> : buttonText}
         </Button>
       </CardFooter>
     </div>
@@ -214,7 +218,6 @@ const PlanCard = ({ title, price, period, subtitle, benefit, isHighlighted, onSe
 
 const planDetails = {
     mensal: { price: 62.90 },
-    trimestral: { price: 149.90 },
     anual: { price: 490.00 },
 };
 
@@ -243,11 +246,23 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
     }
   };
 
+  const handleWhatsAppSpecialClick = () => {
+    const phoneNumber = "5511921494313";
+    const message = "Olá! Tenho interesse no Plano Especial do AtelierFlow que inclui a impressora térmica e suporte.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const createPreference = async (plan: Plan) => {
+    if (plan === 'especial') {
+        handleWhatsAppSpecialClick();
+        return;
+    }
+
     trackFbqEvent('InitiateCheckout', {
         content_name: plan,
         currency: 'BRL',
-        value: planDetails[plan].price,
+        value: (planDetails as any)[plan].price,
     });
 
     if (!user) {
@@ -258,7 +273,6 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
     setSelectedPlan(plan);
     try {
         const isDevelopment = process.env.NODE_ENV === 'development';
-        // Use a test user email in development to ensure test cards work for guest checkouts
         const userEmail = isDevelopment ? 'test_user_12345678@testuser.com' : user.email;
 
         const response = await fetch('/api/mercadopago', {
@@ -278,11 +292,10 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erro de Pagamento', description: error.message || 'Não foi possível iniciar o pagamento. Tente novamente.' });
         setSelectedPlan(null);
-        setIsLoading(false); // Stop loading on error
+        setIsLoading(false);
     }
   };
 
-  // Se o usuário NUNCA começou um teste, mostramos APENAS o card de trial
   if (!profile?.trialStarted) {
       return (
         <Card className="border-primary bg-primary/5 shadow-xl max-w-md mx-auto">
@@ -317,7 +330,6 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
       );
   }
 
-  // Se o usuário JÁ começou o teste (ou ele expirou), mostramos os planos
   return (
     <Card>
         <CardHeader className="text-center">
@@ -328,28 +340,6 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
         </CardHeader>
         <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                <div className="md:order-2">
-                    <PlanCard 
-                        title="Plano Anual"
-                        price="R$490"
-                        period="ano"
-                        subtitle="ou 12x de R$49,86"
-                        benefit="Melhor custo-benefício"
-                        isHighlighted
-                        onSelect={() => createPreference('anual')}
-                        isLoading={isLoading && selectedPlan === 'anual'}
-                    />
-                </div>
-                    <div className="md:order-3">
-                    <PlanCard 
-                        title="Plano Trimestral"
-                        price="R$149,90"
-                        period="trimestre"
-                        subtitle="ou 3x de R$55,58"
-                        onSelect={() => createPreference('trimestral')}
-                        isLoading={isLoading && selectedPlan === 'trimestral'}
-                    />
-                </div>
                 <div className="md:order-1">
                         <PlanCard 
                         title="Plano Mensal"
@@ -358,6 +348,31 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                         subtitle="Ideal para começar."
                         onSelect={() => createPreference('mensal')}
                         isLoading={isLoading && selectedPlan === 'mensal'}
+                    />
+                </div>
+                <div className="md:order-2">
+                    <PlanCard 
+                        title="Plano Anual"
+                        price="12x R$49,86"
+                        period="ano"
+                        subtitle="Equivalente a R$40,83/mês"
+                        benefit="2 MESES DE DESCONTO"
+                        isHighlighted
+                        onSelect={() => createPreference('anual')}
+                        isLoading={isLoading && selectedPlan === 'anual'}
+                    />
+                </div>
+                <div className="md:order-3">
+                    <PlanCard 
+                        title="Combo Automação"
+                        price="Sob Consulta"
+                        period="especial"
+                        subtitle="Impressora + Suporte + App"
+                        benefit="SOLUÇÃO COMPLETA"
+                        icon={Printer}
+                        buttonText="Falar com Consultor"
+                        onSelect={() => handleWhatsAppSpecialClick()}
+                        isLoading={false}
                     />
                 </div>
             </div>
