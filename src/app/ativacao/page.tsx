@@ -477,68 +477,73 @@ export default function AtivacaoPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background/50 p-4 md:p-8">
-       <div className="absolute top-8 left-8 hidden sm:flex items-center gap-2">
-          <Logo className="h-8 w-8 text-primary" />
-          <span className="font-headline font-bold text-xl">AtelierFlow</span>
-        </div>
+    <div className="flex min-h-screen flex-col bg-background/50">
+        {/* Header Fixo no Topo para evitar sobreposição */}
+        <header className="w-full p-6 md:p-8 shrink-0">
+            <div className="flex items-center gap-2 max-w-6xl mx-auto">
+                <Logo className="h-8 w-8 text-primary" />
+                <span className="font-headline font-bold text-xl">AtelierFlow</span>
+            </div>
+        </header>
         
-        <div className="w-full max-w-6xl space-y-12 py-12">
-            
-            {!profile?.phone ? (
-                <div className="max-w-md mx-auto w-full">
-                    <PhoneCollectionStep user={user} />
-                </div>
-            ) : (
-                <Tabs defaultValue="plan" className="w-full">
-                    <div className="flex justify-center mb-8">
-                        <TabsList className="bg-muted p-1 rounded-xl">
-                            <TabsTrigger value="plan" className="rounded-lg px-8">
-                                {!profile.trialStarted ? "Ativar Teste" : "Planos"}
-                            </TabsTrigger>
-                            <TabsTrigger value="code" className="rounded-lg px-8">Usar Código</TabsTrigger>
-                        </TabsList>
+        {/* Área de Conteúdo Centralizada */}
+        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+            <div className="w-full max-w-6xl space-y-12 pb-12">
+                {!profile?.phone ? (
+                    <div className="max-w-md mx-auto w-full">
+                        <PhoneCollectionStep user={user} />
+                    </div>
+                ) : (
+                    <Tabs defaultValue="plan" className="w-full">
+                        <div className="flex justify-center mb-8">
+                            <TabsList className="bg-muted p-1 rounded-xl">
+                                <TabsTrigger value="plan" className="rounded-lg px-8">
+                                    {!profile.trialStarted ? "Ativar Teste" : "Planos"}
+                                </TabsTrigger>
+                                <TabsTrigger value="code" className="rounded-lg px-8">Usar Código</TabsTrigger>
+                            </TabsList>
+                        </div>
+                        
+                        <TabsContent value="plan" className="mt-0 outline-none">
+                            <PlanSelectionTab profile={profile} />
+                        </TabsContent>
+                        
+                        <TabsContent value="code" className="mt-0 outline-none">
+                            <div className="max-w-md mx-auto">
+                                <Card className="rounded-3xl shadow-xl p-4">
+                                    <CodeActivationTab />
+                                </Card>
+                            </div>
+                        </TabsContent>
+                    </Tabs>
+                )}
+
+                <div className="w-full text-center space-y-6">
+                    <div className="max-w-xs mx-auto">
+                        <Separator className="bg-muted-foreground/20" />
+                    </div>
+                    <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                            Alguma dúvida antes de assinar?
+                        </p>
+                        <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5" onClick={handleWhatsAppClick}>
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Chamar no WhatsApp
+                        </Button>
                     </div>
                     
-                    <TabsContent value="plan" className="mt-0 outline-none">
-                        <PlanSelectionTab profile={profile} />
-                    </TabsContent>
-                    
-                    <TabsContent value="code" className="mt-0 outline-none">
-                        <div className="max-w-md mx-auto">
-                            <Card className="rounded-3xl shadow-xl p-4">
-                                <CodeActivationTab />
-                            </Card>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-            )}
-
-            <div className="w-full text-center space-y-6">
-                <div className="max-w-xs mx-auto">
-                    <Separator className="bg-muted-foreground/20" />
-                </div>
-                <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                        Alguma dúvida antes de assinar?
-                    </p>
-                    <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5" onClick={handleWhatsAppClick}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Chamar no WhatsApp
+                    <Button
+                        variant="link"
+                        size="sm"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => auth.signOut()}
+                    >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sair da conta ({user?.email})
                     </Button>
                 </div>
-                
-                <Button
-                    variant="link"
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => auth.signOut()}
-                >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair da conta ({user?.email})
-                </Button>
             </div>
-        </div>
+        </main>
     </div>
   );
 }
