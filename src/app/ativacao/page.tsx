@@ -388,12 +388,6 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
   return (
     <div className="space-y-12">
         <div className="text-center space-y-4 px-4">
-            <div className="inline-flex items-center gap-2 bg-muted px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                <div className="flex -space-x-2">
-                    {[1,2,3].map(i => <div key={i} className="h-5 w-5 rounded-full border-2 border-background bg-muted-foreground/20" />)}
-                </div>
-                Usado por centenas de artesãos
-            </div>
             <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tight">Escolha o seu plano</h2>
             <p className="text-muted-foreground max-w-xl mx-auto text-sm md:text-base">Seu período de teste terminou. Selecione o plano que melhor se adapta ao momento do seu ateliê.</p>
         </div>
@@ -426,8 +420,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                     "Tudo do Plano Mensal",
                     "Prioridade no Suporte",
                     "R$ 490,00 à vista (Opção PIX)",
-                    "Acesso antecipado a recursos",
-                    "Menor taxa de renovação"
+                    "Sem reajuste de preço por 1 ano"
                 ]}
                 onSelect={() => createPreference('anual')}
                 isLoading={isLoading && selectedPlan === 'anual'}
