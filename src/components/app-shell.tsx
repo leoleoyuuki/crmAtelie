@@ -133,12 +133,18 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
         try {
             if (navigator.share) {
                 await navigator.share(shareData);
-            } else {
-                await navigator.clipboard.writeText(window.location.origin);
-                toast({ title: "Link Copiado!", description: "O link do AtelierFlow foi copiado para sua área de transferência." });
+                return; // Sucesso no compartilhamento nativo
             }
         } catch (err) {
-            console.error(err);
+            console.log("Compartilhamento nativo não disponível ou bloqueado, tentando copiar link.", err);
+        }
+
+        // Fallback: Copiar para área de transferência se o share falhar ou não existir
+        try {
+            await navigator.clipboard.writeText(window.location.origin);
+            toast({ title: "Link Copiado!", description: "O link do AtelierFlow foi copiado para sua área de transferência." });
+        } catch (err) {
+            console.error("Falha ao copiar link:", err);
         }
     };
 
