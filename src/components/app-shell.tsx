@@ -16,18 +16,41 @@ import {
   SidebarGroupContent
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign, LogOut, Sparkles, MessageSquare } from "lucide-react";
-import React, { useContext, useState, useEffect } from "react";
-import { useAuth } from "@/firebase";
+import { 
+    LayoutDashboard, 
+    Users, 
+    ShoppingCart, 
+    Eye, 
+    EyeOff, 
+    ListChecks, 
+    Tags, 
+    KeyRound, 
+    BookOpen, 
+    ShieldCheck, 
+    ShieldAlert, 
+    Shield, 
+    Archive, 
+    DollarSign, 
+    LogOut, 
+    Sparkles, 
+    MessageSquare,
+    Share2,
+    Bell,
+    HelpCircle,
+    ChevronDown,
+    Zap
+} from "lucide-react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
+import { useAuth, useDocument } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/firebase/auth/use-user";
 import { PasswordContext } from "@/contexts/password-context";
 import { PasswordDialog } from "./password-dialog";
 import { Badge } from "./ui/badge";
-import type { UserProfile } from "@/lib/types";
+import type { UserProfile, UserSummary } from "@/lib/types";
 import { differenceInDays } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
@@ -40,42 +63,57 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OnboardingModal } from "./dashboard/onboarding-modal";
+import { useToast } from "@/hooks/use-toast";
 
-function SubscriptionBadge({ expiresAt }: { expiresAt?: Date }) {
-    if (!expiresAt) {
-        return null;
-    }
+function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
+    if (!expiresAt) return null;
     const daysLeft = differenceInDays(expiresAt, new Date());
 
-    const getBadgeContent = () => {
-        if (daysLeft < 0) {
-            return { text: "Expirada", icon: <ShieldAlert className="h-3 w-3" />, className: "bg-red-500/10 text-red-700 border-red-500/20" };
-        }
-        if (daysLeft <= 7) {
-            return { text: `${daysLeft}d restantes`, icon: <ShieldAlert className="h-3 w-3" />, className: "bg-red-500/10 text-red-700 border-red-500/20" };
-        }
-        if (daysLeft <= 15) {
-            return { text: `${daysLeft}d restantes`, icon: <Shield className="h-3 w-3" />, className: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20" };
-        }
-        return { text: `${daysLeft}d restantes`, icon: <ShieldCheck className="h-3 w-3" />, className: "bg-green-500/10 text-green-700 border-green-500/20" };
+    if (isTrial) {
+        return <Badge variant="secondary" className="bg-orange-500/10 text-orange-700 border-orange-200 text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter">Trial</Badge>;
     }
 
-    const { text, icon, className } = getBadgeContent();
+    return <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-200 text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter">Ativo</Badge>;
+}
+
+function MonthProgress({ summary }: { summary: UserSummary | null }) {
+    const progress = useMemo(() => {
+        if (!summary || !summary.totalOrders) return 0;
+        const completed = summary.totalOrders - (summary.pendingOrders || 0);
+        return Math.min(Math.round((completed / summary.totalOrders) * 100), 100);
+    }, [summary]);
 
     return (
-        <Badge variant="outline" className={cn("text-[10px] py-0 h-5 gap-1 pl-1 pr-2 font-bold uppercase tracking-tight", className)}>
-            {icon}
-            {text}
-        </Badge>
+        <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-full border bg-background/50">
+            <div className="relative h-6 w-6">
+                <svg className="h-full w-full" viewBox="0 0 36 36">
+                    <circle className="stroke-muted fill-none" strokeWidth="3" cx="18" cy="18" r="16" />
+                    <circle 
+                        className="stroke-primary fill-none transition-all duration-1000" 
+                        strokeWidth="3" 
+                        strokeDasharray={`${progress}, 100`} 
+                        strokeLinecap="round" 
+                        cx="18" 
+                        cy="18" 
+                        r="16" 
+                        transform="rotate(-90 18 18)"
+                    />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-[8px] font-black">{progress}%</span>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground whitespace-nowrap">Meta do Mês 🚀</span>
+        </div>
     );
 }
 
-
 function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null, onOpenOnboarding: () => void }) {
     const { user } = useUser();
-    const { auth } = useAuth();
+    const { auth, db } = useAuth();
+    const router = useRouter();
+    const { toast } = useToast();
     const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
+    const { data: summary } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
 
     const handleToggleClick = () => {
         if (!isPasswordSet) {
@@ -85,67 +123,141 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
         }
     };
 
+    const handleShare = async () => {
+        const shareData = {
+            title: 'AtelierFlow',
+            text: 'Gerencie seu ateliê com o AtelierFlow - Menos papelada, mais arte.',
+            url: window.location.origin,
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(window.location.origin);
+                toast({ title: "Link Copiado!", description: "O link do AtelierFlow foi copiado para sua área de transferência." });
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
         <header className="flex h-16 items-center gap-4 border-b bg-card/50 backdrop-blur-md px-4 lg:px-8 sticky top-0 z-30">
-            <div className="md:hidden">
-              <SidebarTrigger />
-            </div>
-            <div className="w-full flex-1" />
-
-            <div className="flex items-center gap-2 md:gap-4">
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={handleToggleClick} 
-                    aria-label="Toggle Privacy Mode"
-                    className={cn(isPrivacyMode ? "text-primary" : "text-muted-foreground")}
-                >
-                    {isPrivacyMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </Button>
-                <PasswordDialog isOpen={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} />
-
+            <div className="flex items-center gap-4">
+                <div className="md:hidden">
+                    <SidebarTrigger />
+                </div>
+                
+                {/* User Workspace Selector Style Pill */}
                 {user && (
-                    <div className="flex items-center gap-3">
-                        <div className="hidden md:flex flex-col items-end">
-                            <span className="font-bold text-xs text-foreground uppercase tracking-tight leading-none mb-1">{user.displayName}</span>
-                            <SubscriptionBadge expiresAt={profile?.expiresAt} />
+                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer group">
+                        <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Logo className="h-3.5 w-3.5 text-primary" />
                         </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-muted hover:border-primary/50 transition-all p-0">
-                                    <Avatar className="h-full w-full">
-                                        <AvatarImage src={user.photoURL ?? ''} alt="Avatar" />
-                                        <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.displayName?.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-64 mt-2" align="end" forceMount>
-                                <DropdownMenuLabel className="font-normal">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-bold leading-none">{user.displayName}</p>
-                                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                                    </div>
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                    onSelect={onOpenOnboarding} 
-                                    className="cursor-pointer py-3"
-                                >
-                                    <Sparkles className="mr-2 h-4 w-4 text-primary" />
-                                    <span className="font-medium">Tour Inicial</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => auth.signOut()} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer py-3">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span className="font-medium">Sair da conta</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <span className="text-xs font-bold truncate max-w-[120px]">{user.displayName?.split(' ')[0]}</span>
+                        <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && !profile?.status?.includes('active_paid')} />
+                        <ChevronDown className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
                 )}
             </div>
-        </header>
 
+            <div className="flex-1" />
+
+            <div className="flex items-center gap-1.5 md:gap-3">
+                <MonthProgress summary={summary} />
+
+                <Separator orientation="vertical" className="h-6 hidden md:block" />
+
+                <div className="flex items-center gap-1">
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handleToggleClick} 
+                        className={cn("h-9 w-9 rounded-xl", isPrivacyMode ? "text-primary bg-primary/5" : "text-muted-foreground")}
+                    >
+                        {isPrivacyMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    <PasswordDialog isOpen={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen} />
+
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handleShare}
+                        className="h-9 w-9 rounded-xl text-muted-foreground hidden sm:flex"
+                    >
+                        <Share2 className="h-4 w-4" />
+                    </Button>
+
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        asChild
+                        className="h-9 w-9 rounded-xl text-muted-foreground"
+                    >
+                        <Link href="/ajuda">
+                            <HelpCircle className="h-4 w-4" />
+                        </Link>
+                    </Button>
+
+                    <div className="relative">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 rounded-xl text-muted-foreground"
+                        >
+                            <Bell className="h-4 w-4" />
+                        </Button>
+                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive border-2 border-card" />
+                    </div>
+                </div>
+
+                {profile?.trialStarted && profile?.status === 'active' && (
+                    <Button 
+                        size="sm" 
+                        className="hidden md:flex h-9 rounded-xl font-bold bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
+                        onClick={() => router.push('/ativacao')}
+                    >
+                        <Zap className="h-3.5 w-3.5 mr-1.5 fill-current" />
+                        Upgrade
+                    </Button>
+                )}
+
+                {user && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative h-9 w-9 rounded-full border-2 border-muted hover:border-primary/50 transition-all p-0">
+                                <Avatar className="h-full w-full">
+                                    <AvatarImage src={user.photoURL ?? ''} alt="Avatar" />
+                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.displayName?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-64 mt-2" align="end" forceMount>
+                            <DropdownMenuLabel className="font-normal">
+                                <div className="flex flex-col space-y-1">
+                                    <p className="text-sm font-bold leading-none">{user.displayName}</p>
+                                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                                </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                                onSelect={onOpenOnboarding} 
+                                className="cursor-pointer py-3"
+                            >
+                                <Sparkles className="mr-2 h-4 w-4 text-primary" />
+                                <span className="font-medium">Tour Inicial</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => auth.signOut()} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer py-3">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span className="font-medium">Sair da conta</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+            </div>
+        </header>
     );
 }
 
