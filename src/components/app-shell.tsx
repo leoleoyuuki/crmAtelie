@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
 import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign, LogOut, Sparkles, MessageSquare } from "lucide-react";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -127,7 +127,16 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                     </div>
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={onOpenOnboarding} className="cursor-pointer py-3">
+                                <DropdownMenuItem 
+                                    onSelect={(e) => {
+                                        e.preventDefault();
+                                        // Small delay to ensure menu closes before dialog opens to prevent focus conflicts
+                                        setTimeout(() => {
+                                            onOpenOnboarding();
+                                        }, 100);
+                                    }} 
+                                    className="cursor-pointer py-3"
+                                >
                                     <Sparkles className="mr-2 h-4 w-4 text-primary" />
                                     <span className="font-medium">Abrir Tour Inicial</span>
                                 </DropdownMenuItem>
@@ -189,6 +198,18 @@ export default function AppShell({ children, profile }: { children: React.ReactN
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  // Handle automatic onboarding opening
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('atelierflow_onboarding_seen');
+    if (!hasSeenOnboarding) {
+      // Small delay to ensure initial load is smooth before showing modal
+      const timer = setTimeout(() => {
+        setIsOnboardingOpen(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const isAdmin = user?.uid === "3YuL6Ff7G9cHAV7xa81kyQF4bCw2";
 

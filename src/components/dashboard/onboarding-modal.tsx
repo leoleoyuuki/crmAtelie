@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,39 +18,29 @@ import {
   HelpCircle
 } from 'lucide-react';
 import Logo from '@/components/icons/logo';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface OnboardingModalProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function OnboardingModal({ open: externalOpen, onOpenChange: externalOnOpenChange }: OnboardingModalProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
-
-  // Use external control if provided, otherwise use internal state
-  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  const setIsOpen = (value: boolean) => {
-    if (externalOnOpenChange) {
-      externalOnOpenChange(value);
-    } else {
-      setInternalOpen(value);
-    }
-  };
-
-  useEffect(() => {
-    // Only check localStorage for automatic opening if not controlled externally
-    if (externalOpen === undefined) {
-      const hasSeenOnboarding = localStorage.getItem('atelierflow_onboarding_seen');
-      if (!hasSeenOnboarding) {
-        setInternalOpen(true);
-      }
-    }
-  }, [externalOpen]);
+export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
+  const router = useRouter();
 
   const handleClose = () => {
     localStorage.setItem('atelierflow_onboarding_seen', 'true');
-    setIsOpen(false);
+    onOpenChange(false);
+  };
+
+  const handleViewTutorials = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Close modal and set flag before navigating
+    handleClose();
+    // Small delay to allow the modal's cleanup (focus management, body lock) to finish
+    setTimeout(() => {
+      router.push('/ajuda');
+    }, 150);
   };
 
   const handleWhatsAppClick = () => {
@@ -62,7 +51,7 @@ export function OnboardingModal({ open: externalOpen, onOpenChange: externalOnOp
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none bg-background shadow-2xl">
         <div className="bg-primary p-8 text-primary-foreground relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
@@ -127,8 +116,8 @@ export function OnboardingModal({ open: externalOpen, onOpenChange: externalOnOp
                     <Button variant="outline" size="sm" onClick={handleWhatsAppClick} className="h-8 text-xs font-bold border-primary text-primary hover:bg-primary/5">
                         Chamar Suporte
                     </Button>
-                    <Button asChild variant="link" size="sm" className="h-8 text-xs text-muted-foreground">
-                        <Link href="/ajuda" onClick={handleClose}>Ver Tutoriais</Link>
+                    <Button variant="ghost" size="sm" onClick={handleViewTutorials} className="h-8 text-xs text-muted-foreground hover:text-primary transition-colors">
+                        Ver Tutoriais
                     </Button>
                 </div>
             </div>
