@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo } from "react";
@@ -52,6 +53,7 @@ interface OrderTableShellProps {
 
 const monthFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
     const date = row.original.createdAt;
+    if (!date) return false;
     const [month, year] = value.split('-').map(Number);
     return getMonth(date) === month && getYear(date) === year;
 }
@@ -191,7 +193,7 @@ export default function OrderTableShell({
         accessorKey: 'createdAt',
         header: 'Criado em',
         filterFn: monthFilterFn,
-        cell: ({ row }) => format(row.original.createdAt, 'dd/MM/yyyy'),
+        cell: ({ row }) => row.original.createdAt ? format(row.original.createdAt, 'dd/MM/yyyy') : '---',
       },
        {
         accessorKey: 'completionStatus',
@@ -237,7 +239,7 @@ export default function OrderTableShell({
   });
 
   const renderPagination = () => {
-    const canPrev = isPage ? hasPrev : table.getCanPreviousPage();
+    const canPrev = isPage ? hasPrevPage : table.getCanPreviousPage();
     const canNext = isPage ? hasNextPage : table.getCanNextPage();
     const onPrev = isPage ? onPrevPage : () => table.previousPage();
     const onNext = isPage ? onNextPage : () => table.nextPage();
