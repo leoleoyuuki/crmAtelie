@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo } from "react";
@@ -31,6 +30,8 @@ import { CustomerTableRowActions } from "./customer-table-row-actions";
 import { Skeleton } from "../ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CustomerCardMobile } from "./customer-card-mobile";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
 
 interface CustomerTableShellProps {
   data: Customer[];
@@ -61,30 +62,48 @@ export function CustomerTableShell({
     () => [
       {
         accessorKey: "name",
-        header: "Nome",
+        header: ({ column }) => (
+            <button 
+                className="flex items-center gap-1 hover:text-foreground transition-colors uppercase text-[10px] font-black tracking-widest"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+                Nome
+                <ArrowUpDown className="h-3 w-3" />
+            </button>
+        ),
         cell: ({ row }) => (
-          <div className="font-medium text-sm">{row.original.name}</div>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8 rounded-lg border bg-muted/50">
+                <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
+                    {row.original.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+            </Avatar>
+            <span className="font-bold text-sm text-foreground">{row.original.name}</span>
+          </div>
         ),
       },
       {
         accessorKey: "phone",
-        header: "Telefone",
-        cell: ({ row }) => <div className="text-sm">{row.original.phone}</div>,
+        header: () => <span className="uppercase text-[10px] font-black tracking-widest">WhatsApp</span>,
+        cell: ({ row }) => <div className="text-sm font-medium text-muted-foreground">{row.original.phone}</div>,
       },
       {
         accessorKey: "email",
-        header: "Email",
-        cell: ({ row }) => <div className="text-sm">{row.original.email || "N/A"}</div>,
+        header: () => <span className="uppercase text-[10px] font-black tracking-widest">E-mail</span>,
+        cell: ({ row }) => <div className="text-sm font-medium text-muted-foreground">{row.original.email || "---"}</div>,
       },
       {
         accessorKey: 'createdAt',
-        header: 'Cliente Desde',
+        header: () => <span className="uppercase text-[10px] font-black tracking-widest text-center block">Desde</span>,
         cell: ({ row }) => {
           const createdAt = row.original.createdAt;
-          // Check if createdAt is a valid date before formatting
-          return isValid(createdAt)
-            ? format(createdAt, 'dd/MM/yyyy')
-            : "Calculando...";
+          return (
+            <div className="text-center">
+                <span className="text-xs font-bold">
+                    {isValid(createdAt) ? format(createdAt, 'dd/MM/yy') : "..."}
+                </span>
+            </div>
+          )
         },
       },
       {
@@ -106,8 +125,6 @@ export function CustomerTableShell({
     data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // We are now handling pagination manually, so we disable the tanstack-table pagination model
-    // getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -116,40 +133,49 @@ export function CustomerTableShell({
       columnFilters,
       sorting,
     },
-    manualPagination: true, // Tell the table we're handling pagination ourselves
+    manualPagination: true,
   });
 
   if (loading && table.getRowModel().rows.length === 0) {
-      return <Skeleton className="h-[600px] w-full" />;
+      return <Skeleton className="h-[600px] w-full rounded-3xl" />;
   }
 
   const renderPagination = () => (
-    <div className="flex items-center justify-end space-x-2 py-4">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPrevPage()}
-        disabled={!hasPrevPage || loading}
-      >
-        Anterior
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onNextPage()}
-        disabled={!hasNextPage || loading}
-      >
-        Próximo
-      </Button>
+    <div className="flex items-center justify-between p-6 border-t bg-muted/5">
+        <p className="text-xs text-muted-foreground font-medium">
+            Total de <span className="font-bold text-foreground">{data.length}</span> clientes na lista
+        </p>
+        <div className="flex items-center gap-2">
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPrevPage()}
+                disabled={!hasPrevPage || loading}
+                className="h-8 rounded-lg font-bold text-xs"
+            >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Anterior
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onNextPage()}
+                disabled={!hasNextPage || loading}
+                className="h-8 rounded-lg font-bold text-xs"
+            >
+                Próximo
+                <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+        </div>
     </div>
   );
 
   return (
-    <Card>
+    <Card className="border-none shadow-2xl rounded-3xl overflow-hidden bg-card">
       <CustomerTableToolbar table={table} onCustomerCreated={onDataMutated} />
-      <CardContent>
+      <CardContent className="p-0">
         {isMobile ? (
-          <div className="space-y-4">
+          <div className="space-y-4 p-6">
             {table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map(row => (
                     <CustomerCardMobile
@@ -158,20 +184,20 @@ export function CustomerTableShell({
                     />
                 ))
             ) : (
-                <div className="py-24 text-center text-muted-foreground">
-                    Nenhum cliente encontrado.
+                <div className="py-24 text-center text-muted-foreground italic">
+                    Nenhum cliente cadastrado.
                 </div>
             )}
           </div>
         ) : (
-          <div className="rounded-md border">
+          <div className="w-full overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/30 border-y">
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
+                  <TableRow key={headerGroup.id} className="hover:bg-transparent border-none">
                     {headerGroup.headers.map((header) => {
                       return (
-                        <TableHead key={header.id}>
+                        <TableHead key={header.id} className="h-12 py-0">
                           {header.isPlaceholder
                             ? null
                             : flexRender(
@@ -190,6 +216,7 @@ export function CustomerTableShell({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
+                      className="hover:bg-muted/20 border-b last:border-0 transition-colors h-16"
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
@@ -205,7 +232,7 @@ export function CustomerTableShell({
                   <TableRow>
                     <TableCell
                       colSpan={columns.length}
-                      className="h-24 text-center"
+                      className="h-48 text-center text-muted-foreground italic"
                     >
                       Nenhum cliente encontrado.
                     </TableCell>

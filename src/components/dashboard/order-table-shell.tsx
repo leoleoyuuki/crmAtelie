@@ -1,7 +1,6 @@
-
 "use client"
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Order, OrderStatus } from "@/lib/types";
 import {
   ColumnDef,
@@ -31,7 +30,7 @@ import { OrderTableRowActions } from "./order-table-row-actions";
 import { OrderTableToolbar } from "./order-table-toolbar";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OrderCardMobile } from "./order-card-mobile";
@@ -109,28 +108,30 @@ export default function OrderTableShell({
     () => [
       {
         accessorKey: "customerName",
-        header: "Cliente",
+        header: ({ column }) => (
+            <button 
+                className="flex items-center gap-1 hover:text-foreground transition-colors uppercase text-[10px] font-black tracking-widest"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+                Nome do Cliente
+                <ArrowUpDown className="h-3 w-3" />
+            </button>
+        ),
         cell: ({ row }) => (
-          <div className="font-medium">{row.original.customerName}</div>
+          <div className="flex flex-col">
+            <span className="font-bold text-sm text-foreground">{row.original.customerName}</span>
+            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-tight">#{row.original.id.substring(0, 7)}</span>
+          </div>
         ),
       },
       {
-        accessorKey: "id",
-        header: "Pedido",
-        cell: ({ row }) => (
-            <div className="font-mono text-xs uppercase">
-                #{row.original.id.substring(0, 7)}
-            </div>
-        )
-      },
-      {
         accessorKey: "items",
-        header: "Serviços",
+        header: () => <span className="uppercase text-[10px] font-black tracking-widest">Serviços</span>,
         filterFn: serviceTypeFilterFn,
         cell: ({ row }) => (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1 max-w-[200px]">
             {row.original.items && row.original.items.map((item, index) => (
-              <Badge key={index} variant="secondary" className="px-1 py-0.5 text-[10px] whitespace-nowrap">
+              <Badge key={index} variant="secondary" className="px-2 py-0.5 text-[9px] font-bold uppercase border-none bg-muted/50 whitespace-nowrap">
                 {item.serviceType}
               </Badge>
             ))}
@@ -139,52 +140,51 @@ export default function OrderTableShell({
       },
       {
         accessorKey: "totalValue",
-        header: () => <div className="text-right">Total</div>,
+        header: () => <div className="text-right uppercase text-[10px] font-black tracking-widest">Valor Total</div>,
         cell: ({ row }) => {
           if (isPrivacyMode) {
-              return <div className="text-right font-medium">R$ ●●●,●●</div>;
+              return <div className="text-right font-black">R$ ●●●,●●</div>;
           }
           const amount = parseFloat(row.getValue("totalValue"));
           const formatted = new Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
           }).format(amount);
-          return <div className="text-right font-medium">{formatted}</div>;
+          return <div className="text-right font-black text-sm">{formatted}</div>;
         },
       },
       {
         accessorKey: "dueDate",
-        header: ({ column }) => {
-            return (
-              <Button
-                variant="ghost"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-              >
-                Data de Entrega
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </Button>
-            )
-        },
+        header: () => <div className="text-center uppercase text-[10px] font-black tracking-widest">Data de Entrega</div>,
         cell: ({ row }) => {
             const dueDate = row.original.dueDate;
             if (!dueDate) return null;
             const isDueSoon = isBefore(dueDate, addDays(new Date(), 3)) && !isBefore(dueDate, new Date());
-            return <div className={cn('text-center', isDueSoon ? 'text-destructive font-semibold' : '')}>{format(dueDate, "PPP", { locale: ptBR })}</div>
+            return (
+                <div className="flex flex-col items-center">
+                    <span className={cn('text-xs font-bold', isDueSoon ? 'text-destructive' : 'text-foreground')}>
+                        {format(dueDate, "dd/MM/yyyy")}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground italic">
+                        {format(dueDate, "eeee", { locale: ptBR })}
+                    </span>
+                </div>
+            )
         }
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: () => <span className="uppercase text-[10px] font-black tracking-widest">Status</span>,
         cell: ({ row }) => {
           const status = row.getValue("status") as OrderStatus;
           const colorClass = {
-            "Novo": "bg-blue-500/20 text-blue-700 border-blue-500/50",
-            "Em Processo": "bg-yellow-500/20 text-yellow-700 border-yellow-500/50",
-            "Aguardando Retirada": "bg-purple-500/20 text-purple-700 border-purple-500/50",
-            "Concluído": "bg-green-500/20 text-green-700 border-green-500/50",
+            "Novo": "bg-blue-500/10 text-blue-700 border-blue-200",
+            "Em Processo": "bg-yellow-500/10 text-yellow-700 border-yellow-200",
+            "Aguardando Retirada": "bg-purple-500/10 text-purple-700 border-purple-200",
+            "Concluído": "bg-green-500/10 text-green-700 border-green-200",
           }[status];
 
-          return <Badge className={colorClass} variant="outline">{status}</Badge>;
+          return <Badge className={cn(colorClass, "px-3 py-1 rounded-lg font-bold text-[10px] border shadow-none")} variant="outline">{status}</Badge>;
         },
       },
        {
@@ -237,70 +237,57 @@ export default function OrderTableShell({
   });
 
   const renderPagination = () => {
-    if (isPage) {
-        return (
-            <div className="flex items-center justify-end space-x-2 py-4">
+    const canPrev = isPage ? hasPrev : table.getCanPreviousPage();
+    const canNext = isPage ? hasNextPage : table.getCanNextPage();
+    const onPrev = isPage ? onPrevPage : () => table.previousPage();
+    const onNext = isPage ? onNextPage : () => table.nextPage();
+
+    return (
+        <div className="flex items-center justify-between p-6 border-t bg-muted/5">
+            <p className="text-xs text-muted-foreground font-medium">
+                Mostrando <span className="font-bold text-foreground">{table.getRowModel().rows.length}</span> resultados
+            </p>
+            <div className="flex items-center gap-2">
                 <Button
                     variant="outline"
                     size="sm"
-                    onClick={onPrevPage}
-                    disabled={!hasPrevPage || loading}
+                    onClick={onPrev}
+                    disabled={!canPrev || loading}
+                    className="h-8 rounded-lg font-bold text-xs"
                 >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
                     Anterior
                 </Button>
                 <Button
                     variant="outline"
                     size="sm"
-                    onClick={onNextPage}
-                    disabled={!hasNextPage || loading}
+                    onClick={onNext}
+                    disabled={!canNext || loading}
+                    className="h-8 rounded-lg font-bold text-xs"
                 >
                     Próximo
+                    <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
             </div>
-        );
-    }
-     // Render internal pagination for non-page (dashboard) view
-    if (table.getPageCount() > 1) {
-        return (
-             <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                >
-                Anterior
-                </Button>
-                <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                >
-                Próximo
-                </Button>
-            </div>
-        )
-    }
-
-    return null;
+        </div>
+    );
   }
 
   if (loading && data.length === 0) {
-      return <Skeleton className="h-[400px] w-full" />
+      return <Skeleton className="h-[400px] w-full rounded-3xl" />
   }
 
   return (
-    <Card>
+    <Card className="border-none shadow-2xl rounded-3xl overflow-hidden bg-card">
       <OrderTableToolbar 
         table={table} 
         onOrderCreated={handleUpdate}
         isPage={isPage} 
         serviceTypes={uniqueServiceTypes}
       />
-      <CardContent>
+      <CardContent className="p-0">
         {isMobile ? (
-          <div className="space-y-4">
+          <div className="space-y-4 p-6">
             {table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map(row => (
                     <OrderCardMobile 
@@ -312,20 +299,20 @@ export default function OrderTableShell({
                     />
                 ))
             ) : (
-                <div className="py-24 text-center text-muted-foreground">
-                    Nenhum resultado.
+                <div className="py-24 text-center text-muted-foreground italic">
+                    Nenhum pedido encontrado.
                 </div>
             )}
           </div>
         ) : (
-          <div className="rounded-md border">
+          <div className="w-full overflow-x-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/30 border-y">
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
+                  <TableRow key={headerGroup.id} className="hover:bg-transparent border-none">
                     {headerGroup.headers.map((header) => {
                       return (
-                        <TableHead key={header.id}>
+                        <TableHead key={header.id} className="h-12 py-0">
                           {header.isPlaceholder
                             ? null
                             : flexRender(
@@ -344,6 +331,7 @@ export default function OrderTableShell({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}
+                      className="hover:bg-muted/20 border-b last:border-0 transition-colors h-16"
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
@@ -359,9 +347,9 @@ export default function OrderTableShell({
                   <TableRow>
                     <TableCell
                       colSpan={columns.length}
-                      className="h-24 text-center"
+                      className="h-48 text-center text-muted-foreground italic"
                     >
-                      Nenhum resultado.
+                      Nenhum resultado para os filtros aplicados.
                     </TableCell>
                   </TableRow>
                 )}
