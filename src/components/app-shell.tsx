@@ -157,23 +157,28 @@ function BottomNavigation() {
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden flex items-start justify-around px-2 pb-[env(safe-area-inset-bottom,16px)] h-[calc(64px+env(safe-area-inset-bottom,16px))] shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-            {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                    <Link 
-                        key={item.href} 
-                        href={item.href}
-                        className={cn(
-                            "flex flex-col items-center justify-center gap-1 w-full h-16 transition-all duration-200",
-                            isActive ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px] scale-110")} />
-                        <span className="text-[10px] uppercase tracking-widest font-bold">{item.label}</span>
-                    </Link>
-                );
-            })}
+        <div 
+            className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden flex flex-col shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
+        >
+            <div className="flex items-center justify-around h-16 px-2">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                        <Link 
+                            key={item.href} 
+                            href={item.href}
+                            className={cn(
+                                "flex flex-col items-center justify-center gap-1 w-full h-full transition-all duration-200",
+                                isActive ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px] scale-110")} />
+                            <span className="text-[10px] uppercase tracking-widest font-bold">{item.label}</span>
+                        </Link>
+                    );
+                })}
+            </div>
         </div>
     );
 }
@@ -331,7 +336,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
         
         <main className="flex-1 flex flex-col min-w-0 transition-all duration-300">
             <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
-            <div className="flex-1 overflow-y-auto pb-24 md:pb-8">
+            <div className="flex-1 overflow-y-auto pb-32 md:pb-8">
                 {children}
             </div>
             <BottomNavigation />
