@@ -10,7 +10,6 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
   useSidebar,
-  SidebarLogout,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
@@ -129,9 +128,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem 
-                                    onSelect={() => {
-                                        setTimeout(onOpenOnboarding, 50);
-                                    }} 
+                                    onSelect={onOpenOnboarding} 
                                     className="cursor-pointer py-3"
                                 >
                                     <Sparkles className="mr-2 h-4 w-4 text-primary" />
@@ -233,6 +230,13 @@ export default function AppShell({ children, profile }: { children: React.ReactN
     }
   };
 
+  const handleWhatsAppClick = () => {
+    const phoneNumber = "5511921494313";
+    const message = "Olá! Gostaria de tirar uma dúvida sobre o AtelierFlow.";
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
 
   return (
       <div className="flex min-h-screen w-full bg-background">
@@ -247,7 +251,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
               </h1>
             </div>
           </SidebarHeader>
-          <SidebarContent className="px-2 pt-2">
+          <SidebarContent className="px-2 pt-2 scrollbar-none">
             <SidebarGroup>
                 <SidebarGroupContent>
                     <SidebarMenu className="gap-0.5">
@@ -336,6 +340,25 @@ export default function AppShell({ children, profile }: { children: React.ReactN
               )}
           </SidebarContent>
           <SidebarFooter className="p-2 border-t border-border/50">
+             {/* Support Card */}
+             <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 mx-2 mb-4 group-data-[collapsible=icon]:hidden transition-all hover:bg-primary/10">
+                <div className="bg-primary/10 w-8 h-8 rounded-lg flex items-center justify-center mb-3">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                </div>
+                <h4 className="text-sm font-bold mb-1">Precisa de ajuda?</h4>
+                <p className="text-[11px] text-muted-foreground leading-snug mb-3">
+                    Dúvidas sobre o sistema? Fale com nosso suporte.
+                </p>
+                <Button 
+                    variant="default"
+                    size="sm" 
+                    className="w-full h-8 text-[11px] font-bold rounded-xl shadow-md"
+                    onClick={handleWhatsAppClick}
+                >
+                    Suporte WhatsApp
+                </Button>
+             </div>
+
              <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton 
