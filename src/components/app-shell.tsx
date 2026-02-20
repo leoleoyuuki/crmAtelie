@@ -130,8 +130,6 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem 
                                     onSelect={() => {
-                                        // Allow dropdown to close naturally first, then trigger onboarding
-                                        // This prevents focus/pointer-events conflicts
                                         setTimeout(onOpenOnboarding, 50);
                                     }} 
                                     className="cursor-pointer py-3"
@@ -198,11 +196,9 @@ export default function AppShell({ children, profile }: { children: React.ReactN
   const { isMobile, setOpenMobile } = useSidebar();
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
-  // Handle automatic onboarding opening
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('atelierflow_onboarding_seen');
     if (!hasSeenOnboarding) {
-      // Small delay to ensure initial load is smooth before showing modal
       const timer = setTimeout(() => {
         setIsOnboardingOpen(true);
       }, 1000);
@@ -241,34 +237,34 @@ export default function AppShell({ children, profile }: { children: React.ReactN
   return (
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar className="border-r border-border/50 shadow-sm">
-          <SidebarHeader className="h-16 flex flex-row items-center px-6 border-b border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 p-1.5 rounded-xl">
-                <Logo className="h-6 w-6 text-primary" />
+          <SidebarHeader className="h-14 flex flex-row items-center px-4 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="bg-primary/10 p-1 rounded-lg">
+                <Logo className="h-5 w-5 text-primary" />
               </div>
-              <h1 className="text-xl font-headline font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden">
+              <h1 className="text-lg font-headline font-bold tracking-tight text-primary group-data-[collapsible=icon]:hidden">
                 AtelierFlow
               </h1>
             </div>
           </SidebarHeader>
-          <SidebarContent className="px-3 pt-4">
+          <SidebarContent className="px-2 pt-2">
             <SidebarGroup>
                 <SidebarGroupContent>
-                    <SidebarMenu className="gap-1">
+                    <SidebarMenu className="gap-0.5">
                     {menuItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton 
                             asChild 
                             isActive={pathname === item.href}
                             className={cn(
-                                "h-11 px-4 font-medium transition-all duration-200 rounded-lg",
+                                "h-9 px-3 font-medium transition-all duration-200 rounded-lg",
                                 pathname === item.href 
-                                    ? "bg-primary/15 text-primary font-bold shadow-[inset_4px_0_0_0_hsl(var(--primary))] hover:bg-primary/20" 
+                                    ? "bg-primary/15 text-primary font-bold shadow-[inset_3px_0_0_0_hsl(var(--primary))] hover:bg-primary/20" 
                                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                             )}
                         >
                             <Link href={item.href} onClick={handleLinkClick}>
-                                <item.icon className={cn("h-5 w-5 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
+                                <item.icon className={cn("h-4 w-4 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
                                 <span className="text-sm">{item.label}</span>
                             </Link>
                         </SidebarMenuButton>
@@ -278,26 +274,26 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                 </SidebarGroupContent>
             </SidebarGroup>
 
-            <SidebarGroup className="mt-4">
-               <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
+            <SidebarGroup className="mt-2">
+               <SidebarGroupLabel className="px-3 text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
                   Estoque & Custos
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                    <SidebarMenu className="gap-1">
+                    <SidebarMenu className="gap-0.5">
                     {inventoryMenuItems.map((item) => (
                         <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton 
                             asChild 
                             isActive={pathname === item.href}
                             className={cn(
-                                "h-11 px-4 font-medium transition-all duration-200 rounded-lg",
+                                "h-9 px-3 font-medium transition-all duration-200 rounded-lg",
                                 pathname === item.href 
-                                    ? "bg-primary/15 text-primary font-bold shadow-[inset_4px_0_0_0_hsl(var(--primary))] hover:bg-primary/20" 
+                                    ? "bg-primary/15 text-primary font-bold shadow-[inset_3px_0_0_0_hsl(var(--primary))] hover:bg-primary/20" 
                                     : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                             )}
                         >
                             <Link href={item.href} onClick={handleLinkClick}>
-                                <item.icon className={cn("h-5 w-5 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
+                                <item.icon className={cn("h-4 w-4 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
                                 <span className="text-sm">{item.label}</span>
                             </Link>
                         </SidebarMenuButton>
@@ -309,26 +305,26 @@ export default function AppShell({ children, profile }: { children: React.ReactN
 
 
               {isAdmin && (
-                <SidebarGroup className="mt-4">
-                    <SidebarGroupLabel className="px-4 text-[10px] font-bold uppercase tracking-widest text-destructive/70 group-data-[collapsible=icon]:hidden">
+                <SidebarGroup className="mt-2">
+                    <SidebarGroupLabel className="px-3 text-[9px] font-bold uppercase tracking-widest text-destructive/70 group-data-[collapsible=icon]:hidden">
                         Administração
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
-                        <SidebarMenu className="gap-1">
+                        <SidebarMenu className="gap-0.5">
                         {adminMenuItems.map((item) => (
                             <SidebarMenuItem key={item.href}>
                                 <SidebarMenuButton 
                                     asChild 
                                     isActive={pathname === item.href}
                                     className={cn(
-                                        "h-11 px-4 font-medium transition-all duration-200 rounded-lg",
+                                        "h-9 px-3 font-medium transition-all duration-200 rounded-lg",
                                         pathname === item.href 
-                                            ? "bg-destructive/15 text-destructive font-bold shadow-[inset_4px_0_0_0_hsl(var(--destructive))] hover:bg-destructive/20" 
+                                            ? "bg-destructive/15 text-destructive font-bold shadow-[inset_3px_0_0_0_hsl(var(--destructive))] hover:bg-destructive/20" 
                                             : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                                     )}
                                 >
                                     <Link href={item.href} onClick={handleLinkClick}>
-                                        <item.icon className={cn("h-5 w-5 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
+                                        <item.icon className={cn("h-4 w-4 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
                                         <span className="text-sm">{item.label}</span>
                                     </Link>
                                 </SidebarMenuButton>
@@ -339,14 +335,14 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                 </SidebarGroup>
               )}
           </SidebarContent>
-          <SidebarFooter className="p-4 border-t border-border/50">
+          <SidebarFooter className="p-2 border-t border-border/50">
              <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton 
                         onClick={() => auth.signOut()}
-                        className="h-11 px-4 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all duration-200 font-medium rounded-lg"
+                        className="h-9 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all duration-200 font-medium rounded-lg"
                     >
-                        <LogOut className="h-5 w-5" />
+                        <LogOut className="h-4 w-4" />
                         <span className="text-sm group-data-[collapsible=icon]:hidden">Sair da Conta</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
