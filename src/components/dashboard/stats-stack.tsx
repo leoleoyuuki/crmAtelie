@@ -7,12 +7,13 @@ import { cn } from "@/lib/utils";
 
 interface StatsStackProps {
     totalRevenue: number;
+    totalProfit: number;
     totalOrders: number;
     pendingOrders: number;
     isPrivacyMode?: boolean;
 }
 
-export function StatsStack({ totalRevenue, totalOrders, pendingOrders, isPrivacyMode }: StatsStackProps) {
+export function StatsStack({ totalRevenue, totalProfit, totalOrders, pendingOrders, isPrivacyMode }: StatsStackProps) {
     const formattedRevenue = isPrivacyMode
         ? 'R$ ●●●,●●'
         : new Intl.NumberFormat("pt-BR", {
@@ -20,17 +21,34 @@ export function StatsStack({ totalRevenue, totalOrders, pendingOrders, isPrivacy
             currency: "BRL",
           }).format(totalRevenue);
 
+    const formattedProfit = isPrivacyMode
+        ? 'R$ ●●●,●●'
+        : new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(totalProfit);
+
     return (
         <div className="flex flex-col gap-3">
-            <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
+            <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group border-primary/20 bg-primary/5">
                 <div className="bg-primary/10 p-3 rounded-xl group-hover:bg-primary/20 transition-colors">
-                    <DollarSign className="h-5 w-5 text-primary" />
+                    <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Receita Total</p>
-                    <p className="text-lg font-black tracking-tight">{formattedRevenue}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Lucro Real</p>
+                    <p className="text-lg font-black tracking-tight text-primary">{formattedProfit}</p>
                 </div>
                 {isPrivacyMode && <EyeOff className="h-3 w-3 text-muted-foreground ml-auto opacity-50" />}
+            </Card>
+
+            <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
+                <div className="bg-muted/50 p-3 rounded-xl group-hover:bg-muted transition-colors">
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Faturamento</p>
+                    <p className="text-lg font-black tracking-tight">{formattedRevenue}</p>
+                </div>
             </Card>
 
             <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">

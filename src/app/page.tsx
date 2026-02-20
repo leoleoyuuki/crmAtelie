@@ -126,6 +126,7 @@ export default function DashboardPage() {
             <div className="lg:col-span-3 space-y-4">
                 <StatsStack 
                     totalRevenue={summary?.totalRevenue || 0}
+                    totalProfit={totalProfit}
                     totalOrders={summary?.totalOrders || 0}
                     pendingOrders={summary?.pendingOrders || 0}
                     isPrivacyMode={isPrivacyMode}
@@ -188,17 +189,17 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Revenue Section */}
+          {/* Revenue & Profit Section */}
           <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
              <div className="bg-card rounded-3xl border shadow-sm overflow-hidden">
                 <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
                     <h3 className="font-headline font-bold text-xl">Desempenho Financeiro</h3>
                     <div className="flex gap-2">
-                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none">Faturamento</Badge>
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none">Faturamento & Lucro</Badge>
                     </div>
                 </div>
                 <div className="p-6">
-                    <RevenueChart data={revenueData} isPrivacyMode={isPrivacyMode} />
+                    <ProfitChart data={profitData} isPrivacyMode={isPrivacyMode} />
                 </div>
              </div>
           </div>
