@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -129,7 +128,7 @@ export function OnboardingModal({ open: externalOpen, onOpenChange: externalOnOp
                         Chamar Suporte
                     </Button>
                     <Button asChild variant="link" size="sm" className="h-8 text-xs text-muted-foreground">
-                        <Link href="/ajuda">Ver Tutoriais</Link>
+                        <Link href="/ajuda" onClick={handleClose}>Ver Tutoriais</Link>
                     </Button>
                 </div>
             </div>
