@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useFirebase } from '@/firebase';
@@ -8,13 +7,12 @@ import { Timestamp, getDocs, query, collection, where, orderBy, limit, startAfte
 import { startOfDay } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ListChecks, Search } from 'lucide-react';
+import { ListChecks, Search, Sparkles, Clock, AlertCircle } from 'lucide-react';
 import { EditableTaskItemCard } from '@/components/tarefas/task-item-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
-
 
 // Define a new type that combines OrderItem with parent Order info
 export type TaskItem = OrderItem & {
@@ -36,7 +34,7 @@ const convertTimestamps = (data: any) => {
     return data;
 }
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 8;
 
 export default function TarefasPage() {
   const { db, auth } = useFirebase();
@@ -178,9 +176,9 @@ export default function TarefasPage() {
 
     if (isLoading && tasks.length === 0) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-lg" />
+            <Skeleton key={i} className="h-64 w-full rounded-3xl" />
           ))}
         </div>
       );
@@ -188,13 +186,15 @@ export default function TarefasPage() {
 
     if (tasks.length === 0) {
       return (
-        <div className="flex flex-col justify-center items-center h-full py-16 gap-6">
-          <Alert className={`max-w-md ${type === 'overdue' ? 'border-green-500/50 text-green-700' : ''}`}>
-             <ListChecks className={`h-4 w-4 ${type === 'overdue' ? 'text-green-700' : ''}`} />
-             <AlertTitle>{noTasksMessage.title}</AlertTitle>
-             <AlertDescription>
-                {noTasksMessage.description}
-             </AlertDescription>
+        <div className="flex flex-col justify-center items-center h-full py-24 gap-6">
+          <Alert className={`max-w-md rounded-3xl border-dashed py-10 flex flex-col items-center text-center ${type === 'overdue' ? 'border-green-500/50 bg-green-50/30' : 'border-primary/20 bg-primary/5'}`}>
+             <ListChecks className={`h-10 w-10 mb-4 ${type === 'overdue' ? 'text-green-600' : 'text-primary'}`} />
+             <div className="space-y-1">
+                <AlertTitle className="text-xl font-headline font-bold">{noTasksMessage.title}</AlertTitle>
+                <AlertDescription className="text-muted-foreground">
+                    {noTasksMessage.description}
+                </AlertDescription>
+             </div>
            </Alert>
         </div>
       );
@@ -202,7 +202,7 @@ export default function TarefasPage() {
 
     return (
      <>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {tasks.map((task, index) => {
             const order = findOrderForTask(task.orderId);
             return order ? (
@@ -210,14 +210,14 @@ export default function TarefasPage() {
             ) : null;
             })}
         </div>
-        <div className="flex justify-center py-6">
+        <div className="flex justify-center py-12">
             {hasMore ? (
-                <Button variant="outline" onClick={() => handleLoadMore(false)} disabled={isLoading}>
+                <Button variant="outline" onClick={() => handleLoadMore(false)} disabled={isLoading} className="rounded-xl h-12 px-8 font-bold border-primary text-primary hover:bg-primary/5">
                     <Search className="mr-2 h-4 w-4" />
-                    {isLoading ? 'Buscando...' : 'Buscar mais'}
+                    {isLoading ? 'Buscando...' : 'Carregar mais tarefas'}
                 </Button>
             ) : (
-                <p className="text-sm text-muted-foreground">Não há mais tarefas para mostrar.</p>
+                <p className="text-sm text-muted-foreground font-medium italic">Você chegou ao fim da lista.</p>
             )}
         </div>
      </>
@@ -225,35 +225,54 @@ export default function TarefasPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 px-4 pt-6 md:px-8 flex flex-col">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight font-headline">
+    <div className="flex-1 space-y-8 px-4 pt-8 md:px-10 pb-10 flex flex-col">
+      <div className="space-y-4">
+        <h2 className="text-4xl font-black tracking-tight font-headline text-foreground">
           Painel de Tarefas
         </h2>
-        <p className="text-muted-foreground">
-          Acompanhe os itens de pedidos que estão próximos da entrega ou em atraso.
-        </p>
+        
+        <div className="flex items-center gap-6 border-b pb-1 overflow-x-auto no-scrollbar">
+            <button 
+                onClick={() => setActiveTab('upcoming')}
+                className={`text-sm pb-3 whitespace-nowrap transition-all ${activeTab === 'upcoming' ? 'font-bold text-primary border-b-2 border-primary' : 'font-medium text-muted-foreground hover:text-foreground'}`}
+            >
+                Entregas Próximas
+            </button>
+            <button 
+                onClick={() => setActiveTab('overdue')}
+                className={`text-sm pb-3 whitespace-nowrap transition-all ${activeTab === 'overdue' ? 'font-bold text-destructive border-b-2 border-destructive' : 'font-medium text-muted-foreground hover:text-foreground'}`}
+            >
+                Pendências Atrasadas
+            </button>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 flex flex-col flex-1">
-        <TabsList className="self-start">
-          <TabsTrigger value="upcoming">
-            Tarefas Próximas
-            <Badge variant={upcomingTasks.length > 0 ? "default" : "secondary"} className="ml-2">
-              {loadingUpcoming && upcomingTasks.length === 0 ? '...' : upcomingTasks.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="overdue">
-            Atrasadas
-             <Badge variant={overdueTasks.length > 0 ? "destructive" : "secondary"} className="ml-2">
-              {loadingOverdue && overdueTasks.length === 0 ? '...' : overdueTasks.length}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="upcoming" className="flex-1 overflow-y-auto -mx-4 px-4">
+      {/* Banner de Status Estilo Patreon */}
+      <div className="bg-secondary/10 border border-secondary/20 rounded-2xl p-4 flex items-start gap-4">
+        <div className="bg-secondary/20 p-2 rounded-xl mt-0.5">
+            <AlertCircle className="h-4 w-4 text-secondary-foreground" />
+        </div>
+        <div className="space-y-1">
+            <p className="text-sm font-bold text-foreground">Foco na Produção</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+                Este painel decompõe seus pedidos em itens individuais para que você possa focar em cada etapa da confecção.
+            </p>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 flex flex-col flex-1">
+        <TabsContent value="upcoming" className="flex-1 mt-0 outline-none">
+          <div className="flex items-center gap-2 mb-6">
+            <Clock className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Cronograma de Entrega</h3>
+          </div>
           {renderTaskList(upcomingTasks, 'upcoming')}
         </TabsContent>
-        <TabsContent value="overdue" className="flex-1 overflow-y-auto -mx-4 px-4">
+        <TabsContent value="overdue" className="flex-1 mt-0 outline-none">
+          <div className="flex items-center gap-2 mb-6">
+            <AlertCircle className="h-4 w-4 text-destructive" />
+            <h3 className="text-sm font-bold uppercase tracking-widest text-destructive">Itens Prioritários</h3>
+          </div>
           {renderTaskList(overdueTasks, 'overdue')}
         </TabsContent>
       </Tabs>

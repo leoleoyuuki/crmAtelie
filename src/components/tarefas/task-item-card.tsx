@@ -1,84 +1,103 @@
-
 'use client';
 
 import { useState } from 'react';
 import { TaskItem } from '@/app/tarefas/page';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Calendar, Package } from 'lucide-react';
+import { User, Calendar, Package, ArrowRight, Tag, ExternalLink } from 'lucide-react';
 import { format, formatDistanceToNow, isToday, isTomorrow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
 import { Order } from '@/lib/types';
-import { Tag } from 'lucide-react';
 
 interface TaskItemCardProps {
   task: TaskItem;
 }
 
-const getDueDateLabel = (dueDate: Date): { text: string, className: string } => {
+const getDueDateLabel = (dueDate: Date): { text: string, className: string, bg: string } => {
     if (isToday(dueDate)) {
-        return { text: 'Hoje', className: 'text-destructive font-bold' };
+        return { text: 'Entrega Hoje', className: 'text-destructive', bg: 'bg-red-500/10 border-red-200' };
     }
     if (isTomorrow(dueDate)) {
-        return { text: 'Amanhã', className: 'text-orange-600 font-semibold' };
+        return { text: 'Entrega Amanhã', className: 'text-orange-600', bg: 'bg-orange-500/10 border-orange-200' };
     }
     if (isPast(dueDate)) {
         return { 
-            text: `Atrasado há ${formatDistanceToNow(dueDate, { locale: ptBR })}`,
-            className: 'text-destructive font-bold' 
+            text: `Atrasado: ${formatDistanceToNow(dueDate, { locale: ptBR })}`,
+            className: 'text-destructive font-black uppercase tracking-tighter',
+            bg: 'bg-red-500/20 border-red-300 animate-pulse'
         };
     }
     return { 
-        text: `em ${formatDistanceToNow(dueDate, { locale: ptBR })}`,
-        className: 'text-muted-foreground'
+        text: `Prazo: ${format(dueDate, "dd/MM/yy")}`,
+        className: 'text-muted-foreground',
+        bg: 'bg-muted/50 border-border'
     };
 };
 
 export function TaskItemCard({ task }: TaskItemCardProps) {
-  const { text: dueDateText, className: dueDateClassName } = getDueDateLabel(task.dueDate);
+  const { text: dueDateText, className: dueDateClassName, bg: dueDateBg } = getDueDateLabel(task.dueDate);
 
   return (
-    <Card className="flex flex-col h-full hover:shadow-md transition-shadow">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-bold leading-tight">{task.serviceType}</CardTitle>
-          <Badge variant={task.orderStatus === 'Novo' ? 'default' : 'secondary'}>
+    <Card className="flex flex-col h-full hover:shadow-xl transition-all duration-300 rounded-3xl border-none shadow-sm overflow-hidden group bg-card">
+      <CardHeader className="p-6 pb-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-headline font-bold leading-tight group-hover:text-primary transition-colors">
+                {task.serviceType}
+            </CardTitle>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+                <Package className="h-3 w-3" />
+                <span>#{task.orderId.substring(0, 7).toUpperCase()}</span>
+            </div>
+          </div>
+          <Badge variant={task.orderStatus === 'Novo' ? 'default' : 'secondary'} className="rounded-lg text-[10px] font-bold uppercase py-1">
             {task.orderStatus}
           </Badge>
         </div>
-        {task.description && <CardDescription className="pt-1">"{task.description}"</CardDescription>}
+        {task.description && (
+            <p className="mt-3 text-xs text-muted-foreground leading-relaxed italic border-l-2 border-primary/20 pl-3">
+                "{task.description}"
+            </p>
+        )}
       </CardHeader>
-      <CardContent className="flex-grow space-y-3 text-sm">
-        <div className="flex items-center">
-          <Package className="h-4 w-4 mr-2 text-muted-foreground" />
-          Pedido{' '}
-          <Link href={`/print/${task.orderId}`} passHref target="_blank" onClick={(e) => e.stopPropagation()}>
-             <span className="font-semibold text-primary hover:underline ml-1">#{task.orderId.substring(0, 5)}</span>
-          </Link>
+
+      <CardContent className="px-6 py-4 flex-grow space-y-4">
+        <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-xl">
+                <User className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Cliente</span>
+                <span className="text-sm font-bold text-foreground">{task.customerName}</span>
+            </div>
         </div>
-        <div className="flex items-center">
-          <User className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span className="font-semibold">{task.customerName}</span>
-        </div>
+
         {task.assignedTo && (
-          <div className="flex items-center">
-            <Tag className="h-4 w-4 mr-2 text-muted-foreground" />
-            Atribuído a: <span className="font-semibold ml-1">{task.assignedTo}</span>
+          <div className="flex items-center gap-3">
+            <div className="bg-secondary/10 p-2 rounded-xl">
+                <Tag className="h-4 w-4 text-secondary-foreground" />
+            </div>
+            <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Responsável</span>
+                <span className="text-sm font-bold text-foreground">{task.assignedTo}</span>
+            </div>
           </div>
         )}
       </CardContent>
-      <CardFooter className="bg-muted/50 px-6 py-3 border-t">
-        <div className="flex items-center w-full justify-between">
-            <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                <span className="text-sm font-semibold">{format(task.dueDate, "dd/MM/yyyy")}</span>
+
+      <CardFooter className="p-0 border-t mt-auto">
+        <div className={cn('flex items-center justify-between w-full px-6 py-4', dueDateBg)}>
+            <div className="flex flex-col">
+                <span className={cn('text-xs font-black uppercase tracking-tight', dueDateClassName)}>
+                    {dueDateText}
+                </span>
             </div>
-            <span className={cn('text-sm', dueDateClassName)}>
-                {dueDateText}
-            </span>
+            <div className="bg-background/50 p-1.5 rounded-full group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                <ArrowRight className="h-4 w-4" />
+            </div>
         </div>
       </CardFooter>
     </Card>
@@ -96,7 +115,7 @@ export function EditableTaskItemCard({ task, order }: EditableTaskItemCardProps)
 
     return (
         <>
-            <div className="cursor-pointer" onClick={() => setIsEditDialogOpen(true)}>
+            <div className="cursor-pointer h-full" onClick={() => setIsEditDialogOpen(true)}>
                 <TaskItemCard task={task} />
             </div>
             <OrderFormDialog
@@ -107,4 +126,3 @@ export function EditableTaskItemCard({ task, order }: EditableTaskItemCardProps)
         </>
     );
 }
-
