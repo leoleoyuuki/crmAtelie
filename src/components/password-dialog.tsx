@@ -139,7 +139,7 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-sm:top-[25%] max-sm:translate-y-0">
         {renderContent()}
       </DialogContent>
     </Dialog>
