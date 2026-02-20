@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -280,12 +279,6 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                         </p>
                                     </div>
                                 )}
-
-                                <div className="pt-2">
-                                    <Button asChild variant="outline" size="sm" className="w-full text-xs font-bold h-9 rounded-lg">
-                                        <Link href="/ativacao">Gerenciar Assinatura</Link>
-                                    </Button>
-                                </div>
                             </div>
                         </PopoverContent>
                     </Popover>
