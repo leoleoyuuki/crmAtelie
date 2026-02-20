@@ -57,8 +57,8 @@ export function OnboardingModal() {
                     <Sparkles className="h-8 w-8 text-white" />
                 </div>
                 <div className="space-y-1">
-                    <h2 className="text-3xl font-headline font-bold">Bem-vinda ao AtelierFlow!</h2>
-                    <p className="text-primary-foreground/80 font-medium italic">"Menos papelada, mais arte."</p>
+                    <DialogTitle className="text-3xl font-headline font-bold text-primary-foreground">Bem-vinda ao AtelierFlow!</DialogTitle>
+                    <DialogDescription className="text-primary-foreground/80 font-medium italic">"Menos papelada, mais arte."</DialogDescription>
                 </div>
             </div>
         </div>
