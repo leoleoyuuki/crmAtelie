@@ -119,4 +119,5 @@ export interface UserSummary {
   monthlyRevenue: { [key: string]: number }; // YYYY-MM format
   monthlyCosts: { [key: string]: number }; // YYYY-MM format
   serviceDistribution?: { [key: string]: number };
+  monthlyGoal?: number;
 }

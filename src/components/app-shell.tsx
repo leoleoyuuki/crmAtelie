@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -32,7 +33,8 @@ import {
     MessageSquare,
     Share2,
     HelpCircle,
-    ChevronDown
+    ChevronDown,
+    Target
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -45,7 +47,7 @@ import { PasswordContext } from "@/contexts/password-context";
 import { PasswordDialog } from "./password-dialog";
 import { Badge } from "./ui/badge";
 import type { UserProfile, UserSummary } from "@/lib/types";
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
 import {
@@ -58,6 +60,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { OnboardingModal } from "./dashboard/onboarding-modal";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Input } from "./ui/input";
+import { updateMonthlyGoal } from "@/lib/data";
 
 function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
     if (!expiresAt) return null;
@@ -71,32 +82,106 @@ function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?:
 }
 
 function MonthProgress({ summary }: { summary: UserSummary | null }) {
-    const progress = useMemo(() => {
-        if (!summary || !summary.totalOrders) return 0;
-        const completed = summary.totalOrders - (summary.pendingOrders || 0);
-        return Math.min(Math.round((completed / summary.totalOrders) * 100), 100);
+    const { user } = useUser();
+    const { toast } = useToast();
+    const [newGoal, setNewGoal] = useState<string>("");
+    const [isPending, setIsPending] = useState(false);
+
+    const { progress, currentRevenue, goal } = useMemo(() => {
+        if (!summary) return { progress: 0, currentRevenue: 0, goal: 5000 };
+        const currentMonthKey = format(new Date(), 'yyyy-MM');
+        const currentRevenue = summary.monthlyRevenue?.[currentMonthKey] || 0;
+        const goal = summary.monthlyGoal || 5000;
+        const progress = Math.min(Math.round((currentRevenue / goal) * 100), 100);
+        return { progress, currentRevenue, goal };
     }, [summary]);
 
+    useEffect(() => {
+        if (goal) setNewGoal(goal.toString());
+    }, [goal]);
+
+    const handleUpdateGoal = async () => {
+        if (!user) return;
+        const goalNum = parseFloat(newGoal);
+        if (isNaN(goalNum) || goalNum <= 0) {
+            toast({ variant: "destructive", title: "Valor inválido", description: "Informe um valor positivo." });
+            return;
+        }
+        setIsPending(true);
+        try {
+            await updateMonthlyGoal(user.uid, goalNum);
+            toast({ title: "Meta atualizada!", description: `Sua nova meta é ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(goalNum)}` });
+        } catch (e) {
+            toast({ variant: "destructive", title: "Erro ao atualizar meta" });
+        } finally {
+            setIsPending(false);
+        }
+    };
+
+    const formattedRevenue = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentRevenue);
+    const formattedGoal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(goal);
+
     return (
-        <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-full border bg-background/50">
-            <div className="relative h-6 w-6">
-                <svg className="h-full w-full" viewBox="0 0 36 36">
-                    <circle className="stroke-muted fill-none" strokeWidth="3" cx="18" cy="18" r="16" />
-                    <circle 
-                        className="stroke-primary fill-none transition-all duration-1000" 
-                        strokeWidth="3" 
-                        strokeDasharray={`${progress}, 100`} 
-                        strokeLinecap="round" 
-                        cx="18" 
-                        cy="18" 
-                        r="16" 
-                        transform="rotate(-90 18 18)"
-                    />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-[8px] font-black">{progress}%</span>
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground whitespace-nowrap">Meta do Mês 🚀</span>
-        </div>
+        <Popover>
+            <PopoverTrigger asChild>
+                <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-full border bg-background/50 cursor-pointer group transition-colors hover:bg-muted/30">
+                    <div className="relative h-6 w-6">
+                        <svg className="h-full w-full" viewBox="0 0 36 36">
+                            <circle className="stroke-muted fill-none" strokeWidth="3" cx="18" cy="18" r="16" />
+                            <circle 
+                                className="stroke-primary fill-none transition-all duration-1000" 
+                                strokeWidth="3" 
+                                strokeDasharray={`${progress}, 100`} 
+                                strokeLinecap="round" 
+                                cx="18" 
+                                cy="18" 
+                                r="16" 
+                                transform="rotate(-90 18 18)"
+                            />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-[8px] font-black">{progress}%</span>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground whitespace-nowrap">Meta Financeira 💰</span>
+                </div>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" className="w-64 bg-background/95 backdrop-blur-md border shadow-xl p-4">
+                <div className="space-y-4">
+                    <div className="space-y-1">
+                        <div className="flex items-center justify-between mb-1">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Progresso do Mês</p>
+                            <span className="text-[10px] font-black text-primary">{progress}%</span>
+                        </div>
+                        <p className="text-sm font-black">
+                            {formattedRevenue} <span className="text-muted-foreground font-normal text-xs mx-1">de</span> {formattedGoal}
+                        </p>
+                        <div className="h-1.5 w-full bg-muted rounded-full mt-2 overflow-hidden">
+                            <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${progress}%` }} />
+                        </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                            <Target className="h-3 w-3" />
+                            Ajustar Meta (R$)
+                        </label>
+                        <div className="flex gap-2">
+                            <Input 
+                                type="number" 
+                                value={newGoal} 
+                                onChange={(e) => setNewGoal(e.target.value)}
+                                className="h-9 text-sm font-bold bg-muted/20"
+                                placeholder="Ex: 5000"
+                            />
+                            <Button size="sm" className="h-9 px-3 text-[10px] font-bold" onClick={handleUpdateGoal} disabled={isPending}>
+                                {isPending ? "..." : "Salvar"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
 
@@ -217,7 +302,10 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
-                                onSelect={onOpenOnboarding} 
+                                onSelect={() => {
+                                    // Small delay to ensure dropdown closes
+                                    setTimeout(() => onOpenOnboarding(), 100);
+                                }} 
                                 className="cursor-pointer py-3"
                             >
                                 <Sparkles className="mr-2 h-4 w-4 text-primary" />
@@ -330,7 +418,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
 
   return (
       <div className="flex min-h-screen w-full bg-background">
-        <Sidebar className="border-r border-border/50 shadow-sm">
+        <Sidebar className="border-r border-border/50 shadow-sm" collapsible="icon">
           <SidebarHeader className="h-14 flex flex-row items-center px-4 border-b border-border/50">
             <div className="flex items-center gap-2">
               <div className="bg-primary/10 p-1 rounded-lg">

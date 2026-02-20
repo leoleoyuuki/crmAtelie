@@ -857,6 +857,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
         monthlyRevenue,
         monthlyCosts,
         serviceDistribution,
+        monthlyGoal: 5000,
     };
 
     await setDoc(summaryRef, newSummaryData, { merge: true });
@@ -886,6 +887,20 @@ export async function updateUserProfilePhone(userId: string, phone: string): Pro
             path: userRef.path,
             operation: 'update',
             requestResourceData: { phone },
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}
+
+export async function updateMonthlyGoal(userId: string, goal: number): Promise<void> {
+  const summaryRef = doc(db, 'summaries', userId);
+  await updateDoc(summaryRef, { monthlyGoal: goal })
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: summaryRef.path,
+            operation: 'update',
+            requestResourceData: { monthlyGoal: goal },
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
         throw serverError;
