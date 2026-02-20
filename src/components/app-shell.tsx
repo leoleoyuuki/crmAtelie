@@ -46,7 +46,6 @@ import { useUser } from "@/firebase/auth/use-user";
 import { PasswordContext } from "@/contexts/password-context";
 import { PasswordDialog } from "./password-dialog";
 import { Badge } from "./ui/badge";
-import type { UserProfile, UserSummary } from "@/lib/types";
 import { differenceInDays, format, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
@@ -61,15 +60,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { OnboardingModal } from "./dashboard/onboarding-modal";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Input } from "./ui/input";
 import { updateMonthlyGoal } from "@/lib/data";
+import type { UserProfile, UserSummary } from "@/lib/types";
 
 function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
     if (!expiresAt) return null;
@@ -84,6 +78,7 @@ function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?:
 function MonthProgress({ summary }: { summary: UserSummary | null }) {
     const { user } = useUser();
     const { toast } = useToast();
+    const { isPrivacyMode } = useContext(PasswordContext);
     const [newGoal, setNewGoal] = useState<string>("");
     const [isPending, setIsPending] = useState(false);
 
@@ -99,6 +94,8 @@ function MonthProgress({ summary }: { summary: UserSummary | null }) {
     useEffect(() => {
         if (goal) setNewGoal(goal.toString());
     }, [goal]);
+
+    if (isPrivacyMode) return null;
 
     const handleUpdateGoal = async () => {
         if (!user) return;
@@ -344,7 +341,6 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                                 onSelect={() => {
-                                    // Small delay to ensure dropdown closes
                                     setTimeout(() => onOpenOnboarding(), 100);
                                 }} 
                                 className="cursor-pointer py-3"
