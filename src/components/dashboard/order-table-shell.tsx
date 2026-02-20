@@ -115,14 +115,14 @@ export default function OrderTableShell({
                 className="flex items-center gap-1 hover:text-foreground transition-colors uppercase text-[10px] font-black tracking-widest"
                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-                Nome do Cliente
+                Cliente
                 <ArrowUpDown className="h-3 w-3" />
             </button>
         ),
         cell: ({ row }) => (
           <div className="flex flex-col">
-            <span className="font-bold text-sm text-foreground">{row.original.customerName}</span>
-            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-tight">#{row.original.id.substring(0, 7)}</span>
+            <span className="font-bold text-sm text-foreground leading-tight">{row.original.customerName}</span>
+            <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">ID: {row.original.id.substring(0, 7)}</span>
           </div>
         ),
       },
@@ -131,7 +131,7 @@ export default function OrderTableShell({
         header: () => <span className="uppercase text-[10px] font-black tracking-widest">Serviços</span>,
         filterFn: serviceTypeFilterFn,
         cell: ({ row }) => (
-          <div className="flex flex-wrap gap-1 max-w-[200px]">
+          <div className="flex flex-wrap gap-1 max-w-[220px]">
             {row.original.items && row.original.items.map((item, index) => (
               <Badge key={index} variant="secondary" className="px-2 py-0.5 text-[9px] font-bold uppercase border-none bg-muted/50 whitespace-nowrap">
                 {item.serviceType}
@@ -142,22 +142,22 @@ export default function OrderTableShell({
       },
       {
         accessorKey: "totalValue",
-        header: () => <div className="text-right uppercase text-[10px] font-black tracking-widest">Valor Total</div>,
+        header: () => <div className="text-right uppercase text-[10px] font-black tracking-widest">Faturamento</div>,
         cell: ({ row }) => {
           if (isPrivacyMode) {
-              return <div className="text-right font-black">R$ ●●●,●●</div>;
+              return <div className="text-right font-black text-muted-foreground/50">R$ ●●●,●●</div>;
           }
           const amount = parseFloat(row.getValue("totalValue"));
           const formatted = new Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
           }).format(amount);
-          return <div className="text-right font-black text-sm">{formatted}</div>;
+          return <div className="text-right font-black text-sm text-foreground">{formatted}</div>;
         },
       },
       {
         accessorKey: "dueDate",
-        header: () => <div className="text-center uppercase text-[10px] font-black tracking-widest">Data de Entrega</div>,
+        header: () => <div className="text-center uppercase text-[10px] font-black tracking-widest">Prazo de Entrega</div>,
         cell: ({ row }) => {
             const dueDate = row.original.dueDate;
             if (!dueDate) return null;

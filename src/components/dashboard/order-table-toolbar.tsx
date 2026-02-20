@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Table } from "@tanstack/react-table"
@@ -77,7 +78,7 @@ export function OrderTableToolbar<TData>({
                     : "bg-background text-muted-foreground hover:bg-muted border-border"
             )}
         >
-            Todos
+            Todos os Pedidos
         </button>
         {statuses.map(status => (
             <button
