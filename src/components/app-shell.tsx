@@ -13,7 +13,7 @@ import {
   SidebarLogout
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign, LogOut, Sparkles } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign, LogOut, Sparkles, MessageSquare } from "lucide-react";
 import React, { useContext, useState } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
