@@ -16,22 +16,39 @@ import {
   Smartphone, 
   Printer, 
   MessageSquare, 
-  CheckCircle2, 
   ArrowRight,
   HelpCircle
 } from 'lucide-react';
 import Logo from '@/components/icons/logo';
 import Link from 'next/link';
 
-export function OnboardingModal() {
-  const [isOpen, setIsOpen] = useState(false);
+interface OnboardingModalProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function OnboardingModal({ open: externalOpen, onOpenChange: externalOnOpenChange }: OnboardingModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Use external control if provided, otherwise use internal state
+  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setIsOpen = (value: boolean) => {
+    if (externalOnOpenChange) {
+      externalOnOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
 
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('atelierflow_onboarding_seen');
-    if (!hasSeenOnboarding) {
-      setIsOpen(true);
+    // Only check localStorage for automatic opening if not controlled externally
+    if (externalOpen === undefined) {
+      const hasSeenOnboarding = localStorage.getItem('atelierflow_onboarding_seen');
+      if (!hasSeenOnboarding) {
+        setInternalOpen(true);
+      }
     }
-  }, []);
+  }, [externalOpen]);
 
   const handleClose = () => {
     localStorage.setItem('atelierflow_onboarding_seen', 'true');
@@ -46,7 +63,7 @@ export function OnboardingModal() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none bg-background shadow-2xl">
         <div className="bg-primary p-8 text-primary-foreground relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">

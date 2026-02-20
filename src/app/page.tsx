@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, UserPlus } from 'lucide-react';
 import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
 import { CustomerFormDialog } from '@/components/dashboard/customer-form-dialog';
-import { OnboardingModal } from '@/components/dashboard/onboarding-modal';
 
 
 export default function DashboardPage() {
@@ -179,7 +178,6 @@ export default function DashboardPage() {
                 onCustomerCreated={handleDataMutation}
                 onCustomerUpdated={handleDataMutation}
             />
-            <OnboardingModal />
        </div>
     );
   };

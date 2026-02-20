@@ -13,12 +13,12 @@ import {
   SidebarLogout
 } from "@/components/ui/sidebar";
 import Logo from "@/components/icons/logo";
-import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, MessageSquare, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign, Plus } from "lucide-react";
-import React, { useContext } from "react";
+import { LayoutDashboard, Users, ShoppingCart, Eye, EyeOff, ListChecks, Tags, KeyRound, BookOpen, ShieldCheck, ShieldAlert, Shield, Archive, DollarSign, LogOut, Sparkles } from "lucide-react";
+import React, { useContext, useState } from "react";
 import { useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/firebase/auth/use-user";
 import { PasswordContext } from "@/contexts/password-context";
@@ -28,6 +28,15 @@ import type { UserProfile } from "@/lib/types";
 import { differenceInDays } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { OnboardingModal } from "./dashboard/onboarding-modal";
 
 function SubscriptionBadge({ expiresAt }: { expiresAt?: Date }) {
     if (!expiresAt) {
@@ -59,8 +68,9 @@ function SubscriptionBadge({ expiresAt }: { expiresAt?: Date }) {
 }
 
 
-function AppHeader({ profile }: { profile: UserProfile | null }) {
+function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null, onOpenOnboarding: () => void }) {
     const { user } = useUser();
+    const { auth } = useAuth();
     const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
 
@@ -90,10 +100,34 @@ function AppHeader({ profile }: { profile: UserProfile | null }) {
                         <span className="font-semibold text-sm hidden md:block">{user.displayName}</span>
                         <SubscriptionBadge expiresAt={profile?.expiresAt} />
                     </div>
-                    <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.photoURL ?? ''} alt="Avatar" />
-                        <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
-                    </Avatar>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                                <Avatar className="h-9 w-9">
+                                    <AvatarImage src={user.photoURL ?? ''} alt="Avatar" />
+                                    <AvatarFallback>{user.displayName?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56" align="end" forceMount>
+                            <DropdownMenuLabel className="font-normal">
+                                <div className="flex flex-col space-y-1">
+                                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                                </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={onOpenOnboarding}>
+                                <Sparkles className="mr-2 h-4 w-4 text-primary" />
+                                <span>Tour Inicial</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => auth.signOut()}>
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Sair da conta</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             )}
         </header>
@@ -138,6 +172,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
   const { user } = useUser();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   const isAdmin = user?.uid === "3YuL6Ff7G9cHAV7xa81kyQF4bCw2";
 
@@ -240,10 +275,11 @@ export default function AppShell({ children, profile }: { children: React.ReactN
           </SidebarContent>
         </Sidebar>
         <div className="flex flex-col pb-[calc(64px+env(safe-area-inset-bottom,16px))] md:pb-0">
-            <AppHeader profile={profile} />
+            <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
             {children}
             <BottomNavigation />
         </div>
+        <OnboardingModal open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen} />
       </div>
   );
 }
