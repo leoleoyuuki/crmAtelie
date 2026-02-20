@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -237,12 +236,14 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                             asChild 
                             isActive={pathname === item.href}
                             className={cn(
-                                "h-11 px-4 font-medium transition-all duration-200",
-                                pathname === item.href ? "bg-primary/10 text-primary hover:bg-primary/15" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                "h-11 px-4 font-medium transition-all duration-200 rounded-lg",
+                                pathname === item.href 
+                                    ? "bg-primary/15 text-primary font-bold shadow-[inset_4px_0_0_0_hsl(var(--primary))] hover:bg-primary/20" 
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                             )}
                         >
                             <Link href={item.href} onClick={handleLinkClick}>
-                                <item.icon className={cn("h-5 w-5", pathname === item.href && "stroke-[2.5px]")} />
+                                <item.icon className={cn("h-5 w-5 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
                                 <span className="text-sm">{item.label}</span>
                             </Link>
                         </SidebarMenuButton>
@@ -264,12 +265,14 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                             asChild 
                             isActive={pathname === item.href}
                             className={cn(
-                                "h-11 px-4 font-medium transition-all duration-200",
-                                pathname === item.href ? "bg-primary/10 text-primary hover:bg-primary/15" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                "h-11 px-4 font-medium transition-all duration-200 rounded-lg",
+                                pathname === item.href 
+                                    ? "bg-primary/15 text-primary font-bold shadow-[inset_4px_0_0_0_hsl(var(--primary))] hover:bg-primary/20" 
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                             )}
                         >
                             <Link href={item.href} onClick={handleLinkClick}>
-                                <item.icon className={cn("h-5 w-5", pathname === item.href && "stroke-[2.5px]")} />
+                                <item.icon className={cn("h-5 w-5 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
                                 <span className="text-sm">{item.label}</span>
                             </Link>
                         </SidebarMenuButton>
@@ -293,12 +296,14 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                                     asChild 
                                     isActive={pathname === item.href}
                                     className={cn(
-                                        "h-11 px-4 font-medium transition-all duration-200",
-                                        pathname === item.href ? "bg-destructive/10 text-destructive hover:bg-destructive/15" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                                        "h-11 px-4 font-medium transition-all duration-200 rounded-lg",
+                                        pathname === item.href 
+                                            ? "bg-destructive/15 text-destructive font-bold shadow-[inset_4px_0_0_0_hsl(var(--destructive))] hover:bg-destructive/20" 
+                                            : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                                     )}
                                 >
                                     <Link href={item.href} onClick={handleLinkClick}>
-                                        <item.icon className="h-5 w-5" />
+                                        <item.icon className={cn("h-5 w-5 transition-transform", pathname === item.href && "stroke-[2.5px] scale-110")} />
                                         <span className="text-sm">{item.label}</span>
                                     </Link>
                                 </SidebarMenuButton>
@@ -314,7 +319,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                 <SidebarMenuItem>
                     <SidebarMenuButton 
                         onClick={() => auth.signOut()}
-                        className="h-11 px-4 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all duration-200 font-medium"
+                        className="h-11 px-4 text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-all duration-200 font-medium rounded-lg"
                     >
                         <LogOut className="h-5 w-5" />
                         <span className="text-sm group-data-[collapsible=icon]:hidden">Sair da Conta</span>
