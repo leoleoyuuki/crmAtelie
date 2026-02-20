@@ -34,7 +34,8 @@ import {
     Share2,
     HelpCircle,
     ChevronDown,
-    Target
+    Target,
+    CalendarDays
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -47,7 +48,8 @@ import { PasswordContext } from "@/contexts/password-context";
 import { PasswordDialog } from "./password-dialog";
 import { Badge } from "./ui/badge";
 import type { UserProfile, UserSummary } from "@/lib/types";
-import { differenceInDays, format } from 'date-fns';
+import { differenceInDays, format, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { Separator } from "./ui/separator";
 import {
@@ -72,7 +74,6 @@ import { updateMonthlyGoal } from "@/lib/data";
 
 function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
     if (!expiresAt) return null;
-    const daysLeft = differenceInDays(expiresAt, new Date());
 
     if (isTrial) {
         return <Badge variant="secondary" className="bg-orange-500/10 text-orange-700 border-orange-200 text-[9px] h-4 px-1.5 font-black uppercase tracking-tighter">Trial</Badge>;
@@ -225,6 +226,16 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
         }
     };
 
+    const daysLeft = useMemo(() => {
+        if (!profile?.expiresAt || !isValid(profile.expiresAt)) return null;
+        return Math.max(0, differenceInDays(profile.expiresAt, new Date()));
+    }, [profile?.expiresAt]);
+
+    const formattedExpiryDate = useMemo(() => {
+        if (!profile?.expiresAt || !isValid(profile.expiresAt)) return "N/A";
+        return format(profile.expiresAt, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    }, [profile?.expiresAt]);
+
     return (
         <header className="flex h-16 items-center gap-4 border-b bg-card/50 backdrop-blur-md px-4 lg:px-8 sticky top-0 z-30">
             <div className="flex items-center gap-4">
@@ -233,14 +244,51 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                 </div>
                 
                 {user && (
-                    <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer group">
-                        <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Logo className="h-3.5 w-3.5 text-primary" />
-                        </div>
-                        <span className="text-xs font-bold truncate max-w-[120px]">{user.displayName?.split(' ')[0]}</span>
-                        <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && profile?.status !== 'active'} />
-                        <ChevronDown className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
-                    </div>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer group">
+                                <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <Logo className="h-3.5 w-3.5 text-primary" />
+                                </div>
+                                <span className="text-xs font-bold truncate max-w-[120px]">{user.displayName?.split(' ')[0]}</span>
+                                <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && profile?.status !== 'active'} />
+                                <ChevronDown className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
+                            </div>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-72 p-4 bg-background/95 backdrop-blur-md border shadow-xl">
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Plano Atual</p>
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-bold text-sm">
+                                            {profile?.status === 'active' ? (profile?.trialStarted ? 'Assinatura Ativa (Trial)' : 'Assinatura Ativa') : 'Assinatura Inativa'}
+                                        </h4>
+                                        <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && profile?.status !== 'active'} />
+                                    </div>
+                                </div>
+
+                                {daysLeft !== null && (
+                                    <div className="bg-muted/30 rounded-xl p-3 border space-y-2">
+                                        <div className="flex items-center gap-2 text-primary">
+                                            <CalendarDays className="h-4 w-4" />
+                                            <span className="text-xs font-bold">
+                                                {daysLeft === 0 ? "Expira hoje!" : `Expira em ${daysLeft} ${daysLeft === 1 ? 'dia' : 'dias'}`}
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Válido até <span className="font-bold text-foreground">{formattedExpiryDate}</span>
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="pt-2">
+                                    <Button asChild variant="outline" size="sm" className="w-full text-xs font-bold h-9 rounded-lg">
+                                        <Link href="/ativacao">Gerenciar Assinatura</Link>
+                                    </Button>
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
                 )}
             </div>
 
