@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDocument, usePaginatedCollection } from '@/firebase';
@@ -15,8 +14,8 @@ import { useEffect } from 'react';
 import { FixedCostManager } from '@/components/compras/fixed-cost-manager';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { useFirebase } from '@/firebase';
-import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
-
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { Wallet, Info, Sparkles } from 'lucide-react';
 
 // Helper to convert Firestore Timestamps in nested objects
 const convertTimestamps = (data: any) => {
@@ -101,68 +100,90 @@ export default function ComprasPage() {
 
   const handleDataMutation = () => {
     refresh();
-    if(user) getOrCreateUserSummary(user.uid); // Re-calculates and refreshes summary
+    if(user) getOrCreateUserSummary(user.uid); 
     fetchFixedCosts();
   }
 
   return (
-    <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Controle de Compras e Custos
+    <div className="flex-1 space-y-8 px-4 pt-8 md:px-10 pb-10">
+      <div className="space-y-4">
+        <h2 className="text-4xl font-black tracking-tight font-headline text-foreground">
+          Custos e Compras
         </h2>
+        
+        <div className="flex items-center gap-6 border-b pb-1 overflow-x-auto no-scrollbar">
+            <button className="text-sm font-bold text-primary border-b-2 border-primary pb-3 whitespace-nowrap">
+                Registro de Saídas
+            </button>
+            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+                Custos Fixos
+            </button>
+            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+                Análise Anual
+            </button>
+        </div>
       </div>
 
-       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card>
-                <CardHeader>
+      <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-start gap-4">
+        <div className="bg-primary/10 p-2 rounded-xl mt-0.5">
+            <Wallet className="h-4 w-4 text-primary" />
+        </div>
+        <div className="space-y-1">
+            <p className="text-sm font-bold text-foreground">Saúde Financeira</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+                Registre cada compra de material aqui para que o sistema calcule seu <strong>Lucro Real</strong> automaticamente no dashboard.
+            </p>
+        </div>
+      </div>
+
+       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8">
+            <Card className="rounded-3xl border-none shadow-xl overflow-hidden">
+                <CardHeader className="bg-muted/10 border-b">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <CardTitle>Visão Geral de Custos Mensais</CardTitle>
+                        <CardTitle className="font-headline text-xl">Fluxo de Despesas</CardTitle>
                         <CardDescription>
-                        Custo total de materiais e contas fixas nos últimos meses.
+                        Materiais e custos operacionais nos últimos meses.
                         </CardDescription>
                     </div>
-                    <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 sm:pt-0">
-                        <div className="text-center sm:text-right">
-                            <p className="text-sm text-muted-foreground">Custo no Mês Atual</p>
-                            <div className="text-2xl font-bold">{summaryLoading ? <Skeleton className="h-8 w-24" /> : formattedTotalCost}</div>
-                        </div>
+                    <div className="text-center sm:text-right">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Saídas este mês</p>
+                        <div className="text-2xl font-black text-primary">{summaryLoading ? <Skeleton className="h-8 w-24" /> : formattedTotalCost}</div>
                     </div>
                 </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                 {summaryLoading ? (
                     <Skeleton className="h-[300px] w-full" />
                 ) : costData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={costData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                        <YAxis tickFormatter={(value) => `R$${value}`} />
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+                        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={12} fontSize={12} fontWeight={600} />
+                        <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `R$${value}`} fontSize={10} fontWeight={600} />
                         <Tooltip
-                        formatter={(value) =>
-                            new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                            }).format(value as number)
-                        }
-                        cursor={{ fill: 'hsl(var(--muted))' }}
+                            cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4 }}
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                            formatter={(value) =>
+                                new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                                }).format(value as number)
+                            }
                         />
-                        <Legend />
-                        <Bar dataKey="cost" fill="hsl(var(--chart-1))" name="Custo Mensal" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="cost" fill="hsl(var(--primary))" name="Custo Mensal" radius={[6, 6, 0, 0]} barSize={40} />
                     </BarChart>
                     </ResponsiveContainer>
                 ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    Nenhum custo registrado para o período.
+                    <div className="h-[300px] flex items-center justify-center text-muted-foreground italic border-2 border-dashed rounded-2xl">
+                    Nenhum custo registrado no período.
                     </div>
                 )}
                 </CardContent>
             </Card>
           </div>
-           <div className="lg:col-span-1">
+           <div className="lg:col-span-4">
              <FixedCostManager 
                 data={fixedCosts || []} 
                 loading={fixedCostsLoading}
@@ -172,7 +193,7 @@ export default function ComprasPage() {
       </div>
       
        {loading && !purchases?.length ? (
-        <Skeleton className="h-[500px] w-full" />
+        <Skeleton className="h-[500px] w-full rounded-3xl" />
       ) : (
         <PurchaseTableShell 
           data={purchases || []}
