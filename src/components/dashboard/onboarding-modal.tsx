@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -33,14 +34,16 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
     onOpenChange(false);
   };
 
-  const handleViewTutorials = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Close modal and set flag before navigating
-    handleClose();
-    // Small delay to allow the modal's cleanup (focus management, body lock) to finish
+  const handleViewTutorials = () => {
+    // 1. Mark as seen and signal closure
+    localStorage.setItem('atelierflow_onboarding_seen', 'true');
+    onOpenChange(false);
+    
+    // 2. Small delay to allow Radix UI to cleanup body locks and pointer events
+    // before navigating, preventing "stuck" UI on the next page
     setTimeout(() => {
       router.push('/ajuda');
-    }, 150);
+    }, 100);
   };
 
   const handleWhatsAppClick = () => {

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -128,17 +129,15 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem 
-                                    onSelect={(e) => {
-                                        e.preventDefault();
-                                        // Small delay to ensure menu closes before dialog opens to prevent focus conflicts
-                                        setTimeout(() => {
-                                            onOpenOnboarding();
-                                        }, 100);
+                                    onSelect={() => {
+                                        // Allow dropdown to close naturally first, then trigger onboarding
+                                        // This prevents focus/pointer-events conflicts
+                                        setTimeout(onOpenOnboarding, 50);
                                     }} 
                                     className="cursor-pointer py-3"
                                 >
                                     <Sparkles className="mr-2 h-4 w-4 text-primary" />
-                                    <span className="font-medium">Abrir Tour Inicial</span>
+                                    <span className="font-medium">Tour Inicial</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => auth.signOut()} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer py-3">
