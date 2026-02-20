@@ -1,4 +1,3 @@
-
 "use client";
 
 import {
@@ -26,19 +25,14 @@ import {
     Tags, 
     KeyRound, 
     BookOpen, 
-    ShieldCheck, 
-    ShieldAlert, 
-    Shield, 
     Archive, 
     DollarSign, 
     LogOut, 
     Sparkles, 
     MessageSquare,
     Share2,
-    Bell,
     HelpCircle,
-    ChevronDown,
-    Zap
+    ChevronDown
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -108,8 +102,7 @@ function MonthProgress({ summary }: { summary: UserSummary | null }) {
 
 function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null, onOpenOnboarding: () => void }) {
     const { user } = useUser();
-    const { auth, db } = useAuth();
-    const router = useRouter();
+    const { auth } = useAuth();
     const { toast } = useToast();
     const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
@@ -133,13 +126,12 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
         try {
             if (navigator.share) {
                 await navigator.share(shareData);
-                return; // Sucesso no compartilhamento nativo
+                return;
             }
         } catch (err) {
             console.log("Compartilhamento nativo não disponível ou bloqueado, tentando copiar link.", err);
         }
 
-        // Fallback: Copiar para área de transferência se o share falhar ou não existir
         try {
             await navigator.clipboard.writeText(window.location.origin);
             toast({ title: "Link Copiado!", description: "O link do AtelierFlow foi copiado para sua área de transferência." });
@@ -155,14 +147,13 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                     <SidebarTrigger />
                 </div>
                 
-                {/* User Workspace Selector Style Pill */}
                 {user && (
                     <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-background/50 hover:bg-muted/50 transition-colors cursor-pointer group">
                         <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
                             <Logo className="h-3.5 w-3.5 text-primary" />
                         </div>
                         <span className="text-xs font-bold truncate max-w-[120px]">{user.displayName?.split(' ')[0]}</span>
-                        <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && !profile?.status?.includes('active_paid')} />
+                        <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && profile?.status !== 'active'} />
                         <ChevronDown className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
                 )}
@@ -205,29 +196,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                             <HelpCircle className="h-4 w-4" />
                         </Link>
                     </Button>
-
-                    <div className="relative">
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-9 w-9 rounded-xl text-muted-foreground"
-                        >
-                            <Bell className="h-4 w-4" />
-                        </Button>
-                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-destructive border-2 border-card" />
-                    </div>
                 </div>
-
-                {profile?.trialStarted && profile?.status === 'active' && (
-                    <Button 
-                        size="sm" 
-                        className="hidden md:flex h-9 rounded-xl font-bold bg-primary shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
-                        onClick={() => router.push('/ativacao')}
-                    >
-                        <Zap className="h-3.5 w-3.5 mr-1.5 fill-current" />
-                        Upgrade
-                    </Button>
-                )}
 
                 {user && (
                     <DropdownMenu>
@@ -461,7 +430,6 @@ export default function AppShell({ children, profile }: { children: React.ReactN
               )}
           </SidebarContent>
           <SidebarFooter className="p-2 border-t border-border/50">
-             {/* Support Card */}
              <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 mx-2 mb-4 group-data-[collapsible=icon]:hidden transition-all hover:bg-primary/10">
                 <div className="bg-primary/10 w-8 h-8 rounded-lg flex items-center justify-center mb-3">
                     <MessageSquare className="h-4 w-4 text-primary" />
