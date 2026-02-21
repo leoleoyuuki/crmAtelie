@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     auto_return: 'approved',
     notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/mercadopago/webhook`,
     // Configuração para garantir que o parcelamento em 12x esteja disponível
-    // O custo do parcelamento sem juros deve ser configurado no painel do Mercado Pago
+    // O custo do parcelamento sem juros é configurado no painel do Mercado Pago (Parcelamento Vendedor)
     payment_methods: {
       installments: 12,
       default_installments: plan === 'anual' ? 12 : 1,

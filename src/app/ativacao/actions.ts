@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { redeemActivationToken } from '@/lib/activation';
 
-type Plan = 'mensal' | 'trimestral' | 'anual';
+type Plan = 'mensal' | 'anual';
 
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
 
@@ -121,8 +121,9 @@ function PlanSelectionTab() {
             body: JSON.stringify({ plan: plan, userId: user.uid }),
         });
         const data = await response.json();
-        if (response.ok) {
-            setPreferenceId(data.id);
+        if (response.ok && data.init_point) {
+            // Se for Checkout Pro, redirecionamos para o init_point
+            window.location.href = data.init_point;
         } else {
             throw new Error(data.error || 'Erro ao criar preferência');
         }
@@ -150,32 +151,20 @@ function PlanSelectionTab() {
                         <Star className="h-5 w-5 text-yellow-500"/>
                         <span className="font-bold text-lg">Plano Mensal</span>
                     </div>
-                    <span className="text-sm font-normal">R$ 29,90 / mês</span>
+                    <span className="text-sm font-normal">R$ 99,90 / mês</span>
                     {isLoading && selectedPlan === 'mensal' && <Loader2 className="animate-spin ml-auto"/>}
                 </Button>
-                 <Button variant="outline" className="h-20 flex flex-col items-start p-4" onClick={() => createPreference('trimestral')} disabled={isLoading && selectedPlan !== 'trimestral'}>
-                    <div className="flex items-center gap-2">
-                        <Gem className="h-5 w-5 text-blue-500"/>
-                        <span className="font-bold text-lg">Plano Trimestral</span>
-                    </div>
-                    <span className="text-sm font-normal">R$ 79,90 / 3 meses</span>
-                    {isLoading && selectedPlan === 'trimestral' && <Loader2 className="animate-spin ml-auto"/>}
-                </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-start p-4" onClick={() => createPreference('anual')} disabled={isLoading && selectedPlan !== 'anual'}>
+                <Button variant="outline" className="h-24 flex flex-col items-start p-4 border-primary/50 bg-primary/5" onClick={() => createPreference('anual')} disabled={isLoading && selectedPlan !== 'anual'}>
                      <div className="flex items-center gap-2">
                         <Crown className="h-5 w-5 text-purple-500"/>
                         <span className="font-bold text-lg">Plano Anual</span>
+                        <Badge className="ml-2 bg-green-600">Economize 2 Meses</Badge>
                     </div>
-                    <span className="text-sm font-normal">R$ 299,90 / ano</span>
+                    <span className="text-sm font-black">12x R$ 82,50 Sem Juros</span>
+                    <span className="text-[10px] text-muted-foreground">Total: R$ 990,00 à vista</span>
                      {isLoading && selectedPlan === 'anual' && <Loader2 className="animate-spin ml-auto"/>}
                 </Button>
             </div>
-            
-            {preferenceId && (
-                <div className="mt-4">
-                    <Wallet initialization={{ preferenceId: preferenceId }} customization={{ texts: { valueProp: 'smart_option'}}} />
-                </div>
-            )}
         </CardContent>
     </Card>
   )
