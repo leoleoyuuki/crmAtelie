@@ -417,8 +417,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                     "Tudo do Plano Mensal",
                     "Prioridade no Suporte",
                     "R$ 990,00 à vista (Opção PIX)",
-                    "12x Sem Juros no Cartão",
-                    "Parcelamento Pago pelo Vendedor"
+                    "12x Sem Juros no Cartão"
                 ]}
                 onSelect={() => createPreference('anual')}
                 isLoading={isLoading && selectedPlan === 'anual'}
