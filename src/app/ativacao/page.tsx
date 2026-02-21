@@ -42,9 +42,7 @@ function PhoneCollectionStep({ user }: { user: any }) {
 
         setIsLoading(true);
         try {
-            // 1. Save Phone
             await updateUserProfilePhone(user.uid, phone);
-            // 2. Start Trial immediately
             await startFreeTrial(user);
             
             toast({ title: 'Sucesso!', description: 'Seu período de 7 dias grátis começou. Bem-vindo(a)!' });
@@ -401,7 +399,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                     "Gestão de Pedidos",
                     "Cadastro de Clientes",
                     "Dashboard Financeiro",
-                    "Suporte via Email",
+                    "Suporte via WhatsApp",
                     "Relatórios Básicos"
                 ]}
                 onSelect={() => createPreference('mensal')}
@@ -420,7 +418,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                     "Prioridade no Suporte",
                     "R$ 990,00 à vista (Opção PIX)",
                     "12x Sem Juros no Cartão",
-                    "Sem reajuste por 1 ano"
+                    "Parcelamento Pago pelo Vendedor"
                 ]}
                 onSelect={() => createPreference('anual')}
                 isLoading={isLoading && selectedPlan === 'anual'}
@@ -471,7 +469,6 @@ export default function AtivacaoPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background/50">
-        {/* Header Fixo no Topo para evitar sobreposição */}
         <header className="w-full p-6 md:p-8 shrink-0">
             <div className="flex items-center gap-2 max-w-6xl mx-auto">
                 <Logo className="h-8 w-8 text-primary" />
@@ -479,7 +476,6 @@ export default function AtivacaoPage() {
             </div>
         </header>
         
-        {/* Área de Conteúdo Centralizada */}
         <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
             <div className="w-full max-w-6xl space-y-12 pb-12">
                 {!profile?.phone ? (

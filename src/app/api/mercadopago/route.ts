@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import '@/lib/load-env'; // Carrega as variáveis de ambiente
 
-// Tipos de Planos
-type Plan = 'mensal' | 'trimestral' | 'anual';
+// Tipos de Planos - Foco em Mensal e Anual conforme nova estratégia
+type Plan = 'mensal' | 'anual';
 
 interface PlanDetails {
   title: string;
   price: number;
 }
 
-// Detalhes dos planos atualizados conforme nova estratégia de precificação
+// Detalhes dos planos atualizados para garantir 2 meses de desconto no anual
 const plans: Record<Plan, PlanDetails> = {
   mensal: { title: 'Plano Mensal - AtelierFlow', price: 99.90 },
-  trimestral: { title: 'Plano Trimestral - AtelierFlow', price: 249.90 },
   anual: { title: 'Plano Anual - AtelierFlow', price: 990.00 },
 };
 
@@ -48,7 +47,7 @@ export async function POST(request: NextRequest) {
     payer: {
       email: payerEmail,
     },
-    external_reference: userId, // This correctly links the payment to your app's user
+    external_reference: userId,
     back_urls: {
       success: `${process.env.NEXT_PUBLIC_APP_URL}/`,
       failure: `${process.env.NEXT_PUBLIC_APP_URL}/ativacao`,
@@ -56,15 +55,15 @@ export async function POST(request: NextRequest) {
     },
     auto_return: 'approved',
     notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/mercadopago/webhook`,
-    // Configuração para incentivar o parcelamento sem juros (configurado no painel do MP)
+    // Configuração para garantir que o parcelamento em 12x esteja disponível
+    // O custo do parcelamento sem juros deve ser configurado no painel do Mercado Pago
     payment_methods: {
       installments: 12,
+      default_installments: plan === 'anual' ? 12 : 1,
     }
   };
 
   try {
-    console.log('[LOG MP] Criando preferência com payload:', JSON.stringify(preferencePayload, null, 2));
-
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
       headers: {
@@ -77,11 +76,10 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (!response.ok || !data.init_point) {
-        console.error('[ERRO MP] Falha ao criar preferência (HTTP):', data);
+        console.error('[ERRO MP] Falha ao criar preferência:', data);
         throw new Error(data.message || 'Erro da API do Mercado Pago');
     }
 
-    console.log('[LOG MP] Preferência criada com sucesso. Redirecionando para:', data.init_point);
     return NextResponse.json({ init_point: data.init_point });
 
   } catch (error) {
