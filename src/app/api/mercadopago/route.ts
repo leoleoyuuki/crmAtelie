@@ -9,11 +9,11 @@ interface PlanDetails {
   price: number;
 }
 
-// Detalhes dos planos (preços e títulos)
+// Detalhes dos planos atualizados conforme nova estratégia de precificação
 const plans: Record<Plan, PlanDetails> = {
-  mensal: { title: 'Plano Mensal - AtelierFlow', price: 62.90 },
-  trimestral: { title: 'Plano Trimestral - AtelierFlow', price: 149.90 },
-  anual: { title: 'Plano Anual - AtelierFlow', price: 490.00 },
+  mensal: { title: 'Plano Mensal - AtelierFlow', price: 99.90 },
+  trimestral: { title: 'Plano Trimestral - AtelierFlow', price: 249.90 },
+  anual: { title: 'Plano Anual - AtelierFlow', price: 990.00 },
 };
 
 export async function POST(request: NextRequest) {
@@ -56,6 +56,10 @@ export async function POST(request: NextRequest) {
     },
     auto_return: 'approved',
     notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/mercadopago/webhook`,
+    // Configuração para incentivar o parcelamento sem juros (configurado no painel do MP)
+    payment_methods: {
+      installments: 12,
+    }
   };
 
   try {

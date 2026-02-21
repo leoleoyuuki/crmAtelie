@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -264,8 +263,8 @@ const PlanCard = ({
 };
 
 const planDetails = {
-    mensal: { price: 62.90 },
-    anual: { price: 490.00 },
+    mensal: { price: 99.90 },
+    anual: { price: 990.00 },
 };
 
 function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
@@ -395,7 +394,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto px-4 md:px-8">
             <PlanCard 
                 title="Plano Mensal"
-                price="R$62,90"
+                price="R$99,90"
                 period="mês"
                 subtitle="Flexibilidade total para quem está começando agora."
                 features={[
@@ -411,7 +410,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
             
             <PlanCard 
                 title="Plano Anual"
-                price="12x R$49,86"
+                price="12x R$82,50"
                 period="ano"
                 subtitle="O favorito dos ateliês profissionais que buscam economia."
                 benefit="2 MESES DE DESCONTO"
@@ -419,8 +418,9 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                 features={[
                     "Tudo do Plano Mensal",
                     "Prioridade no Suporte",
-                    "R$ 490,00 à vista (Opção PIX)",
-                    "Sem reajuste de preço por 1 ano"
+                    "R$ 990,00 à vista (Opção PIX)",
+                    "12x Sem Juros no Cartão",
+                    "Sem reajuste por 1 ano"
                 ]}
                 onSelect={() => createPreference('anual')}
                 isLoading={isLoading && selectedPlan === 'anual'}
