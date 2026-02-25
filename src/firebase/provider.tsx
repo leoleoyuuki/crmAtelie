@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, {
@@ -202,7 +200,7 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
         loadFirstPage();
     }, [loadFirstPage]);
     
-    const nextPage = async () => {
+    const nextPage = useCallback(async () => {
         if (!auth.currentUser || !lastVisible) return;
         const q = query(
             collection(db, path),
@@ -213,9 +211,9 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
         );
         await fetchData(q);
         setHasPrev(true);
-    };
+    }, [db, path, auth.currentUser, lastVisible, pageSize, fetchData]);
 
-    const prevPage = async () => {
+    const prevPage = useCallback(async () => {
         if (!auth.currentUser || !firstVisible) return;
          const q = query(
             collection(db, path),
@@ -225,9 +223,8 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
             limitToLast(pageSize)
         );
         await fetchData(q);
-        // This is a simplification; robust backward pagination is more complex
-        setHasPrev(false); // A simple way to handle it for now
-    };
+        setHasPrev(false); 
+    }, [db, path, auth.currentUser, firstVisible, pageSize, fetchData]);
     
     return { data, loading, error, nextPage, prevPage, hasMore, hasPrev, refresh: loadFirstPage };
 }

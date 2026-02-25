@@ -1,7 +1,6 @@
-
 "use client"
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Order, OrderStatus } from "@/lib/types";
 import {
   ColumnDef,
@@ -238,6 +237,19 @@ export default function OrderTableShell({
     manualPagination: isPage,
   });
 
+  // Auto-fetch next page if current filtered results are empty but more pages exist
+  useEffect(() => {
+    if (isPage && !loading && hasNextPage) {
+      const hasActiveFilters = columnFilters.length > 0;
+      const noRowsVisible = table.getRowModel().rows.length === 0;
+      
+      // If we have filters active but no results on current page, and there's potentially more data in Firestore...
+      if (hasActiveFilters && noRowsVisible && data.length > 0) {
+        onNextPage?.();
+      }
+    }
+  }, [isPage, loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage]);
+
   const renderPagination = () => {
     const canPrev = isPage ? hasPrevPage : table.getCanPreviousPage();
     const canNext = isPage ? hasNextPage : table.getCanNextPage();
@@ -302,7 +314,7 @@ export default function OrderTableShell({
                 ))
             ) : (
                 <div className="py-24 text-center text-muted-foreground italic">
-                    Nenhum pedido encontrado.
+                    {loading ? "Buscando mais resultados..." : "Nenhum pedido encontrado."}
                 </div>
             )}
           </div>
@@ -351,7 +363,7 @@ export default function OrderTableShell({
                       colSpan={columns.length}
                       className="h-48 text-center text-muted-foreground italic"
                     >
-                      Nenhum resultado para os filtros aplicados.
+                      {loading ? "Buscando nos registros seguintes..." : "Nenhum resultado para os filtros aplicados."}
                     </TableCell>
                   </TableRow>
                 )}

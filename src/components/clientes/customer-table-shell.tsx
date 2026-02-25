@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Customer } from "@/lib/types";
 import {
   ColumnDef,
@@ -136,6 +136,18 @@ export function CustomerTableShell({
     manualPagination: true,
   });
 
+  // Auto-fetch next page if current filtered results are empty but more pages exist
+  useEffect(() => {
+    if (!loading && hasNextPage) {
+      const hasActiveFilters = columnFilters.length > 0;
+      const noRowsVisible = table.getRowModel().rows.length === 0;
+      
+      if (hasActiveFilters && noRowsVisible && data.length > 0) {
+        onNextPage?.();
+      }
+    }
+  }, [loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage]);
+
   if (loading && table.getRowModel().rows.length === 0) {
       return <Skeleton className="h-[600px] w-full rounded-3xl" />;
   }
@@ -185,7 +197,7 @@ export function CustomerTableShell({
                 ))
             ) : (
                 <div className="py-24 text-center text-muted-foreground italic">
-                    Nenhum cliente cadastrado.
+                    {loading ? "Buscando mais clientes..." : "Nenhum cliente cadastrado."}
                 </div>
             )}
           </div>
@@ -234,7 +246,7 @@ export function CustomerTableShell({
                       colSpan={columns.length}
                       className="h-48 text-center text-muted-foreground italic"
                     >
-                      Nenhum cliente encontrado.
+                      {loading ? "Expandindo a busca..." : "Nenhum cliente encontrado."}
                     </TableCell>
                   </TableRow>
                 )}

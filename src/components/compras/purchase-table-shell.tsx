@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Purchase } from "@/lib/types";
 import {
   ColumnDef,
@@ -145,6 +145,7 @@ export function PurchaseTableShell({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -155,6 +156,18 @@ export function PurchaseTableShell({
     },
     manualPagination: true,
   });
+
+  // Auto-fetch next page if current filtered results are empty but more pages exist
+  useEffect(() => {
+    if (!loading && hasNextPage) {
+      const hasActiveFilters = columnFilters.length > 0;
+      const noRowsVisible = table.getRowModel().rows.length === 0;
+      
+      if (hasActiveFilters && noRowsVisible && data.length > 0) {
+        onNextPage?.();
+      }
+    }
+  }, [loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage]);
 
   if (loading && data.length === 0) {
       return <Skeleton className="h-[600px] w-full rounded-3xl" />
@@ -205,7 +218,7 @@ export function PurchaseTableShell({
                 ))
             ) : (
                 <div className="py-24 text-center text-muted-foreground italic">
-                    Nenhum registro de compra encontrado.
+                    {loading ? "Carregando mais compras..." : "Nenhum registro de compra encontrado."}
                 </div>
             )}
           </div>
@@ -254,7 +267,7 @@ export function PurchaseTableShell({
                       colSpan={columns.length}
                       className="h-48 text-center text-muted-foreground italic"
                     >
-                      Nenhum resultado encontrado.
+                      {loading ? "Vasculhando o histórico..." : "Nenhum resultado encontrado."}
                     </TableCell>
                   </TableRow>
                 )}
