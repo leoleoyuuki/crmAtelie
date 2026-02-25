@@ -4,7 +4,8 @@ import { usePaginatedCollection } from '@/firebase';
 import { Material } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaterialTableShell } from '@/components/estoque/material-table-shell';
-import { Archive, Info, Sparkles } from 'lucide-react';
+import { Archive } from 'lucide-react';
+import Link from 'next/link';
 
 export default function EstoquePage() {
   const { 
@@ -28,12 +29,12 @@ export default function EstoquePage() {
             <button className="text-sm font-bold text-primary border-b-2 border-primary pb-3 whitespace-nowrap">
                 Lista de Insumos
             </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Alertas de Reposição
-            </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            </Link>
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Relatórios de Consumo
-            </button>
+            </Link>
         </div>
       </div>
 

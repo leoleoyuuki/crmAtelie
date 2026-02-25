@@ -4,18 +4,17 @@ import { useDocument, usePaginatedCollection } from '@/firebase';
 import { Purchase, UserSummary, FixedCost } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PurchaseTableShell } from '@/components/compras/purchase-table-shell';
-import { useState, useMemo } from 'react';
-import { getCostChartDataFromSummary } from '@/lib/data';
+import { useState, useMemo, useEffect } from 'react';
+import { getCostChartDataFromSummary, getOrCreateUserSummary } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useUser } from '@/firebase/auth/use-user';
-import { getOrCreateUserSummary } from '@/lib/data';
-import { useEffect } from 'react';
 import { FixedCostManager } from '@/components/compras/fixed-cost-manager';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { useFirebase } from '@/firebase';
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { Wallet, Info, Sparkles } from 'lucide-react';
+import { Wallet } from 'lucide-react';
+import Link from 'next/link';
 
 // Helper to convert Firestore Timestamps in nested objects
 const convertTimestamps = (data: any) => {
@@ -115,12 +114,12 @@ export default function ComprasPage() {
             <button className="text-sm font-bold text-primary border-b-2 border-primary pb-3 whitespace-nowrap">
                 Registro de Saídas
             </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Custos Fixos
-            </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            </Link>
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Análise Anual
-            </button>
+            </Link>
         </div>
       </div>
 

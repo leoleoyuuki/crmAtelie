@@ -4,7 +4,8 @@ import { PriceTableShell } from '@/components/tabela-precos/price-table-shell';
 import { PriceTableItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCollection } from '@/firebase';
-import { Tags, Info } from 'lucide-react';
+import { Tags } from 'lucide-react';
+import Link from 'next/link';
 
 export default function PriceTablePage() {
   const { data: items, loading, error } = useCollection<PriceTableItem>('priceTable');
@@ -20,12 +21,12 @@ export default function PriceTablePage() {
             <button className="text-sm font-bold text-primary border-b-2 border-primary pb-3 whitespace-nowrap">
                 Lista de Serviços
             </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Categorias
-            </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            </Link>
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Histórico de Reajustes
-            </button>
+            </Link>
         </div>
       </div>
 

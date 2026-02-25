@@ -3,7 +3,8 @@
 import { usePaginatedCollection } from '@/firebase';
 import { Customer } from '@/lib/types';
 import { CustomerTableShell } from '@/components/clientes/customer-table-shell';
-import { Users, Info } from 'lucide-react';
+import { Users } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CustomersPage() {
   const { data: customers, loading, nextPage, prevPage, hasMore, hasPrev, refresh } = usePaginatedCollection<Customer>('customers');
@@ -23,12 +24,12 @@ export default function CustomersPage() {
             <button className="text-sm font-bold text-primary border-b-2 border-primary pb-3 whitespace-nowrap">
                 Lista de Contatos
             </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Segmentação
-            </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            </Link>
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Exportação
-            </button>
+            </Link>
         </div>
       </div>
 

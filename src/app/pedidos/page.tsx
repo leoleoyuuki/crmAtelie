@@ -4,8 +4,8 @@ import { usePaginatedCollection } from '@/firebase';
 import { Order } from '@/lib/types';
 import OrderTableShell from '@/components/dashboard/order-table-shell';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { Sparkles } from 'lucide-react';
+import Link from 'next/link';
 
 export default function OrdersPage() {
   const { data: orders, loading, nextPage, prevPage, hasMore, hasPrev, refresh } = usePaginatedCollection<Order>('orders');
@@ -25,12 +25,12 @@ export default function OrdersPage() {
             <button className="text-sm font-bold text-primary border-b-2 border-primary pb-3 whitespace-nowrap">
                 Fluxo de Trabalho
             </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Histórico de Vendas
-            </button>
-            <button className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
+            </Link>
+            <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Relatórios
-            </button>
+            </Link>
         </div>
       </div>
 
