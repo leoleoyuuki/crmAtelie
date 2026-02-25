@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { Order, OrderStatus } from "@/lib/types";
 import {
   ColumnDef,
@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OrderCardMobile } from "./order-card-mobile";
 import { Skeleton } from "../ui/skeleton";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 
 interface OrderTableShellProps {
@@ -76,7 +76,7 @@ const completionStatusFilterFn: FilterFn<any> = (row, columnId, value, addMeta) 
 }
 
 
-export default function OrderTableShell({ 
+function OrderTableShellContent({ 
     data, 
     isPage = false,
     onNextPage,
@@ -88,12 +88,33 @@ export default function OrderTableShell({
     isPrivacyMode = false,
 }: OrderTableShellProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const isMobile = useIsMobile();
+
+  // Inicializa filtros a partir da URL se estiver na página de listagem completa
+  useEffect(() => {
+    if (!isPage) return;
+    
+    const q = searchParams.get('q');
+    const status = searchParams.get('status');
+    
+    if (q || status) {
+        const newFilters: ColumnFiltersState = [];
+        if (q) newFilters.push({ id: 'customerName', value: q });
+        if (status) newFilters.push({ id: 'status', value: status });
+        
+        setColumnFilters(prev => {
+            const isSame = prev.length === newFilters.length && 
+                           newFilters.every(nf => prev.find(pf => pf.id === nf.id)?.value === nf.value);
+            return isSame ? prev : newFilters;
+        });
+    }
+  }, [searchParams, isPage]);
 
   const handleUpdate = () => {
     onDataMutated?.();
@@ -239,7 +260,7 @@ export default function OrderTableShell({
     manualPagination: false, 
   });
 
-  // Redirect or Progressive load based on filter results
+  // Redirecionamento ou Carregamento Progressivo baseado nos filtros
   useEffect(() => {
     if (loading) return;
     
@@ -248,22 +269,33 @@ export default function OrderTableShell({
 
     if (hasActiveFilters && noRowsVisible) {
         if (isPage) {
-            // Full page: try to load more from DB to find matches
+            // Página completa: tenta carregar mais do DB
             if (hasNextPage && data.length > 0) {
                 onNextPage?.();
             }
         } else {
-            // Dashboard: redirect to orders page to search the full history
+            // Dashboard: redireciona para página de pedidos com os filtros
             setIsRedirecting(true);
+            
+            const searchTerm = table.getColumn("customerName")?.getFilterValue() as string;
+            const statusFilter = table.getColumn("status")?.getFilterValue() as string;
+            
+            const params = new URLSearchParams();
+            if (searchTerm) params.set('q', searchTerm);
+            if (statusFilter) params.set('status', statusFilter);
+            
+            const queryStr = params.toString();
+            const redirectPath = queryStr ? `/pedidos?${queryStr}` : '/pedidos';
+
             const timer = setTimeout(() => {
-                router.push('/pedidos');
-            }, 1000); // Pequeno delay para o usuário ver a mensagem
+                router.push(redirectPath);
+            }, 1000); 
             return () => clearTimeout(timer);
         }
     } else {
         setIsRedirecting(false);
     }
-  }, [isPage, loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage, router]);
+  }, [isPage, loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage, router, table]);
 
   const renderPagination = () => {
     if (!isPage) return null;
@@ -411,4 +443,12 @@ export default function OrderTableShell({
       </CardContent>
     </Card>
   );
+}
+
+export default function OrderTableShell(props: OrderTableShellProps) {
+    return (
+        <Suspense fallback={<Skeleton className="h-[400px] w-full rounded-3xl" />}>
+            <OrderTableShellContent {...props} />
+        </Suspense>
+    );
 }
