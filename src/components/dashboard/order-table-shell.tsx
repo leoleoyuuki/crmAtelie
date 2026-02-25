@@ -30,7 +30,7 @@ import { OrderTableRowActions } from "./order-table-row-actions";
 import { OrderTableToolbar } from "./order-table-toolbar";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OrderCardMobile } from "./order-card-mobile";
@@ -211,14 +211,13 @@ export default function OrderTableShell({
         ),
       },
     ],
-    [onDataMutated, isPrivacyMode]
+    [handleUpdate, isPrivacyMode]
   );
 
   const table = useReactTable({
     data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -228,22 +227,21 @@ export default function OrderTableShell({
       sorting,
     },
     initialState: {
-      pagination: { pageSize: isPage ? 10 : 5 },
        columnVisibility: {
         createdAt: false, 
         completionStatus: false,
       },
     },
-    manualPagination: isPage,
+    // Desabilitamos manualPagination pois o hook agora entrega a lista "acumulada" do cache
+    manualPagination: false, 
   });
 
-  // Auto-fetch next page if current filtered results are empty but more pages exist
+  // Busca progressiva automática se filtros estiverem ativos e a página estiver vazia
   useEffect(() => {
     if (isPage && !loading && hasNextPage) {
       const hasActiveFilters = columnFilters.length > 0;
       const noRowsVisible = table.getRowModel().rows.length === 0;
       
-      // If we have filters active but no results on current page, and there's potentially more data in Firestore...
       if (hasActiveFilters && noRowsVisible && data.length > 0) {
         onNextPage?.();
       }
@@ -251,37 +249,38 @@ export default function OrderTableShell({
   }, [isPage, loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage]);
 
   const renderPagination = () => {
-    const canPrev = isPage ? hasPrevPage : table.getCanPreviousPage();
-    const canNext = isPage ? hasNextPage : table.getCanNextPage();
-    const onPrev = isPage ? onPrevPage : () => table.previousPage();
-    const onNext = isPage ? onNextPage : () => table.nextPage();
+    if (!isPage) return null;
 
     return (
         <div className="flex items-center justify-between p-6 border-t bg-muted/5">
             <p className="text-xs text-muted-foreground font-medium">
-                Mostrando <span className="font-bold text-foreground">{table.getRowModel().rows.length}</span> resultados
+                Mostrando <span className="font-bold text-foreground">{table.getRowModel().rows.length}</span> pedidos
             </p>
             <div className="flex items-center gap-2">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onPrev}
-                    disabled={!canPrev || loading}
-                    className="h-8 rounded-lg font-bold text-xs"
-                >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    Anterior
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onNext}
-                    disabled={!canNext || loading}
-                    className="h-8 rounded-lg font-bold text-xs"
-                >
-                    Próximo
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
+                {hasPrevPage && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onPrevPage}
+                        disabled={loading}
+                        className="h-8 rounded-lg font-bold text-xs bg-background"
+                    >
+                        <ChevronUp className="h-4 w-4 mr-1" />
+                        Ver Menos
+                    </Button>
+                )}
+                {hasNextPage && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={onNextPage}
+                        disabled={loading}
+                        className="h-8 rounded-lg font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                        {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+                        Ver Mais
+                    </Button>
+                )}
             </div>
         </div>
     );

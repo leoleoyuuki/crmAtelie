@@ -6,7 +6,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   getFilteredRowModel,
   useReactTable,
   ColumnFiltersState,
@@ -30,8 +29,8 @@ import { CustomerTableRowActions } from "./customer-table-row-actions";
 import { Skeleton } from "../ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CustomerCardMobile } from "./customer-card-mobile";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+import { Avatar, AvatarFallback } from "../ui/avatar";
+import { ArrowUpDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 interface CustomerTableShellProps {
   data: Customer[];
@@ -133,10 +132,9 @@ export function CustomerTableShell({
       columnFilters,
       sorting,
     },
-    manualPagination: true,
+    manualPagination: false,
   });
 
-  // Auto-fetch next page if current filtered results are empty but more pages exist
   useEffect(() => {
     if (!loading && hasNextPage) {
       const hasActiveFilters = columnFilters.length > 0;
@@ -158,26 +156,30 @@ export function CustomerTableShell({
             Total de <span className="font-bold text-foreground">{data.length}</span> clientes na lista
         </p>
         <div className="flex items-center gap-2">
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onPrevPage()}
-                disabled={!hasPrevPage || loading}
-                className="h-8 rounded-lg font-bold text-xs"
-            >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Anterior
-            </Button>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNextPage()}
-                disabled={!hasNextPage || loading}
-                className="h-8 rounded-lg font-bold text-xs"
-            >
-                Próximo
-                <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
+            {hasPrevPage && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onPrevPage}
+                    disabled={loading}
+                    className="h-8 rounded-lg font-bold text-xs bg-background"
+                >
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Ver Menos
+                </Button>
+            )}
+            {hasNextPage && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onNextPage}
+                    disabled={loading}
+                    className="h-8 rounded-lg font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                    {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+                    Ver Mais
+                </Button>
+            )}
         </div>
     </div>
   );

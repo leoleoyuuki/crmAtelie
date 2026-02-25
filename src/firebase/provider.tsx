@@ -8,6 +8,7 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
@@ -146,35 +147,59 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
 }
 
 
+/**
+ * usePaginatedCollection with Cumulative Caching.
+ * Implements "Ver Mais" (load and append) and "Ver Menos" (slice local cache).
+ */
 export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
     const { db, auth } = useFirebase();
-    const [data, setData] = useState<T[]>([]);
+    const [allFetchedData, setAllFetchedData] = useState<T[]>([]);
+    const [visibleLimit, setVisibleLimit] = useState(pageSize);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
-    const [firstVisible, setFirstVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-    const [lastVisible, setLastVisible] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-    const [hasMore, setHasMore] = useState(true);
-    const [hasPrev, setHasPrev] = useState(false);
+    const [hasMoreInDB, setHasMoreInDB] = useState(true);
     
-    const fetchData = useCallback(async (q: Query) => {
+    // Using Ref for cursor to avoid re-triggering loadBatch due to dependency loop
+    const lastVisibleRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
+
+    const loadBatch = useCallback(async (isInitial = false) => {
+        if (!auth.currentUser) return;
         setLoading(true);
+        
+        let q = query(
+            collection(db, path),
+            where('userId', '==', auth.currentUser.uid),
+            orderBy('createdAt', 'desc'),
+            limit(pageSize)
+        );
+
+        if (!isInitial && lastVisibleRef.current) {
+            q = query(q, startAfter(lastVisibleRef.current));
+        }
+
         try {
             const snapshot = await getDocs(q);
-            const result: T[] = snapshot.docs.map(doc => {
+            const items = snapshot.docs.map(doc => {
                  const docData = doc.data();
                  const convertedData = { ...docData };
                  for (const key in convertedData) {
-                    const value = (convertedData as any)[key];
-                    if (value instanceof Timestamp) {
-                        (convertedData as any)[key] = value.toDate();
+                    if ((convertedData as any)[key] instanceof Timestamp) {
+                        (convertedData as any)[key] = (convertedData as any)[key].toDate();
                     }
                  }
                  return { ...convertedData, id: doc.id } as T;
             });
-            setData(result);
-            setFirstVisible(snapshot.docs[0] || null);
-            setLastVisible(snapshot.docs[snapshot.docs.length - 1] || null);
-            setHasMore(snapshot.docs.length === pageSize);
+
+            if (isInitial) {
+                setAllFetchedData(items);
+                lastVisibleRef.current = snapshot.docs[snapshot.docs.length - 1] || null;
+                setHasMoreInDB(snapshot.docs.length === pageSize);
+                setVisibleLimit(pageSize);
+            } else {
+                setAllFetchedData(prev => [...prev, ...items]);
+                lastVisibleRef.current = snapshot.docs[snapshot.docs.length - 1] || null;
+                setHasMoreInDB(snapshot.docs.length === pageSize);
+            }
             setError(null);
         } catch (err: any) {
             setError(err);
@@ -182,51 +207,44 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
         } finally {
             setLoading(false);
         }
+    }, [db, path, auth.currentUser, pageSize]);
+
+    useEffect(() => {
+        loadBatch(true);
+    }, [loadBatch]);
+
+    const loadMore = useCallback(async () => {
+        // 1. If we have items in the cache that are not being shown, just increment visibleLimit
+        if (allFetchedData.length > visibleLimit) {
+            setVisibleLimit(prev => prev + pageSize);
+            return;
+        }
+        
+        // 2. Otherwise, if there is more in DB, fetch next batch
+        if (hasMoreInDB) {
+            await loadBatch(false);
+            setVisibleLimit(prev => prev + pageSize);
+        }
+    }, [allFetchedData.length, visibleLimit, hasMoreInDB, loadBatch, pageSize]);
+
+    const showLess = useCallback(() => {
+        setVisibleLimit(prev => Math.max(pageSize, prev - pageSize));
     }, [pageSize]);
 
-    const loadFirstPage = useCallback(() => {
-        if (!auth.currentUser) return;
-        const q = query(
-            collection(db, path),
-            where('userId', '==', auth.currentUser.uid),
-            orderBy('createdAt', 'desc'),
-            limit(pageSize)
-        );
-        fetchData(q);
-        setHasPrev(false);
-    }, [db, path, auth.currentUser, pageSize, fetchData]);
-    
-    useEffect(() => {
-        loadFirstPage();
-    }, [loadFirstPage]);
-    
-    const nextPage = useCallback(async () => {
-        if (!auth.currentUser || !lastVisible) return;
-        const q = query(
-            collection(db, path),
-            where('userId', '==', auth.currentUser.uid),
-            orderBy('createdAt', 'desc'),
-            startAfter(lastVisible),
-            limit(pageSize)
-        );
-        await fetchData(q);
-        setHasPrev(true);
-    }, [db, path, auth.currentUser, lastVisible, pageSize, fetchData]);
+    const data = useMemo(() => allFetchedData.slice(0, visibleLimit), [allFetchedData, visibleLimit]);
+    const hasMore = hasMoreInDB || allFetchedData.length > visibleLimit;
+    const hasPrev = visibleLimit > pageSize;
 
-    const prevPage = useCallback(async () => {
-        if (!auth.currentUser || !firstVisible) return;
-         const q = query(
-            collection(db, path),
-            where('userId', '==', auth.currentUser.uid),
-            orderBy('createdAt', 'desc'),
-            endBefore(firstVisible),
-            limitToLast(pageSize)
-        );
-        await fetchData(q);
-        setHasPrev(false); 
-    }, [db, path, auth.currentUser, firstVisible, pageSize, fetchData]);
-    
-    return { data, loading, error, nextPage, prevPage, hasMore, hasPrev, refresh: loadFirstPage };
+    return { 
+        data, 
+        loading, 
+        error, 
+        nextPage: loadMore, 
+        prevPage: showLess, 
+        hasMore, 
+        hasPrev, 
+        refresh: () => loadBatch(true) 
+    };
 }
 
 export function useDocument<T>(path: string | null) {
