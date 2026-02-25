@@ -25,7 +25,7 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { PriceTableToolbar } from "./price-table-toolbar";
 import { PriceTableRowActions } from "./price-table-row-actions";
-import { ArrowUpDown, ChevronLeft, ChevronRight, Scissors } from "lucide-react";
+import { ArrowUpDown, ChevronUp, ChevronDown, Scissors } from "lucide-react";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 
 interface PriceTableShellProps {
@@ -35,11 +35,14 @@ interface PriceTableShellProps {
   onItemDeleted: (itemId: string) => void;
 }
 
+const PAGE_SIZE = 10;
+
 export function PriceTableShell({ data, onItemCreated, onItemUpdated, onItemDeleted }: PriceTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'serviceName', desc: false },
   ]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   
   const columns: ColumnDef<PriceTableItem>[] = useMemo(
     () => [
@@ -106,13 +109,15 @@ export function PriceTableShell({ data, onItemCreated, onItemUpdated, onItemDele
     state: {
       columnFilters,
       sorting,
-    },
-    initialState: {
       pagination: {
-        pageSize: 10,
-      },
-    }
+          pageSize: visibleCount,
+          pageIndex: 0
+      }
+    },
   });
+
+  const hasMore = data.length > visibleCount;
+  const hasPrev = visibleCount > PAGE_SIZE;
 
   const renderPagination = () => (
     <div className="flex items-center justify-between p-6 border-t bg-muted/5">
@@ -120,26 +125,28 @@ export function PriceTableShell({ data, onItemCreated, onItemUpdated, onItemDele
             Total de <span className="font-bold text-foreground">{data.length}</span> serviços cadastrados
         </p>
         <div className="flex items-center gap-2">
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="h-8 rounded-lg font-bold text-xs"
-            >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Anterior
-            </Button>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="h-8 rounded-lg font-bold text-xs"
-            >
-                Próximo
-                <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
+            {hasPrev && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVisibleCount(prev => Math.max(PAGE_SIZE, prev - PAGE_SIZE))}
+                    className="h-8 rounded-lg font-bold text-xs bg-background"
+                >
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Ver Menos
+                </Button>
+            )}
+            {hasMore && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+                    className="h-8 rounded-lg font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                    <ChevronDown className="h-4 w-4 mr-1" />
+                    Ver Mais
+                </Button>
+            )}
         </div>
     </div>
   );

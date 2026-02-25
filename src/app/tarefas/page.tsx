@@ -2,12 +2,12 @@
 
 import { useFirebase } from '@/firebase';
 import { Order, OrderItem } from '@/lib/types';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Timestamp, getDocs, query, collection, where, orderBy, limit, startAfter, type QuerySnapshot } from 'firebase/firestore';
 import { startOfDay } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ListChecks, Search, Sparkles, Clock, AlertCircle } from 'lucide-react';
+import { ListChecks, Search, Sparkles, Clock, AlertCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { EditableTaskItemCard } from '@/components/tarefas/task-item-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -42,15 +42,17 @@ export default function TarefasPage() {
   
   // State for Upcoming Tasks
   const [upcomingTasks, setUpcomingTasks] = useState<TaskItem[]>([]);
+  const [visibleUpcoming, setVisibleUpcoming] = useState(ITEMS_PER_PAGE);
   const [lastUpcomingDoc, setLastUpcomingDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [loadingUpcoming, setLoadingUpcoming] = useState(true);
-  const [hasMoreUpcoming, setHasMoreUpcoming] = useState(true);
+  const [hasMoreUpcomingDB, setHasMoreUpcomingDB] = useState(true);
 
   // State for Overdue Tasks
   const [overdueTasks, setOverdueTasks] = useState<TaskItem[]>([]);
+  const [visibleOverdue, setVisibleOverdue] = useState(ITEMS_PER_PAGE);
   const [lastOverdueDoc, setLastOverdueDoc] = useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [loadingOverdue, setLoadingOverdue] = useState(true);
-  const [hasMoreOverdue, setHasMoreOverdue] = useState(true);
+  const [hasMoreOverdueDB, setHasMoreOverdueDB] = useState(true);
 
   const [activeTab, setActiveTab] = useState('upcoming');
 
@@ -77,10 +79,10 @@ export default function TarefasPage() {
 
       if (type === 'upcoming') {
           setUpcomingTasks(prev => [...prev, ...newTasks]);
-          setHasMoreUpcoming(snapshot.docs.length === ITEMS_PER_PAGE);
+          setHasMoreUpcomingDB(snapshot.docs.length === ITEMS_PER_PAGE);
       } else {
           setOverdueTasks(prev => [...prev, ...newTasks]);
-          setHasMoreOverdue(snapshot.docs.length === ITEMS_PER_PAGE);
+          setHasMoreOverdueDB(snapshot.docs.length === ITEMS_PER_PAGE);
       }
 
       const lastDoc = snapshot.docs[snapshot.docs.length - 1];
@@ -90,7 +92,7 @@ export default function TarefasPage() {
 
 
   const fetchUpcomingTasks = useCallback(async (initial = false) => {
-    if (!auth.currentUser || (!initial && !hasMoreUpcoming)) {
+    if (!auth.currentUser || (!initial && !hasMoreUpcomingDB)) {
       setLoadingUpcoming(false);
       return;
     }
@@ -118,10 +120,10 @@ export default function TarefasPage() {
     } finally {
         setLoadingUpcoming(false);
     }
-  }, [auth.currentUser, db, lastUpcomingDoc, hasMoreUpcoming]);
+  }, [auth.currentUser, db, lastUpcomingDoc, hasMoreUpcomingDB]);
 
    const fetchOverdueTasks = useCallback(async (initial = false) => {
-    if (!auth.currentUser || (!initial && !hasMoreOverdue)) {
+    if (!auth.currentUser || (!initial && !hasMoreOverdueDB)) {
       setLoadingOverdue(false);
       return;
     }
@@ -148,7 +150,7 @@ export default function TarefasPage() {
     } finally {
         setLoadingOverdue(false);
     }
-  }, [auth.currentUser, db, lastOverdueDoc, hasMoreOverdue]);
+  }, [auth.currentUser, db, lastOverdueDoc, hasMoreOverdueDB]);
 
 
   useEffect(() => {
@@ -165,11 +167,34 @@ export default function TarefasPage() {
   const findOrderForTask = (taskId: string) => {
     return allTaskOrders?.find(o => o.id === taskId);
   }
+
+  const handleUpcomingMore = () => {
+      if (upcomingTasks.length > visibleUpcoming) {
+          setVisibleUpcoming(prev => prev + ITEMS_PER_PAGE);
+      } else if (hasMoreUpcomingDB) {
+          fetchUpcomingTasks(false).then(() => setVisibleUpcoming(prev => prev + ITEMS_PER_PAGE));
+      }
+  }
+
+  const handleOverdueMore = () => {
+      if (overdueTasks.length > visibleOverdue) {
+          setVisibleOverdue(prev => prev + ITEMS_PER_PAGE);
+      } else if (hasMoreOverdueDB) {
+          fetchOverdueTasks(false).then(() => setVisibleOverdue(prev => prev + ITEMS_PER_PAGE));
+      }
+  }
   
   const renderTaskList = (tasks: TaskItem[], type: 'upcoming' | 'overdue') => {
     const isLoading = type === 'upcoming' ? loadingUpcoming : loadingOverdue;
-    const hasMore = type === 'upcoming' ? hasMoreUpcoming : hasMoreOverdue;
-    const handleLoadMore = type === 'upcoming' ? fetchUpcomingTasks : fetchOverdueTasks;
+    const visibleCount = type === 'upcoming' ? visibleUpcoming : visibleOverdue;
+    const setVisibleCount = type === 'upcoming' ? setVisibleUpcoming : setVisibleOverdue;
+    const hasMoreDB = type === 'upcoming' ? hasMoreUpcomingDB : hasMoreOverdueDB;
+    const handleMore = type === 'upcoming' ? handleUpcomingMore : handleOverdueMore;
+    
+    const visibleTasks = tasks.slice(0, visibleCount);
+    const hasMore = hasMoreDB || tasks.length > visibleCount;
+    const hasPrev = visibleCount > ITEMS_PER_PAGE;
+
     const noTasksMessage = type === 'upcoming' 
         ? { title: "Tudo em dia!", description: "Não há nenhuma tarefa com data de entrega futura." }
         : { title: "Nenhuma pendência!", description: "Não há nenhuma tarefa atrasada." };
@@ -203,18 +228,33 @@ export default function TarefasPage() {
     return (
      <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {tasks.map((task, index) => {
+            {visibleTasks.map((task, index) => {
             const order = findOrderForTask(task.orderId);
             return order ? (
                 <EditableTaskItemCard key={`${task.orderId}-${index}`} task={task} order={order} />
             ) : null;
             })}
         </div>
-        <div className="flex justify-center py-12">
+        <div className="flex justify-center items-center gap-4 py-12">
+            {hasPrev && (
+                <Button 
+                    variant="outline" 
+                    onClick={() => setVisibleCount(prev => Math.max(ITEMS_PER_PAGE, prev - ITEMS_PER_PAGE))} 
+                    className="rounded-xl h-12 px-8 font-bold"
+                >
+                    <ChevronUp className="mr-2 h-4 w-4" />
+                    Ver Menos
+                </Button>
+            )}
             {hasMore ? (
-                <Button variant="outline" onClick={() => handleLoadMore(false)} disabled={isLoading} className="rounded-xl h-12 px-8 font-bold border-primary text-primary hover:bg-primary/5">
-                    <Search className="mr-2 h-4 w-4" />
-                    {isLoading ? 'Buscando...' : 'Carregar mais tarefas'}
+                <Button 
+                    variant="outline" 
+                    onClick={handleMore} 
+                    disabled={isLoading} 
+                    className="rounded-xl h-12 px-8 font-bold border-primary text-primary hover:bg-primary/5"
+                >
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ChevronDown className="mr-2 h-4 w-4" />}
+                    Ver Mais Tarefas
                 </Button>
             ) : (
                 <p className="text-sm text-muted-foreground font-medium italic">Você chegou ao fim da lista.</p>

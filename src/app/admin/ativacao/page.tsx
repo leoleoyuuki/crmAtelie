@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -8,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { KeyRound, Copy, ArrowLeft } from 'lucide-react';
+import { KeyRound, Copy, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import type { AccessToken, TokenDuration } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
@@ -36,6 +34,8 @@ import { Badge } from '@/components/ui/badge';
 import { format } from "date-fns";
 import { ptBR } from 'date-fns/locale';
 
+const PAGE_SIZE = 10;
+
 const generateRandomCode = (length: number): string => {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -53,6 +53,7 @@ export default function GenerateActivationPage() {
   const [tokens, setTokens] = useState<AccessToken[]>([]);
   const [loadingTokens, setLoadingTokens] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'createdAt', desc: true }]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { toast } = useToast();
   const { db } = useFirebase();
 
@@ -184,11 +185,18 @@ export default function GenerateActivationPage() {
       getSortedRowModel: getSortedRowModel(),
       state: {
           sorting,
+          pagination: {
+              pageSize: visibleCount,
+              pageIndex: 0
+          }
       },
   });
 
+  const hasMore = tokens.length > visibleCount;
+  const hasPrev = visibleCount > PAGE_SIZE;
+
   return (
-    <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
+    <div className="flex-1 space-y-8 px-4 pt-6 md:px-8 pb-20">
        <div className="flex items-center gap-4">
         <Button asChild variant="outline" size="icon" className="h-7 w-7">
           <Link href="/">
@@ -320,22 +328,26 @@ export default function GenerateActivationPage() {
             </div>
             )}
              <div className="flex items-center justify-end space-x-2 py-4">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                >
-                    Anterior
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                >
-                    Próximo
-                </Button>
+                {hasPrev && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setVisibleCount(prev => Math.max(PAGE_SIZE, prev - PAGE_SIZE))}
+                    >
+                        <ChevronUp className="h-4 w-4 mr-1" />
+                        Ver Menos
+                    </Button>
+                )}
+                {hasMore && (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+                    >
+                        <ChevronDown className="h-4 w-4 mr-1" />
+                        Ver Mais
+                    </Button>
+                )}
             </div>
         </CardContent>
       </Card>

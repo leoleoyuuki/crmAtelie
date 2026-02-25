@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -34,7 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Trash2, ArrowLeft } from "lucide-react";
+import { MoreHorizontal, Trash2, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -49,6 +47,8 @@ import {
 import { useUser } from '@/firebase/auth/use-user';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+
+const PAGE_SIZE = 10;
 
 interface SuggestionRowActionsProps {
   suggestion: Suggestion;
@@ -117,6 +117,7 @@ export default function SuggestionsAdminPage() {
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [loading, setLoading] = useState(true);
     const [sorting, setSorting] = useState<SortingState>([{ id: 'createdAt', desc: true }]);
+    const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
     const { user, loading: userLoading } = useUser();
     const router = useRouter();
 
@@ -182,8 +183,15 @@ export default function SuggestionsAdminPage() {
         getSortedRowModel: getSortedRowModel(),
         state: {
             sorting,
+            pagination: {
+                pageSize: visibleCount,
+                pageIndex: 0
+            }
         },
     });
+
+    const hasMore = suggestions.length > visibleCount;
+    const hasPrev = visibleCount > PAGE_SIZE;
 
     if (loading || userLoading) {
         return (
@@ -201,13 +209,12 @@ export default function SuggestionsAdminPage() {
                         <CardTitle>Acesso Negado</CardTitle>
                         <CardDescription>Você não tem permissão para acessar esta página.</CardDescription>
                     </CardHeader>
-                </Card>
-            </div>
+                </div>
         );
     }
 
     return (
-        <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
+        <div className="flex-1 space-y-8 px-4 pt-6 md:px-8 pb-20">
             <Card>
                 <CardHeader>
                     <div className="flex items-center gap-4 mb-2">
@@ -259,22 +266,26 @@ export default function SuggestionsAdminPage() {
                         </Table>
                     </div>
                     <div className="flex items-center justify-end space-x-2 py-4">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                        >
-                            Anterior
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                        >
-                            Próximo
-                        </Button>
+                        {hasPrev && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setVisibleCount(prev => Math.max(PAGE_SIZE, prev - PAGE_SIZE))}
+                            >
+                                <ChevronUp className="h-4 w-4 mr-1" />
+                                Ver Menos
+                            </Button>
+                        )}
+                        {hasMore && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+                            >
+                                <ChevronDown className="h-4 w-4 mr-1" />
+                                Ver Mais
+                            </Button>
+                        )}
                     </div>
                 </CardContent>
             </Card>
