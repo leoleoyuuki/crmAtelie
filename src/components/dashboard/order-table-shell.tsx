@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -35,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OrderCardMobile } from "./order-card-mobile";
 import { Skeleton } from "../ui/skeleton";
+import { useRouter } from "next/navigation";
 
 
 interface OrderTableShellProps {
@@ -85,6 +87,7 @@ export default function OrderTableShell({
     onDataMutated,
     isPrivacyMode = false,
 }: OrderTableShellProps) {
+  const router = useRouter();
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
@@ -232,21 +235,28 @@ export default function OrderTableShell({
         completionStatus: false,
       },
     },
-    // Desabilitamos manualPagination pois o hook agora entrega a lista "acumulada" do cache
     manualPagination: false, 
   });
 
-  // Busca progressiva automática se filtros estiverem ativos e a página estiver vazia
+  // Redirect or Progressive load based on filter results
   useEffect(() => {
-    if (isPage && !loading && hasNextPage) {
-      const hasActiveFilters = columnFilters.length > 0;
-      const noRowsVisible = table.getRowModel().rows.length === 0;
-      
-      if (hasActiveFilters && noRowsVisible && data.length > 0) {
-        onNextPage?.();
-      }
+    if (loading) return;
+    
+    const hasActiveFilters = columnFilters.length > 0;
+    const noRowsVisible = table.getRowModel().rows.length === 0;
+
+    if (hasActiveFilters && noRowsVisible) {
+        if (isPage) {
+            // Full page: try to load more from DB to find matches
+            if (hasNextPage && data.length > 0) {
+                onNextPage?.();
+            }
+        } else {
+            // Dashboard: redirect to orders page to search the full history
+            router.push('/pedidos');
+        }
     }
-  }, [isPage, loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage]);
+  }, [isPage, loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage, router]);
 
   const renderPagination = () => {
     if (!isPage) return null;
