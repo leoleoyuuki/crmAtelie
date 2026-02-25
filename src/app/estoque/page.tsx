@@ -1,13 +1,21 @@
 'use client';
 
-import { useCollection } from '@/firebase';
+import { usePaginatedCollection } from '@/firebase';
 import { Material } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MaterialTableShell } from '@/components/estoque/material-table-shell';
 import { Archive, Info, Sparkles } from 'lucide-react';
 
 export default function EstoquePage() {
-  const { data: materials, loading: loadingMaterials } = useCollection<Material>('materials');
+  const { 
+    data: materials, 
+    loading, 
+    nextPage, 
+    prevPage, 
+    hasMore, 
+    hasPrev, 
+    refresh 
+  } = usePaginatedCollection<Material>('materials');
 
   return (
     <div className="flex-1 space-y-8 px-4 pt-8 md:px-10 pb-10">
@@ -42,11 +50,16 @@ export default function EstoquePage() {
         </div>
       </div>
 
-       {loadingMaterials && !materials?.length ? (
+       {loading && !materials?.length ? (
         <Skeleton className="h-[600px] w-full rounded-3xl" />
       ) : (
         <MaterialTableShell 
           data={materials || []}
+          loading={loading}
+          onNextPage={nextPage}
+          onPrevPage={prevPage}
+          hasNextPage={hasMore}
+          hasPrevPage={hasPrev}
         />
       )}
     </div>

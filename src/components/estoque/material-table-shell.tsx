@@ -28,13 +28,25 @@ import { MaterialTableToolbar } from "./material-table-toolbar";
 import { MaterialTableRowActions } from "./material-table-row-actions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MaterialCardMobile } from "./material-card-mobile";
-import { Box, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+import { Box, ChevronDown, ChevronUp, ArrowUpDown, Loader2 } from "lucide-react";
 
 interface MaterialTableShellProps {
   data: Material[];
+  loading?: boolean;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
 }
 
-export function MaterialTableShell({ data }: MaterialTableShellProps) {
+export function MaterialTableShell({ 
+    data, 
+    loading, 
+    onNextPage, 
+    onPrevPage, 
+    hasNextPage, 
+    hasPrevPage 
+}: MaterialTableShellProps) {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'name', desc: false },
@@ -123,7 +135,6 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -132,39 +143,39 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
       columnFilters,
       sorting,
     },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    }
+    manualPagination: false,
   });
 
   const renderPagination = () => (
     <div className="flex items-center justify-between p-6 border-t bg-muted/5">
         <p className="text-xs text-muted-foreground font-medium">
-            Total de <span className="font-bold text-foreground">{data.length}</span> insumos
+            Total de <span className="font-bold text-foreground">{data.length}</span> insumos na lista
         </p>
         <div className="flex items-center gap-2">
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="h-8 rounded-lg font-bold text-xs"
-            >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Anterior
-            </Button>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="h-8 rounded-lg font-bold text-xs"
-            >
-                Próximo
-                <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
+            {hasPrevPage && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onPrevPage}
+                    disabled={loading}
+                    className="h-8 rounded-lg font-bold text-xs bg-background"
+                >
+                    <ChevronUp className="h-4 w-4 mr-1" />
+                    Ver Menos
+                </Button>
+            )}
+            {hasNextPage && (
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onNextPage}
+                    disabled={loading}
+                    className="h-8 rounded-lg font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                    {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ChevronDown className="h-4 w-4 mr-1" />}
+                    Ver Mais
+                </Button>
+            )}
         </div>
     </div>
   );
@@ -184,7 +195,7 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
               ))
             ) : (
               <div className="py-24 text-center text-muted-foreground italic">
-                Nenhum material no estoque.
+                {loading ? "Carregando materiais..." : "Nenhum material no estoque."}
               </div>
             )}
           </div>
@@ -233,7 +244,7 @@ export function MaterialTableShell({ data }: MaterialTableShellProps) {
                       colSpan={columns.length}
                       className="h-48 text-center text-muted-foreground italic"
                     >
-                      Nenhum material encontrado.
+                      {loading ? "Expandindo o inventário..." : "Nenhum material encontrado."}
                     </TableCell>
                   </TableRow>
                 )}
