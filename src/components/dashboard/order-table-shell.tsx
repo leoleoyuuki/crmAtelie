@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useMemo, useEffect, Suspense } from "react";
@@ -102,11 +101,13 @@ function OrderTableShellContent({
     
     const q = searchParams.get('q');
     const status = searchParams.get('status');
+    const month = searchParams.get('month');
     
-    if (q || status) {
+    if (q || status || month) {
         const newFilters: ColumnFiltersState = [];
         if (q) newFilters.push({ id: 'customerName', value: q });
         if (status) newFilters.push({ id: 'status', value: status });
+        if (month) newFilters.push({ id: 'createdAt', value: month });
         
         setColumnFilters(prev => {
             const isSame = prev.length === newFilters.length && 
@@ -279,10 +280,12 @@ function OrderTableShellContent({
             
             const searchTerm = table.getColumn("customerName")?.getFilterValue() as string;
             const statusFilter = table.getColumn("status")?.getFilterValue() as string;
+            const monthFilter = table.getColumn("createdAt")?.getFilterValue() as string;
             
             const params = new URLSearchParams();
             if (searchTerm) params.set('q', searchTerm);
             if (statusFilter) params.set('status', statusFilter);
+            if (monthFilter) params.set('month', monthFilter);
             
             const queryStr = params.toString();
             const redirectPath = queryStr ? `/pedidos?${queryStr}` : '/pedidos';
