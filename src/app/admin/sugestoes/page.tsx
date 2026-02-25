@@ -201,15 +201,17 @@ export default function SuggestionsAdminPage() {
             </div>
         );
     }
-     if (!isAdmin) {
+
+    if (!isAdmin) {
         return (
-             <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
+            <div className="flex-1 space-y-8 px-4 pt-6 md:px-8">
                 <Card>
                     <CardHeader>
                         <CardTitle>Acesso Negado</CardTitle>
                         <CardDescription>Você não tem permissão para acessar esta página.</CardDescription>
                     </CardHeader>
-                </div>
+                </Card>
+            </div>
         );
     }
 
