@@ -92,6 +92,7 @@ export default function OrderTableShell({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const isMobile = useIsMobile();
 
   const handleUpdate = () => {
@@ -253,8 +254,14 @@ export default function OrderTableShell({
             }
         } else {
             // Dashboard: redirect to orders page to search the full history
-            router.push('/pedidos');
+            setIsRedirecting(true);
+            const timer = setTimeout(() => {
+                router.push('/pedidos');
+            }, 1000); // Pequeno delay para o usuário ver a mensagem
+            return () => clearTimeout(timer);
         }
+    } else {
+        setIsRedirecting(false);
     }
   }, [isPage, loading, hasNextPage, columnFilters, table.getRowModel().rows.length, data.length, onNextPage, router]);
 
@@ -322,8 +329,18 @@ export default function OrderTableShell({
                     />
                 ))
             ) : (
-                <div className="py-24 text-center text-muted-foreground italic">
-                    {loading ? "Buscando mais resultados..." : "Nenhum pedido encontrado."}
+                <div className="py-24 text-center text-muted-foreground italic flex flex-col items-center gap-4">
+                    {isRedirecting ? (
+                        <>
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <div className="space-y-1">
+                                <p className="font-bold text-foreground">Expandindo busca...</p>
+                                <p className="text-xs">Indo para a página completa onde os filtros funcionam.</p>
+                            </div>
+                        </>
+                    ) : (
+                        loading ? "Buscando mais resultados..." : "Nenhum pedido encontrado."
+                    )}
                 </div>
             )}
           </div>
@@ -372,7 +389,17 @@ export default function OrderTableShell({
                       colSpan={columns.length}
                       className="h-48 text-center text-muted-foreground italic"
                     >
-                      {loading ? "Buscando nos registros seguintes..." : "Nenhum resultado para os filtros aplicados."}
+                      {isRedirecting ? (
+                        <div className="flex flex-col items-center justify-center gap-3">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            <div className="space-y-1">
+                                <p className="font-bold text-foreground text-base">Expandindo busca no histórico completo...</p>
+                                <p className="text-sm">Redirecionando para a página onde os filtros funcionam em toda a base.</p>
+                            </div>
+                        </div>
+                      ) : (
+                        loading ? "Buscando nos registros seguintes..." : "Nenhum resultado para os filtros aplicados."
+                      )}
                     </TableCell>
                   </TableRow>
                 )}
