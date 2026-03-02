@@ -114,8 +114,8 @@ export async function startFreeTrial(user: User): Promise<void> {
             trialStarted: true,
         });
 
-        // Enviar notificação para o Discord
-        notifyTrialStartedAction({
+        // Enviar notificação para o Discord (Aguardando conclusão antes de prosseguir)
+        await notifyTrialStartedAction({
           name: user.displayName || 'Artesão(ã)',
           email: user.email || 'N/A',
           phone: phone

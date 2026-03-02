@@ -16,8 +16,6 @@ interface TrialNotificationData {
  * Envia uma notificação formatada para o Discord quando um novo trial é iniciado.
  */
 export async function notifyTrialStartedAction(data: TrialNotificationData) {
-  if (!DISCORD_TRIAL_WEBHOOK) return;
-
   const embed = {
     title: '🚀 Novo Trial Iniciado!',
     description: 'Um novo artesão acaba de se juntar ao AtelierFlow.',
@@ -46,11 +44,15 @@ export async function notifyTrialStartedAction(data: TrialNotificationData) {
   };
 
   try {
-    await fetch(DISCORD_TRIAL_WEBHOOK, {
+    const response = await fetch(DISCORD_TRIAL_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ embeds: [embed] }),
     });
+
+    if (!response.ok) {
+        console.error('[Discord Notification Error]: HTTP status', response.status);
+    }
   } catch (error) {
     console.error('[Discord Notification Error]:', error);
   }
