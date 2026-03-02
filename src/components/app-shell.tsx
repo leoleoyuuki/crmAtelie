@@ -409,7 +409,7 @@ function BottomNavigation() {
 
                     {/* Botão de Ação Central (FAB) */}
                     <div className="flex justify-center -mt-10 relative z-10">
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
                                 <Button 
                                     size="icon" 
