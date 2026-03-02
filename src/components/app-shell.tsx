@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -34,7 +35,8 @@ import {
     HelpCircle,
     ChevronDown,
     Target,
-    CalendarDays
+    CalendarDays,
+    Plus
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -64,6 +66,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Input } from "./ui/input";
 import { updateMonthlyGoal } from "@/lib/data";
 import type { UserProfile, UserSummary } from "@/lib/types";
+import { OrderFormDialog } from "./dashboard/order-form-dialog";
+import { CustomerFormDialog } from "./dashboard/customer-form-dialog";
+import { PurchaseFormDialog } from "./compras/purchase-form-dialog";
 
 function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
     if (!expiresAt) return null;
@@ -363,41 +368,117 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
 
 function BottomNavigation() {
     const pathname = usePathname();
+    const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
+    const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+    const [isPurchaseFormOpen, setIsPurchaseFormOpen] = useState(false);
     
-    const navItems = [
+    const leftItems = [
         { href: "/", label: "Início", icon: LayoutDashboard },
         { href: "/pedidos", label: "Pedidos", icon: ShoppingCart },
+    ];
+    const rightItems = [
         { href: "/tarefas", label: "Tarefas", icon: ListChecks },
-        { href: "/ajuda", label: "Ajuda", icon: BookOpen },
+        { href: "/ajuda", label: "Ajuda", icon: HelpCircle },
     ];
 
     return (
-        <div 
-            className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden flex flex-col shadow-[0_-4px_12px_rgba(0,0,0,0.05)]"
-            style={{ 
-                paddingBottom: 'calc(env(safe-area-inset-bottom, 12px) + 12px)',
-                paddingTop: '12px'
-            }}
-        >
-            <div className="flex items-center justify-around px-2">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                        <Link 
-                            key={item.href} 
-                            href={item.href}
-                            className={cn(
-                                "flex flex-col items-center justify-center gap-1 w-full h-full transition-all duration-200",
-                                isActive ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px] scale-110")} />
-                            <span className="text-[10px] uppercase tracking-widest font-bold">{item.label}</span>
-                        </Link>
-                    );
-                })}
+        <>
+            <div 
+                className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+                style={{ 
+                    paddingBottom: 'env(safe-area-inset-bottom, 12px)',
+                }}
+            >
+                <div className="flex items-center justify-between h-16 px-2 relative">
+                    {/* Itens Esquerda */}
+                    <div className="flex flex-1 justify-around">
+                        {leftItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link 
+                                    key={item.href} 
+                                    href={item.href}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center gap-1 transition-all duration-200",
+                                        isActive ? "text-primary font-bold" : "text-muted-foreground"
+                                    )}
+                                >
+                                    <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                                    <span className="text-[9px] uppercase tracking-tighter font-black">{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+
+                    {/* Botão de Ação Central (FAB) */}
+                    <div className="flex justify-center -mt-8 relative z-10">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button 
+                                    size="icon" 
+                                    className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl border-4 border-background hover:scale-105 active:scale-95 transition-all"
+                                >
+                                    <Plus className="h-8 w-8 stroke-[3px]" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="center" side="top" sideOffset={15} className="w-56 p-2 rounded-2xl bg-background/95 backdrop-blur-lg border-primary/20 shadow-2xl">
+                                <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground tracking-widest px-3 py-2">Atalhos Rápidos</DropdownMenuLabel>
+                                <DropdownMenuItem onSelect={() => setIsOrderFormOpen(true)} className="rounded-xl py-3 cursor-pointer">
+                                    <ShoppingCart className="mr-3 h-4 w-4 text-primary" />
+                                    <span className="font-bold">Novo Pedido</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsCustomerFormOpen(true)} className="rounded-xl py-3 cursor-pointer">
+                                    <Users className="mr-3 h-4 w-4 text-primary" />
+                                    <span className="font-bold">Novo Cliente</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => setIsPurchaseFormOpen(true)} className="rounded-xl py-3 cursor-pointer">
+                                    <DollarSign className="mr-3 h-4 w-4 text-secondary" />
+                                    <span className="font-bold">Registrar Compra</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    {/* Itens Direita */}
+                    <div className="flex flex-1 justify-around">
+                        {rightItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                                <Link 
+                                    key={item.href} 
+                                    href={item.href}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center gap-1 transition-all duration-200",
+                                        isActive ? "text-primary font-bold" : "text-muted-foreground"
+                                    )}
+                                >
+                                    <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                                    <span className="text-[9px] uppercase tracking-tighter font-black">{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
-        </div>
+
+            {/* Diálogos Globais */}
+            <OrderFormDialog 
+                isOpen={isOrderFormOpen} 
+                setIsOpen={setIsOrderFormOpen} 
+            />
+            <CustomerFormDialog 
+                isOpen={isCustomerFormOpen} 
+                setIsOpen={setIsCustomerFormOpen} 
+                onCustomerCreated={() => {}} 
+                onCustomerUpdated={() => {}} 
+            />
+            <PurchaseFormDialog 
+                isOpen={isPurchaseFormOpen} 
+                setIsOpen={setIsPurchaseFormOpen} 
+                onPurchaseCreated={() => {}} 
+            />
+        </>
     );
 }
 
