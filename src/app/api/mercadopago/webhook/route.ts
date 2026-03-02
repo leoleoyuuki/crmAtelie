@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import { add } from 'date-fns';
 import '@/lib/load-env'; // Carrega as variáveis de ambiente
 import { createHash } from 'crypto'; // For Facebook Conversions API
+import { notifyPurchaseAction } from '@/app/actions/notifications';
 
 type PlanIdentifier = 'mensal' | 'anual';
 
@@ -55,6 +56,8 @@ export async function POST(request: NextRequest) {
 
         const userRef = adminDb.collection('users').doc(userId);
         const userDoc = await userRef.get();
+        const userData = userDoc.exists ? userDoc.data() : {};
+        
         let startDate = new Date();
 
         if (userDoc.exists && userDoc.data()?.status === 'active' && userDoc.data()?.expiresAt) {
@@ -71,6 +74,22 @@ export async function POST(request: NextRequest) {
           status: 'active',
           expiresAt: expiresAt,
         }, { merge: true });
+
+        // NOTIFICAÇÃO DISCORD
+        try {
+            const planLabel = planIdentifier === 'anual' ? 'Plano Anual' : 'Plano Mensal';
+            const amountStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(paymentInfo.transaction_amount);
+            
+            await notifyPurchaseAction({
+                name: userData?.displayName || 'Artesão(ã)',
+                email: userData?.email || 'N/A',
+                phone: userData?.phone,
+                plan: planLabel,
+                amount: amountStr
+            });
+        } catch (notifErr) {
+            console.error('[ERRO DISCORD Webhook]:', notifErr);
+        }
 
       } catch (dbError: any) {
            console.error(`[ERRO MP] Falha no Firestore:`, dbError);

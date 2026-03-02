@@ -3,7 +3,7 @@
 import { doc, getDoc, writeBatch, Firestore, User, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { add } from 'date-fns';
 import { db } from '@/firebase/config';
-import { notifyTrialStartedAction } from '@/app/actions/notifications';
+import { notifyTrialStartedAction, notifyPurchaseAction } from '@/app/actions/notifications';
 
 export type TokenDurationIdentifier = number;
 
@@ -73,6 +73,20 @@ export async function redeemActivationToken(user: User, token: string): Promise<
 
     // Commit the atomic operation
     await batch.commit();
+
+    // NOTIFICAÇÃO DISCORD
+    try {
+        const planLabel = tokenDuration >= 1 ? `Plano ${tokenDuration} Meses (Código)` : 'Ativação via Código';
+        await notifyPurchaseAction({
+            name: user.displayName || 'Artesão(ã)',
+            email: user.email || 'N/A',
+            phone: userDoc.data()?.phone,
+            plan: planLabel,
+            amount: 'Ativação por Código'
+        });
+    } catch (notifError) {
+        console.error("Failed to send purchase notification:", notifError);
+    }
 
   } catch (error) {
     console.error("Error redeeming token:", error);
