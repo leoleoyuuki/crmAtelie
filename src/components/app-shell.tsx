@@ -384,10 +384,7 @@ function BottomNavigation() {
     return (
         <>
             <div 
-                className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
-                style={{ 
-                    paddingBottom: 'env(safe-area-inset-bottom, 12px)',
-                }}
+                className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-8 pt-2"
             >
                 <div className="flex items-center justify-between h-16 px-2 relative">
                     {/* Itens Esquerda */}
@@ -411,7 +408,7 @@ function BottomNavigation() {
                     </div>
 
                     {/* Botão de Ação Central (FAB) */}
-                    <div className="flex justify-center -mt-8 relative z-10">
+                    <div className="flex justify-center -mt-10 relative z-10">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button 
@@ -672,7 +669,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
             <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
             <div 
                 className="flex-1 overflow-y-auto"
-                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 24px) + 80px)' }}
+                style={{ paddingBottom: '120px' }}
             >
                 {children}
             </div>
