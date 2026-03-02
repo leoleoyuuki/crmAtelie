@@ -3,6 +3,7 @@
 import { doc, getDoc, writeBatch, Firestore, User, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
 import { add } from 'date-fns';
 import { db } from '@/firebase/config';
+import { notifyTrialStartedAction } from '@/app/actions/notifications';
 
 export type TokenDurationIdentifier = number;
 
@@ -92,9 +93,11 @@ export async function startFreeTrial(user: User): Promise<void> {
 
     try {
         const userDoc = await getDoc(userRef);
+        let phone = '';
 
         if (userDoc.exists()) {
             const userData = userDoc.data();
+            phone = userData.phone || '';
             if (userData.trialStarted) {
                 throw new Error("Você já utilizou seu período de teste.");
             }
@@ -109,6 +112,13 @@ export async function startFreeTrial(user: User): Promise<void> {
             status: 'active',
             expiresAt: Timestamp.fromDate(expiresAt),
             trialStarted: true,
+        });
+
+        // Enviar notificação para o Discord
+        notifyTrialStartedAction({
+          name: user.displayName || 'Artesão(ã)',
+          email: user.email || 'N/A',
+          phone: phone
         });
 
     } catch (error) {
