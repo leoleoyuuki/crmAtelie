@@ -1,4 +1,3 @@
-
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -14,6 +13,7 @@ import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { notifyTrialExpiredAction } from '@/app/actions/notifications';
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading: userLoading } = useUser();
@@ -38,6 +38,15 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
           if (userProfile.status === 'active' && userProfile.expiresAt) {
             if (new Date() > userProfile.expiresAt) {
+              // Notificar sobre o encerramento do trial antes de desativar
+              if (userProfile.trialStarted) {
+                notifyTrialExpiredAction({
+                  name: userProfile.displayName,
+                  email: userProfile.email,
+                  phone: userProfile.phone
+                });
+              }
+
               updateDoc(userRef, { status: 'inactive' }).catch(err => {
                   console.error("Failed to update user status to inactive:", err);
               });
