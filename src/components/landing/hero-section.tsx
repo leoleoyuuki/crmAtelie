@@ -109,7 +109,7 @@ export function HeroSection() {
             variants={itemVariants}
             className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground md:text-xl leading-relaxed"
           >
-            Substitui planilhas, cadernos e anotações soltas. Sistema feito exclusivamente para ateliês de costura, bordado e personalizados.
+            Substitui planilhas, cadernos e anotações soltas. Sistema feito exclusivamente para ateliês: costura, bordado e personalizados.
           </motion.p>
 
           <motion.div
