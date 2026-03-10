@@ -5,82 +5,65 @@ import { ShieldCheck, TrendingUp, Clock } from 'lucide-react';
 const highlights = [
   {
     icon: ShieldCheck,
-    title: 'Nunca mais perca um pedido ou prazo',
-    description: 'Centralize todas as ordens de serviço e clientes em um painel que prioriza automaticamente o que é mais urgente.',
+    title: 'Prazos Sob Controle',
+    description: 'Centralize todas as ordens de serviço em um painel inteligente que prioriza automaticamente o que é urgente.',
   },
   {
     icon: TrendingUp,
-    title: 'Veja exatamente quanto entra e sai',
-    description: 'O dashboard financeiro mostra seu faturamento e custos de forma clara, ajudando você a tomar decisões baseadas em dados.',
+    title: 'Lucro Real',
+    description: 'O dashboard financeiro mostra seu faturamento e custos de forma clara, ajudando você a crescer com segurança.',
   },
   {
     icon: Clock,
-    title: 'Tenha tudo do ateliê em um só lugar',
-    description: 'Substitua cadernos, planilhas e anotações. Gerencie pedidos, clientes, preços e finanças de forma integrada e profissional.',
+    title: 'Gestão Unificada',
+    description: 'Substitua cadernos e anotações soltas por um sistema que integra pedidos, clientes, preços e finanças.',
   },
 ];
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.3,
-        delayChildren: 0.2,
-      },
-    },
-};
-
-const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: {
-        y: 0,
-        opacity: 1,
-        transition: {
-        duration: 0.5,
-        ease: 'easeOut',
-        },
-    },
-};
-
-
 export function FeatureHighlights() {
   return (
-    <div className="py-20 sm:py-28 bg-card">
-      <div className="container mx-auto px-4 md:px-6">
+    <div className="py-24 sm:py-32 relative overflow-hidden">
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="text-center mb-20"
         >
-            <h2 className="text-3xl font-bold font-headline tracking-tight sm:text-4xl">
-                Menos papelada, mais arte.
+            <h2 className="text-3xl font-bold font-headline tracking-tight sm:text-5xl text-foreground">
+                Menos papelada, <span className="text-primary italic">mais arte.</span>
             </h2>
-            <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                O AtelierFlow foi desenhado para eliminar as tarefas chatas e repetitivas,
-                liberando seu tempo para o que você faz de melhor.
+            <p className="mt-6 max-w-2xl mx-auto text-lg text-muted-foreground">
+                O AtelierFlow elimina a burocracia para você focar no que realmente importa: a sua criação.
             </p>
         </motion.div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          className="mt-16 grid grid-cols-1 gap-12 md:grid-cols-3"
-        >
-          {highlights.map((highlight) => (
-            <motion.div key={highlight.title} variants={itemVariants} className="text-center">
-              <div className="bg-primary/10 p-5 rounded-full inline-block">
-                <highlight.icon className="h-10 w-10 text-primary" />
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          {highlights.map((highlight, index) => (
+            <motion.div 
+                key={highlight.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2, duration: 0.5 }}
+                whileHover={{ y: -10 }}
+                className="group p-8 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 transition-all shadow-xl"
+            >
+              <div className="bg-primary/20 p-4 rounded-2xl inline-block mb-6 group-hover:scale-110 transition-transform">
+                <highlight.icon className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="mt-6 text-xl font-bold font-headline">{highlight.title}</h3>
-              <p className="mt-2 text-muted-foreground">{highlight.description}</p>
+              <h3 className="text-xl font-bold font-headline mb-3 text-foreground">{highlight.title}</h3>
+              <p className="text-muted-foreground leading-relaxed">{highlight.description}</p>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
+      </div>
+      
+      {/* Background visual element */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full -z-10 opacity-20 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 blur-[150px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/20 blur-[150px] rounded-full" />
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -15,87 +14,72 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 const features = [
   {
     icon: StickyNote,
-    title: 'Gestão de Pedidos Flexível',
-    description:
-      'Crie, edite e acompanhe todos os pedidos em um único lugar, com múltiplos serviços por cliente.',
-    benefit: 'Agilidade e Organização',
+    title: 'Gestão de Pedidos',
+    description: 'Crie e acompanhe pedidos complexos com múltiplos serviços e prazos em um clique.',
   },
   {
     icon: BarChart3,
-    title: 'Dashboard Inteligente',
-    description:
-      'Visão completa do seu negócio com gráficos de faturamento, volume de pedidos e serviços mais populares.',
-    benefit: 'Decisões Baseadas em Dados',
+    title: 'Dashboard Financeiro',
+    description: 'Gráficos de faturamento e custos para você entender a saúde do seu negócio.',
   },
   {
     icon: ListChecks,
-    title: 'Tarefas do Dia Priorizadas',
-    description:
-      'Agenda diária que organiza todos os itens por ordem de urgência, garantindo pontualidade.',
-    benefit: 'Produtividade e Foco',
+    title: 'Painel de Tarefas',
+    description: 'Agenda inteligente que decompõe pedidos em tarefas diárias priorizadas.',
   },
   {
     icon: Users,
-    title: 'Cadastro de Clientes e Comunicação',
-    description:
-      'Mantenha um banco de dados de clientes e envie notificações via WhatsApp com um clique.',
-    benefit: 'Profissionalismo e Fidelização',
+    title: 'CRM de Clientes',
+    description: 'Histórico completo e comunicação via WhatsApp integrada para fidelização.',
   },
   {
     icon: Printer,
-    title: 'Impressão e Tabela de Preços',
-    description:
-      'Gere comprovantes detalhados para cada pedido e padronize os valores dos seus serviços.',
-    benefit: 'Consistência e Eficiência',
+    title: 'Comprovantes 58mm',
+    description: 'Gere tickets térmicos profissionais e envie cópias digitais para seus clientes.',
   },
   {
     icon: Eye,
-    title: 'Modo de Privacidade',
-    description:
-      'Proteja seus dados financeiros com um modo que oculta valores sensíveis, protegido por senha.',
-    benefit: 'Segurança e Confidencialidade',
+    title: 'Modo Privacidade',
+    description: 'Esconda valores sensíveis com senha para usar o sistema na frente de clientes.',
   },
 ];
 
-const cardVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
-};
-
 export function AllFeatures() {
   return (
-    <div className="bg-card py-20 sm:py-28">
-      <div className="container mx-auto px-4 md:px-6">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold font-headline tracking-tight sm:text-4xl">
-            Todas as ferramentas para transformar seu ateliê
-          </h2>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-            Do pedido à entrega, o AtelierFlow foi pensado para simplificar cada
-            etapa do seu fluxo de trabalho.
-          </p>
+    <div className="bg-muted/30 py-24 sm:py-32 relative">
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
+        <div className="text-center mb-16">
+          <motion.h2 
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            className="text-3xl font-bold font-headline tracking-tight sm:text-5xl"
+          >
+            Ferramentas profissionais para <br className="hidden md:block" />
+            <span className="text-primary">artesãos modernos</span>
+          </motion.h2>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature, index) => (
             <motion.div
               key={feature.title}
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.3 }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
             >
-              <Card className="h-full text-center flex flex-col items-center">
-                <CardHeader>
-                  <div className="bg-primary/10 p-4 rounded-full mx-auto w-fit">
-                    <feature.icon className="h-8 w-8 text-primary" />
+              <Card className="h-full bg-white/40 dark:bg-black/40 backdrop-blur-sm border-white/20 shadow-2xl rounded-[2rem] overflow-hidden group">
+                <CardHeader className="p-8">
+                  <div className="bg-primary/10 p-4 rounded-2xl w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-500">
+                    <feature.icon className="h-6 w-6" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <CardTitle className="text-xl font-headline mb-2">
+                <CardContent className="p-8 pt-0">
+                  <CardTitle className="text-xl font-headline mb-3">
                     {feature.title}
                   </CardTitle>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </CardContent>
