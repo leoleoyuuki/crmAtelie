@@ -33,6 +33,9 @@ export function StatsStack({
         }).format(val);
     };
 
+    // Verifica se o rótulo do período corresponde à visão vitalícia
+    const isLifetime = periodLabel === "Total Acumulado" || periodLabel === "Máximo";
+
     return (
         <div className="flex flex-col gap-4">
             {/* Desktop View (Legacy) */}
@@ -85,7 +88,7 @@ export function StatsStack({
 
             {/* Mobile View (Inspired by the Image) */}
             <Card className="lg:hidden bg-card border-none shadow-2xl overflow-hidden rounded-[2rem]">
-                {/* Header Card (Balanço do Mês) */}
+                {/* Header Card (Balanço do Mês ou Lucro desde o início) */}
                 <div className="bg-primary p-6 text-primary-foreground relative">
                     {/* Grid Pattern Background with Edge Fade Mask */}
                     <div 
@@ -99,7 +102,9 @@ export function StatsStack({
                     ></div>
                     
                     <div className="flex items-center justify-between mb-3 relative z-10">
-                        <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Balanço do Mês</p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">
+                            {isLifetime ? "Lucro desde o início" : "Balanço do Mês"}
+                        </p>
                         <button onClick={togglePrivacyMode} className="p-1.5 rounded-full bg-white/15 backdrop-blur-sm active:scale-90 transition-transform">
                             {isPrivacyMode ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </button>
