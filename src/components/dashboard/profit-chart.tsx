@@ -1,13 +1,11 @@
 
 "use client"
 
-import { Area, AreaChart, Bar, BarChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Area, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
 import { EyeOff, TrendingUp } from "lucide-react"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -15,8 +13,6 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from "@/components/ui/chart"
 import { cn } from "@/lib/utils"
 
@@ -79,7 +75,7 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
             </div>
         ) : (
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
-            <AreaChart
+            <ComposedChart
                 data={data}
                 margin={{
                     left: -20,
@@ -92,12 +88,12 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
                     <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">
                         <stop
                             offset="5%"
-                            stopColor="var(--color-profit)"
+                            stopColor="var(--color-revenue)"
                             stopOpacity={0.2}
                         />
                         <stop
                             offset="95%"
-                            stopColor="var(--color-profit)"
+                            stopColor="var(--color-revenue)"
                             stopOpacity={0}
                         />
                     </linearGradient>
@@ -148,7 +144,7 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
                     strokeWidth={3}
                     dot={{ r: 4, fill: "var(--color-cost)", strokeWidth: 2, stroke: "#fff" }}
                 />
-            </AreaChart>
+            </ComposedChart>
         </ChartContainer>
         )}
       </CardContent>
