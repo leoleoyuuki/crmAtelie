@@ -386,12 +386,10 @@ function BottomNavigation() {
 
     return (
         <>
-            <div 
-                className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card/95 backdrop-blur-md md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-8 pt-2"
-            >
-                <div className="flex items-center justify-between h-16 px-2 relative">
+            <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center px-6 md:hidden pointer-events-none">
+                <div className="w-full max-w-[400px] h-20 bg-card/90 backdrop-blur-xl border border-white/20 shadow-[0_15px_50px_-12px_rgba(0,0,0,0.25)] rounded-[2.5rem] flex items-center justify-between px-2 pointer-events-auto relative">
                     {/* Itens Esquerda */}
-                    <div className="flex flex-1 justify-around">
+                    <div className="flex flex-1 justify-around items-center">
                         {leftItems.map((item) => {
                             const isActive = pathname === item.href;
                             return (
@@ -403,7 +401,7 @@ function BottomNavigation() {
                                         isActive ? "text-primary font-bold" : "text-muted-foreground"
                                     )}
                                 >
-                                    <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                                    <item.icon className={cn("h-5 w-5 transition-transform", isActive && "stroke-[2.5px] scale-110")} />
                                     <span className="text-[9px] uppercase tracking-tighter font-black">{item.label}</span>
                                 </Link>
                             );
@@ -411,14 +409,14 @@ function BottomNavigation() {
                     </div>
 
                     {/* Botão de Ação Central (FAB) */}
-                    <div className="flex justify-center -mt-10 relative z-10">
+                    <div className="flex justify-center -mt-12 relative z-10 px-2">
                         <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
                                 <Button 
                                     size="icon" 
-                                    className="h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl border-4 border-background hover:scale-105 active:scale-95 transition-all"
+                                    className="h-16 w-16 rounded-full bg-primary text-primary-foreground shadow-xl shadow-primary/30 border-[6px] border-background hover:scale-105 active:scale-95 transition-all"
                                 >
-                                    <Plus className="h-8 w-8 stroke-[3px]" />
+                                    <Plus className="h-10 w-10 stroke-[3px]" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="center" side="top" sideOffset={15} className="w-56 p-2 rounded-2xl bg-background/95 backdrop-blur-lg border-primary/20 shadow-2xl">
@@ -441,7 +439,7 @@ function BottomNavigation() {
                     </div>
 
                     {/* Itens Direita */}
-                    <div className="flex flex-1 justify-around">
+                    <div className="flex flex-1 justify-around items-center">
                         {rightItems.map((item) => {
                             const isActive = pathname === item.href;
                             return (
@@ -453,7 +451,7 @@ function BottomNavigation() {
                                         isActive ? "text-primary font-bold" : "text-muted-foreground"
                                     )}
                                 >
-                                    <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px]")} />
+                                    <item.icon className={cn("h-5 w-5 transition-transform", isActive && "stroke-[2.5px] scale-110")} />
                                     <span className="text-[9px] uppercase tracking-tighter font-black">{item.label}</span>
                                 </Link>
                             );
@@ -672,7 +670,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
             <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
             <div 
                 className="flex-1 overflow-y-auto"
-                style={{ paddingBottom: '120px' }}
+                style={{ paddingBottom: '140px' }}
             >
                 {children}
             </div>
