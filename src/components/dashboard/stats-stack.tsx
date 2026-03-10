@@ -85,38 +85,44 @@ export function StatsStack({
             </div>
 
             {/* Mobile View (Inspired by the Image) */}
-            <Card className="lg:hidden bg-card border-none shadow-2xl overflow-hidden rounded-[2.5rem]">
+            <Card className="lg:hidden bg-card border-none shadow-2xl overflow-hidden rounded-[2rem]">
                 {/* Header Card (Balanço do Mês) */}
-                <div className="bg-primary p-8 text-primary-foreground relative">
-                    {/* Pattern Background */}
-                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+                <div className="bg-primary p-6 text-primary-foreground relative">
+                    {/* Grid Pattern Background */}
+                    <div 
+                        className="absolute inset-0 opacity-[0.08] pointer-events-none" 
+                        style={{ 
+                            backgroundImage: `linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)`,
+                            backgroundSize: '20px 20px' 
+                        }}
+                    ></div>
                     
-                    <div className="flex items-center justify-between mb-4 relative z-10">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Balanço do Mês</p>
-                        <button onClick={togglePrivacyMode} className="p-2 rounded-full bg-white/10 backdrop-blur-sm">
-                            {isPrivacyMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <div className="flex items-center justify-between mb-3 relative z-10">
+                        <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">Balanço do Mês</p>
+                        <button onClick={togglePrivacyMode} className="p-1.5 rounded-full bg-white/15 backdrop-blur-sm active:scale-90 transition-transform">
+                            {isPrivacyMode ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </button>
                     </div>
                     
-                    <h3 className="text-4xl font-black tracking-tighter relative z-10">
+                    <h3 className="text-3xl font-black tracking-tighter relative z-10">
                         {formatValue(totalProfit)}
                     </h3>
                 </div>
 
                 {/* Sub Stats Row */}
                 <div className="grid grid-cols-3 divide-x bg-card">
-                    <div className="p-5 flex flex-col gap-1 items-center text-center">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Faturamento</p>
+                    <div className="p-4 flex flex-col gap-0.5 items-center text-center">
+                        <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Faturamento</p>
                         <p className={cn("text-xs font-black", isPrivacyMode ? "text-muted-foreground/50" : "text-primary")}>
                             {isPrivacyMode ? "---" : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", notation: "compact" }).format(totalRevenue)}
                         </p>
                     </div>
-                    <div className="p-5 flex flex-col gap-1 items-center text-center">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Pedidos</p>
+                    <div className="p-4 flex flex-col gap-0.5 items-center text-center">
+                        <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Pedidos</p>
                         <p className="text-xs font-black text-foreground">{totalOrders}</p>
                     </div>
-                    <div className="p-5 flex flex-col gap-1 items-center text-center">
-                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Pendências</p>
+                    <div className="p-4 flex flex-col gap-0.5 items-center text-center">
+                        <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Pendências</p>
                         <p className="text-xs font-black text-orange-600">{pendingOrders}</p>
                     </div>
                 </div>
