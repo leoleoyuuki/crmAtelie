@@ -1,3 +1,4 @@
+
 {
   "placeholderImages": [
     {
@@ -7,6 +8,30 @@
       "height": 450,
       "alt": "De anotações no caderno para um sistema digital organizado.",
       "data-ai-hint": "artisan notebook"
+    },
+    {
+      "id": "feature-prazos",
+      "url": "https://picsum.photos/seed/prazos/800/600",
+      "width": 800,
+      "height": 600,
+      "alt": "Controle de prazos no ateliê",
+      "data-ai-hint": "sewing clock"
+    },
+    {
+      "id": "feature-lucro",
+      "url": "https://picsum.photos/seed/lucro/800/600",
+      "width": 800,
+      "height": 600,
+      "alt": "Gestão financeira para artesãos",
+      "data-ai-hint": "atelier coins"
+    },
+    {
+      "id": "feature-gestao",
+      "url": "https://picsum.photos/seed/gestao/800/600",
+      "width": 800,
+      "height": 600,
+      "alt": "Organização unificada de pedidos",
+      "data-ai-hint": "artisan workspace"
     }
   ]
 }
