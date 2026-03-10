@@ -240,8 +240,8 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     return (
         <header className="flex h-16 items-center gap-4 border-b bg-card/50 backdrop-blur-md px-4 lg:px-8 sticky top-0 z-30">
             <div className="flex items-center gap-4">
-                <div className="md:hidden">
-                    <SidebarTrigger />
+                <div className="flex items-center gap-2 md:hidden">
+                    <Logo className="h-6 w-6 text-primary" />
                 </div>
                 
                 {user && (

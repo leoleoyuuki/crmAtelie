@@ -2,7 +2,7 @@
 "use client"
 
 import { Area, AreaChart, Bar, BarChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
-import { EyeOff } from "lucide-react"
+import { EyeOff, TrendingUp } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -18,6 +18,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
+import { cn } from "@/lib/utils"
 
 type ProfitChartProps = {
   data: { month: string; revenue: number; cost: number; profit: number }[];
@@ -26,68 +27,77 @@ type ProfitChartProps = {
 
 const chartConfig = {
   revenue: {
-    label: "Receita",
-    color: "hsl(var(--chart-2))",
+    label: "Receitas",
+    color: "hsl(var(--primary))",
   },
   cost: {
-    label: "Custo",
-    color: "hsl(var(--chart-4))",
+    label: "Despesas",
+    color: "hsl(var(--foreground))",
   },
   profit: {
     label: "Lucro",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--primary))",
   },
 }
 
 export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
+  const latestProfit = data.length > 0 ? data[data.length - 1].profit : 0;
+  const isPositive = latestProfit >= 0;
+
   return (
     <Card className="border-none shadow-none bg-transparent">
-      <CardHeader className="px-0">
-        <CardTitle className="font-headline text-2xl">Receita vs. Custo vs. Lucro</CardTitle>
-        <CardDescription>
-          Análise do seu desempenho financeiro nos últimos 6 meses.
-        </CardDescription>
+      <CardHeader className="px-0 pb-8">
+        <CardTitle className="font-headline text-3xl font-black">Balanço Mensal</CardTitle>
+        <div className="flex items-start gap-2 mt-2">
+            <TrendingUp className={cn("h-4 w-4 mt-0.5", isPositive ? "text-primary" : "text-destructive")} />
+            <p className="text-sm text-muted-foreground leading-snug">
+                Seu balanço este mês está <span className="font-bold text-foreground">{isPositive ? 'positivo' : 'negativo'}</span> em 
+                <span className={cn("font-bold mx-1", isPositive ? "text-primary" : "text-destructive")}>
+                    {isPrivacyMode ? 'R$ ●●●,●●' : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Math.abs(latestProfit))}
+                </span>.
+            </p>
+        </div>
+        
+        {!isPrivacyMode && (
+            <div className="flex gap-4 mt-4">
+                <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Receitas</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-foreground" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Despesas</span>
+                </div>
+            </div>
+        )}
       </CardHeader>
       <CardContent className="px-0">
         {isPrivacyMode ? (
-            <div className="h-[300px] w-full flex flex-col items-center justify-center bg-muted/20 rounded-2xl border-2 border-dashed">
+            <div className="h-[250px] w-full flex flex-col items-center justify-center bg-muted/20 rounded-[2rem] border-2 border-dashed">
                 <EyeOff className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm font-bold text-muted-foreground">Dados financeiros ocultos</p>
-                <p className="text-xs text-muted-foreground">Desative o modo de privacidade para visualizar</p>
+                <p className="text-sm font-bold text-muted-foreground">Gráfico oculto</p>
             </div>
         ) : (
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
-            <ComposedChart
+        <ChartContainer config={chartConfig} className="h-[250px] w-full">
+            <AreaChart
                 data={data}
                 margin={{
-                    left: 0,
-                    right: 0,
+                    left: -20,
+                    right: 10,
                     top: 10,
                     bottom: 0
                 }}
             >
                 <defs>
-                    <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="fillProfit" x1="0" y1="0" x2="0" y2="1">
                         <stop
                             offset="5%"
-                            stopColor="var(--color-revenue)"
-                            stopOpacity={0.4}
+                            stopColor="var(--color-profit)"
+                            stopOpacity={0.2}
                         />
                         <stop
                             offset="95%"
-                            stopColor="var(--color-revenue)"
-                            stopOpacity={0}
-                        />
-                    </linearGradient>
-                    <linearGradient id="fillCost" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                            offset="5%"
-                            stopColor="var(--color-cost)"
-                            stopOpacity={0.4}
-                        />
-                        <stop
-                            offset="95%"
-                            stopColor="var(--color-cost)"
+                            stopColor="var(--color-profit)"
                             stopOpacity={0}
                         />
                     </linearGradient>
@@ -98,22 +108,21 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
                     tickLine={false}
                     axisLine={false}
                     tickMargin={12}
-                    tickFormatter={(value) => value.slice(0, 3)}
+                    tickFormatter={(value) => value.toLowerCase()}
                     fontSize={12}
                     fontWeight={600}
+                    className="lowercase"
                 />
                  <YAxis
                     tickLine={false}
                     axisLine={false}
-                    tickMargin={12}
-                    tickFormatter={(value) =>
-                        `R$${value / 1000}k`
-                    }
                     fontSize={10}
                     fontWeight={600}
+                    tickFormatter={(value) => `R$${value}`}
+                    hide
                 />
                 <ChartTooltip
-                    cursor={{ stroke: 'hsl(var(--muted-foreground))', strokeWidth: 1, strokeDasharray: '4 4' }}
+                    cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1 }}
                     content={
                       <ChartTooltipContent 
                         indicator="dot" 
@@ -122,51 +131,27 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
                       />
                     }
                 />
-                 <ChartLegend content={<ChartLegendContent />} className="pt-4" />
                 
                 <Area
                     dataKey="revenue"
                     type="natural"
-                    fill="url(#fillRevenue)"
+                    fill="url(#fillProfit)"
                     stroke="var(--color-revenue)"
-                    strokeWidth={3}
+                    strokeWidth={4}
+                    dot={{ r: 4, fill: "var(--color-revenue)", strokeWidth: 2, stroke: "#fff" }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                 />
-                 <Area
+                 <Line
                     dataKey="cost"
                     type="natural"
-                    fill="url(#fillCost)"
                     stroke="var(--color-cost)"
                     strokeWidth={3}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    dot={{ r: 4, fill: "var(--color-cost)", strokeWidth: 2, stroke: "#fff" }}
                 />
-                <Line 
-                    dataKey="profit" 
-                    type="monotone" 
-                    stroke="var(--color-profit)" 
-                    strokeWidth={4} 
-                    dot={{
-                        r: 4,
-                        fill: "var(--color-profit)",
-                        stroke: "white",
-                        strokeWidth: 2
-                    }}
-                    activeDot={{
-                        r: 6,
-                        fill: "var(--color-profit)",
-                        stroke: "white",
-                        strokeWidth: 2
-                    }}
-                />
-            </ComposedChart>
+            </AreaChart>
         </ChartContainer>
         )}
       </CardContent>
-      <CardFooter className="px-0 pt-4 flex-col items-start gap-2 text-sm">
-        <div className="leading-none text-muted-foreground font-medium">
-          Mostrando receita, custos e lucro dos últimos 6 meses.
-        </div>
-      </CardFooter>
     </Card>
   )
 }

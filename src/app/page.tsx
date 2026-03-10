@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import Link from 'next/link';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -131,15 +132,21 @@ export default function DashboardPage() {
        <div className="space-y-8">
           {/* Header & Actions */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-                <div>
-                    <h2 className="text-3xl font-black tracking-tight font-headline text-foreground leading-tight">
-                        Dashboard
+            <div className="flex flex-col gap-1">
+                <p className="text-xs font-bold text-primary uppercase tracking-widest md:hidden">Página Inicial</p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <h2 className="text-3xl md:text-4xl font-black tracking-tight font-headline text-foreground leading-tight">
+                        Olá, {user?.displayName?.split(' ')[0]}.
                     </h2>
-                    <p className="text-muted-foreground text-sm leading-none mt-1">Bem-vinda de volta, {user?.displayName?.split(' ')[0]}!</p>
+                    <p className="text-muted-foreground text-sm md:text-base font-medium capitalize">
+                        {format(new Date(), "eeee, dd 'de' MMMM", { locale: ptBR })}
+                    </p>
                 </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
                 <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                    <SelectTrigger className="w-[180px] h-9 rounded-xl border-dashed bg-primary/5 text-primary font-bold text-xs">
+                    <SelectTrigger className="w-[180px] h-10 rounded-xl border-dashed bg-primary/5 text-primary font-bold text-xs">
                         <Filter className="h-3 w-3 mr-2" />
                         <SelectValue placeholder="Período" />
                     </SelectTrigger>
@@ -150,23 +157,24 @@ export default function DashboardPage() {
                         ))}
                     </SelectContent>
                 </Select>
-            </div>
-            <div className="flex items-center gap-3">
-                <Button 
-                    variant="outline" 
-                    className="rounded-xl font-bold border-primary text-primary hover:bg-primary/5"
-                    onClick={() => setIsCustomerFormOpen(true)}
-                >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Novo Cliente
-                </Button>
-                <Button 
-                    className="rounded-xl font-bold shadow-lg shadow-primary/20"
-                    onClick={() => setIsOrderFormOpen(true)}
-                >
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Novo Pedido
-                </Button>
+                
+                <div className="hidden md:flex items-center gap-3">
+                    <Button 
+                        variant="outline" 
+                        className="rounded-xl font-bold border-primary text-primary hover:bg-primary/5"
+                        onClick={() => setIsCustomerFormOpen(true)}
+                    >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Novo Cliente
+                    </Button>
+                    <Button 
+                        className="rounded-xl font-bold shadow-lg shadow-primary/20"
+                        onClick={() => setIsOrderFormOpen(true)}
+                    >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Novo Pedido
+                    </Button>
+                </div>
             </div>
           </div>
 
@@ -176,7 +184,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Left: Stats Stack */}
-            <div className="lg:col-span-3 space-y-4">
+            <div className="lg:col-span-3">
                 <StatsStack 
                     totalRevenue={stats.totalRevenue}
                     totalProfit={stats.totalProfit}
@@ -185,7 +193,6 @@ export default function DashboardPage() {
                     isPrivacyMode={isPrivacyMode}
                     periodLabel={selectedPeriod === 'all' ? 'Total Acumulado' : monthsOptions.find(m => m.value === selectedPeriod)?.label || 'Mensal'}
                 />
-                <WhatsNew />
             </div>
 
             {/* Center: Ownership/Distribution */}
@@ -241,6 +248,10 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
+          </div>
+
+          <div className="hidden md:block">
+            <WhatsNew />
           </div>
 
           {/* Revenue & Profit Section */}
