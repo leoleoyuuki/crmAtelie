@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { PasswordDialog } from '@/components/password-dialog';
 import { useUser, useDocument } from '@/firebase';
-import { setUserPrivacyPassword } from '@/lib/data';
+import { setUserPrivacyPassword, updateUserPrivacyPreference } from '@/lib/data';
 import type { UserProfile } from '@/lib/types';
 
 interface PasswordContextType {
@@ -36,15 +37,23 @@ export const PasswordProvider = ({ children }: { children: ReactNode }) => {
   const isPasswordSet = !!profile?.passwordHash;
   const passwordHash = profile?.passwordHash || null;
 
-  // Verifica persistência no carregamento
+  // Verifica persistência no carregamento (LocalStorage para velocidade + Profile para persistência real)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const isAlwaysUnlocked = localStorage.getItem(PERSIST_KEY) === 'true';
-      if (isAlwaysUnlocked) {
+      const isLocalUnlocked = localStorage.getItem(PERSIST_KEY) === 'true';
+      if (isLocalUnlocked) {
         setIsPrivacyMode(false);
       }
     }
   }, []);
+
+  // Sincroniza com a preferência do Banco de Dados assim que o perfil carrega
+  useEffect(() => {
+    if (profile && profile.privacyMode === false) {
+        setIsPrivacyMode(false);
+        localStorage.setItem(PERSIST_KEY, 'true');
+    }
+  }, [profile]);
 
   const simpleHash = (str: string) => {
     let hash = 0;
@@ -69,14 +78,16 @@ export const PasswordProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const verifyPassword = (password: string, shouldPersist: boolean = false): boolean => {
-    if (!passwordHash) return false;
+    if (!passwordHash || !user) return false;
     const isCorrect = simpleHash(password) === passwordHash;
     if (isCorrect) {
       setIsPrivacyMode(false);
       if (shouldPersist) {
         localStorage.setItem(PERSIST_KEY, 'true');
+        updateUserPrivacyPreference(user.uid, false); // Salva no Banco: privacyMode: false (desbloqueado)
       } else {
         localStorage.removeItem(PERSIST_KEY);
+        updateUserPrivacyPreference(user.uid, true); // Salva no Banco: privacyMode: true (padrão bloqueado)
       }
     }
     return isCorrect;
@@ -87,8 +98,9 @@ export const PasswordProvider = ({ children }: { children: ReactNode }) => {
       setIsDialogOpen(true);
     } else {
       setIsPrivacyMode(true);
-      // Se o usuário trancar manualmente, não alteramos a persistência para a próxima sessão, 
-      // mas mantemos trancado nesta sessão.
+      // Se o usuário trancar manualmente, removemos a persistência local para esta sessão
+      localStorage.removeItem(PERSIST_KEY);
+      // Opcional: Poderíamos também atualizar o banco aqui para 'true' se quisermos que a tranca seja definitiva
     }
   }, [isPrivacyMode]);
 

@@ -59,6 +59,7 @@ export interface UserProfile {
   expiresAt?: Date;
   trialStarted?: boolean;
   passwordHash?: string;
+  privacyMode?: boolean;
 }
 
 export interface AccessToken {

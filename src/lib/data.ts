@@ -910,6 +910,20 @@ export async function setUserPrivacyPassword(userId: string, passwordHash: strin
     });
 }
 
+export async function updateUserPrivacyPreference(userId: string, privacyMode: boolean): Promise<void> {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, { privacyMode })
+    .catch(async (serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'update',
+            requestResourceData: { privacyMode },
+        } satisfies SecurityRuleContext);
+        errorEmitter.emit('permission-error', permissionError);
+        throw serverError;
+    });
+}
+
 export async function updateUserProfilePhone(userId: string, phone: string): Promise<void> {
   const userRef = doc(db, 'users', userId);
   await updateDoc(userRef, { phone })

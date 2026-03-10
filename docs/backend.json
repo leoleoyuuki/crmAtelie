@@ -181,6 +181,10 @@
             "passwordHash": {
               "type": "string",
               "description": "The hash of the user's privacy mode password."
+            },
+            "privacyMode": {
+              "type": "boolean",
+              "description": "Flag indicating if privacy mode is enabled by default (locked)."
             }
         },
         "required": ["displayName", "email", "status"]
