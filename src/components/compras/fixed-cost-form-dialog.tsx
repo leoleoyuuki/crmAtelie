@@ -78,8 +78,8 @@ export function FixedCostFormDialog({
     try {
       await addFixedCost(data);
       toast({
-        title: "Custo Registrado",
-        description: `O custo "${data.description}" foi adicionado.`,
+        title: "Conta Registrada",
+        description: `A conta "${data.description}" foi adicionada.`,
       });
       onCostCreated();
       setIsOpen(false);
@@ -87,7 +87,7 @@ export function FixedCostFormDialog({
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Não foi possível registrar o custo.",
+        description: "Não foi possível registrar a conta.",
       });
     }
   };
@@ -95,7 +95,7 @@ export function FixedCostFormDialog({
   const dialogContent = (
     <DialogContent className="sm:max-w-[425px]">
       <DialogHeader>
-        <DialogTitle className="font-headline">Registrar Custo Fixo/Operacional</DialogTitle>
+        <DialogTitle className="font-headline">Registrar Nova Conta</DialogTitle>
         <DialogDescription>
           Adicione despesas como aluguel, contas de luz, água, internet, etc.
         </DialogDescription>
@@ -107,7 +107,7 @@ export function FixedCostFormDialog({
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Descrição</FormLabel>
+                <FormLabel>Descrição da Conta</FormLabel>
                 <FormControl>
                   <Input placeholder="ex: Aluguel do Ateliê" {...field} />
                 </FormControl>
@@ -134,7 +134,7 @@ export function FixedCostFormDialog({
               name="date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                    <FormLabel className="mb-1.5">Data do Custo</FormLabel>
+                    <FormLabel className="mb-1.5">Data de Pagamento</FormLabel>
                     <DatePickerWithDialog
                         date={field.value}
                         setDate={field.onChange}
@@ -150,7 +150,7 @@ export function FixedCostFormDialog({
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Salvar Custo</Button>
+            <Button type="submit">Salvar Conta</Button>
           </DialogFooter>
         </form>
       </Form>

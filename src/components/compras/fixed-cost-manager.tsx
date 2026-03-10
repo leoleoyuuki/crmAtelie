@@ -38,15 +38,15 @@ export function FixedCostManager({ data, loading, onDataMutated }: FixedCostMana
         try {
             await deleteFixedCost(cost.id);
             toast({
-                title: "Custo Excluído",
-                description: `O custo "${cost.description}" foi removido.`,
+                title: "Conta Excluída",
+                description: `O conta "${cost.description}" foi removida.`,
             });
             onDataMutated();
         } catch (error) {
             toast({
                 variant: "destructive",
                 title: "Erro",
-                description: "Falha ao excluir o custo.",
+                description: "Falha ao excluir a conta.",
             });
         }
     };
@@ -56,7 +56,7 @@ export function FixedCostManager({ data, loading, onDataMutated }: FixedCostMana
       <CardHeader>
         <div className="flex items-center justify-between">
             <div>
-                <CardTitle>Custos Fixos do Mês</CardTitle>
+                <CardTitle>Contas do Mês</CardTitle>
                 <CardDescription>Gerencie aluguel, contas, etc.</CardDescription>
             </div>
             <FixedCostFormDialog
@@ -76,7 +76,7 @@ export function FixedCostManager({ data, loading, onDataMutated }: FixedCostMana
                     [...Array(3)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
                 ) : data.length === 0 ? (
                     <div className="text-center text-sm text-muted-foreground py-10">
-                        Nenhum custo fixo registrado para este mês.
+                        Nenhuma conta registrada para este mês.
                     </div>
                 ) : (
                     data.map((cost) => (
@@ -104,7 +104,7 @@ export function FixedCostManager({ data, loading, onDataMutated }: FixedCostMana
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Confirmar Exclusão?</AlertDialogTitle>
                                             <AlertDialogDescription>
-                                                Esta ação removerá o custo "{cost.description}" e abaterá o valor do seu resumo de custos.
+                                                Esta ação removerá a conta "{cost.description}" e abaterá o valor do seu resumo de custos.
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>

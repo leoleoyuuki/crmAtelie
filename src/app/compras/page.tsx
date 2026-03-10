@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDocument, usePaginatedCollection } from '@/firebase';
@@ -115,7 +116,7 @@ export default function ComprasPage() {
                 Registro de Saídas
             </button>
             <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
-                Custos Fixos
+                Contas do Mês
             </Link>
             <Link href="/implementando" className="text-sm font-medium text-muted-foreground hover:text-foreground pb-3 whitespace-nowrap transition-colors">
                 Análise Anual
