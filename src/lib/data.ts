@@ -185,7 +185,7 @@ export function getMonths() {
     for (let i = 0; i < 12; i++) {
         const date = subMonths(now, i);
         months.push({
-            value: `${getMonth(date)}-${getYear(date)}`,
+            value: format(date, 'yyyy-MM'),
             label: format(date, 'MMMM yyyy', { locale: ptBR })
         });
     }
@@ -195,6 +195,9 @@ export function getMonths() {
 export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>) {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
+
+    const now = new Date();
+    const monthKey = format(now, 'yyyy-MM');
 
     const newOrderData = {
         ...order,
@@ -213,6 +216,8 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
             const summaryUpdates: any = {
                 totalOrders: increment(1),
                 pendingOrders: increment(1),
+                [`monthlyOrders.${monthKey}`]: increment(1),
+                [`monthlyPending.${monthKey}`]: increment(1),
             };
 
             // Distribution Map Increments
@@ -252,6 +257,7 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
             const currentOrder = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
             const currentStatus = currentOrder.status;
             const newStatus = updatedData.status;
+            const creationMonthKey = format(currentOrder.createdAt, 'yyyy-MM');
 
             // --- 1. Handle Service Distribution Changes if items updated ---
             if (updatedData.items) {
@@ -284,14 +290,15 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
 
             // --- 2. Handle status change logic ---
             if (currentStatus === 'Concluído' && newStatus && newStatus !== 'Concluído') {
-                const orderMonthKey = format(currentOrder.createdAt, 'yyyy-MM');
+                // Re-opening a concluded order
                 const revenueDecrement = currentOrder.totalValue;
 
                 transaction.set(summaryRef, {
                     totalRevenue: increment(-revenueDecrement),
                     pendingOrders: increment(1),
+                    [`monthlyPending.${creationMonthKey}`]: increment(1),
                     monthlyRevenue: {
-                        [orderMonthKey]: increment(-revenueDecrement)
+                        [creationMonthKey]: increment(-revenueDecrement)
                     }
                 }, { merge: true });
 
@@ -307,6 +314,20 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
                 
                  transaction.update(orderRef, { ...updatedData, materialsUsed: [] });
 
+            } else if (currentStatus !== 'Concluído' && newStatus === 'Concluído') {
+                // Concluding via manual update (though we have concludeOrderWithStockUpdate, safety first)
+                const revenueIncrement = currentOrder.totalValue;
+                
+                transaction.set(summaryRef, {
+                    totalRevenue: increment(revenueIncrement),
+                    pendingOrders: increment(-1),
+                    [`monthlyPending.${creationMonthKey}`]: increment(-1),
+                    monthlyRevenue: {
+                        [creationMonthKey]: increment(revenueIncrement)
+                    }
+                }, { merge: true });
+
+                transaction.update(orderRef, updatedData);
             } else {
                 const updatePayload: any = { ...updatedData };
                 if (updatedData.dueDate && !(updatedData.dueDate instanceof Timestamp)) {
@@ -342,17 +363,19 @@ export async function deleteOrder(orderId: string) {
 
             const orderData = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
             const revenueDecrement = orderData.totalValue;
-            const orderMonthKey = format(orderData.createdAt, 'yyyy-MM');
+            const creationMonthKey = format(orderData.createdAt, 'yyyy-MM');
 
             const summaryUpdate: any = {
                 totalOrders: increment(-1),
+                [`monthlyOrders.${creationMonthKey}`]: increment(-1),
             };
 
             if (orderData.status === 'Concluído') {
                 summaryUpdate.totalRevenue = increment(-revenueDecrement);
-                summaryUpdate.monthlyRevenue = { [orderMonthKey]: increment(-revenueDecrement) };
+                summaryUpdate.monthlyRevenue = { [creationMonthKey]: increment(-revenueDecrement) };
             } else {
                 summaryUpdate.pendingOrders = increment(-1);
+                summaryUpdate[`monthlyPending.${creationMonthKey}`] = increment(-1);
             }
 
             // Decrement Distribution
@@ -748,7 +771,8 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
             if (!orderDoc.exists()) {
                 throw new Error("Pedido não encontrado.");
             }
-            const orderData = orderDoc.data() as Order;
+            const orderData = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
+            const creationMonthKey = format(orderData.createdAt, 'yyyy-MM');
 
             const materialRefs = usedMaterials.map(used => doc(db, 'materials', used.materialId));
             const materialDocs = await Promise.all(materialRefs.map(ref => transaction.get(ref)));
@@ -774,14 +798,14 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
                 });
             }
             
-            const orderMonthKey = format(new Date(), 'yyyy-MM');
             const revenueIncrement = orderData.totalValue;
 
             transaction.set(summaryRef, {
                 totalRevenue: increment(revenueIncrement),
                 pendingOrders: increment(-1),
+                [`monthlyPending.${creationMonthKey}`]: increment(-1),
                 monthlyRevenue: {
-                    [orderMonthKey]: increment(revenueIncrement)
+                    [creationMonthKey]: increment(revenueIncrement)
                 }
             }, { merge: true });
 
@@ -803,7 +827,7 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     const summaryRef = doc(db, 'summaries', userId);
     const summarySnap = await getDoc(summaryRef);
 
-    if (summarySnap.exists() && summarySnap.data()?.serviceDistribution) {
+    if (summarySnap.exists() && summarySnap.data()?.monthlyOrders) {
         return fromFirebase(summarySnap.data(), summarySnap.id) as UserSummary;
     }
 
@@ -820,11 +844,16 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
     let pendingOrders = 0;
     const monthlyRevenue: { [key: string]: number } = {};
     const monthlyCosts: { [key: string]: number } = {};
+    const monthlyOrders: { [key: string]: number } = {};
+    const monthlyPending: { [key: string]: number } = {};
     const serviceDistribution: { [key: string]: number } = {};
 
     ordersSnapshot.forEach(orderDoc => {
         const order = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
         totalOrders++;
+
+        const creationMonthKey = format(order.createdAt, 'yyyy-MM');
+        monthlyOrders[creationMonthKey] = (monthlyOrders[creationMonthKey] || 0) + 1;
 
         if (order.items) {
             order.items.forEach(item => {
@@ -835,10 +864,10 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
 
         if (order.status === 'Concluído') {
             totalRevenue += order.totalValue;
-            const monthKey = format(order.createdAt, 'yyyy-MM');
-            monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + order.totalValue;
-        } else if (order.status === 'Novo' || order.status === 'Em Processo') {
+            monthlyRevenue[creationMonthKey] = (monthlyRevenue[creationMonthKey] || 0) + order.totalValue;
+        } else {
             pendingOrders++;
+            monthlyPending[creationMonthKey] = (monthlyPending[creationMonthKey] || 0) + 1;
         }
     });
 
@@ -856,6 +885,8 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
         pendingOrders,
         monthlyRevenue,
         monthlyCosts,
+        monthlyOrders,
+        monthlyPending,
         serviceDistribution,
         monthlyGoal: 5000,
     };

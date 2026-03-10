@@ -11,9 +11,17 @@ interface StatsStackProps {
     totalOrders: number;
     pendingOrders: number;
     isPrivacyMode?: boolean;
+    periodLabel?: string;
 }
 
-export function StatsStack({ totalRevenue, totalProfit, totalOrders, pendingOrders, isPrivacyMode }: StatsStackProps) {
+export function StatsStack({ 
+    totalRevenue, 
+    totalProfit, 
+    totalOrders, 
+    pendingOrders, 
+    isPrivacyMode,
+    periodLabel = "Máximo"
+}: StatsStackProps) {
     const formattedRevenue = isPrivacyMode
         ? 'R$ ●●●,●●'
         : new Intl.NumberFormat("pt-BR", {
@@ -30,6 +38,10 @@ export function StatsStack({ totalRevenue, totalProfit, totalOrders, pendingOrde
 
     return (
         <div className="flex flex-col gap-3">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1">
+                Indicadores: <span className="text-primary">{periodLabel}</span>
+            </p>
+            
             <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group border-primary/20 bg-primary/5">
                 <div className="bg-primary/10 p-3 rounded-xl group-hover:bg-primary/20 transition-colors">
                     <TrendingUp className="h-5 w-5 text-primary" />

@@ -118,6 +118,8 @@ export interface UserSummary {
   pendingOrders: number;
   monthlyRevenue: { [key: string]: number }; // YYYY-MM format
   monthlyCosts: { [key: string]: number }; // YYYY-MM format
+  monthlyOrders: { [key: string]: number }; // YYYY-MM format - Total created in month
+  monthlyPending: { [key: string]: number }; // YYYY-MM format - Total pending created in month
   serviceDistribution?: { [key: string]: number };
   monthlyGoal?: number;
 }

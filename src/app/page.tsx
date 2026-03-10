@@ -4,7 +4,7 @@
 import { useEffect, useState, useContext, useMemo } from 'react';
 import { useCollection, useDocument } from '@/firebase';
 import { Order, UserSummary } from '@/lib/types';
-import { getServiceDistributionData, getRevenueChartDataFromSummary, getProfitChartDataFromSummary } from '@/lib/data';
+import { getServiceDistributionData, getRevenueChartDataFromSummary, getProfitChartDataFromSummary, getMonths } from '@/lib/data';
 import { StatsStack } from '@/components/dashboard/stats-stack';
 import { RevenueChart } from '@/components/dashboard/revenue-chart';
 import { ServiceDistributionChart } from '@/components/dashboard/service-distribution-chart';
@@ -16,11 +16,18 @@ import { useUser } from '@/firebase/auth/use-user';
 import { ProfitChart } from '@/components/dashboard/profit-chart';
 import { WelcomeGuide } from '@/components/dashboard/welcome-guide';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, UserPlus, Sparkles, ArrowRight, Clock, AlertCircle } from 'lucide-react';
+import { PlusCircle, UserPlus, Sparkles, ArrowRight, Clock, AlertCircle, Filter } from 'lucide-react';
 import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
 import { CustomerFormDialog } from '@/components/dashboard/customer-form-dialog';
 import { WhatsNew } from '@/components/dashboard/whats-new';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -32,6 +39,8 @@ export default function DashboardPage() {
   });
 
   const { isPrivacyMode } = useContext(PasswordContext);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
+  
   const [serviceDistributionData, setServiceDistributionData] = useState<{ service: string; count: number; fill: string }[]>([]);
   const [revenueData, setRevenueData] = useState<{ month: string; revenue: number }[]>([]);
   const [profitData, setProfitData] = useState<{ month: string; revenue: number; cost: number; profit: number }[]>([]);
@@ -39,12 +48,35 @@ export default function DashboardPage() {
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
 
-  const { totalCosts, totalProfit } = useMemo(() => {
-    if (!summary) return { totalCosts: 0, totalProfit: 0 };
-    const costs = Object.values(summary.monthlyCosts || {}).reduce((acc, cost) => acc + cost, 0);
-    const profit = summary.totalRevenue - costs;
-    return { totalCosts: costs, totalProfit: profit };
-  }, [summary]);
+  const monthsOptions = useMemo(() => getMonths(), []);
+
+  const stats = useMemo(() => {
+    if (!summary) return { totalRevenue: 0, totalProfit: 0, totalOrders: 0, pendingOrders: 0 };
+
+    if (selectedPeriod === 'all') {
+        const totalCosts = Object.values(summary.monthlyCosts || {}).reduce((acc, cost) => acc + cost, 0);
+        const totalProfit = summary.totalRevenue - totalCosts;
+        return { 
+            totalRevenue: summary.totalRevenue, 
+            totalProfit, 
+            totalOrders: summary.totalOrders, 
+            pendingOrders: summary.pendingOrders 
+        };
+    }
+
+    // Filtered by month
+    const rev = summary.monthlyRevenue?.[selectedPeriod] || 0;
+    const cost = summary.monthlyCosts?.[selectedPeriod] || 0;
+    const ord = summary.monthlyOrders?.[selectedPeriod] || 0;
+    const pend = summary.monthlyPending?.[selectedPeriod] || 0;
+    
+    return {
+        totalRevenue: rev,
+        totalProfit: rev - cost,
+        totalOrders: ord,
+        pendingOrders: pend
+    };
+  }, [summary, selectedPeriod]);
 
   useEffect(() => {
     if (user && !summary && !summaryLoading) {
@@ -92,11 +124,25 @@ export default function DashboardPage() {
        <div className="space-y-8">
           {/* Header & Actions */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h2 className="text-3xl font-black tracking-tight font-headline text-foreground">
-                    Dashboard
-                </h2>
-                <p className="text-muted-foreground text-sm">Bem-vinda de volta, {user?.displayName?.split(' ')[0]}!</p>
+            <div className="flex items-center gap-4">
+                <div>
+                    <h2 className="text-3xl font-black tracking-tight font-headline text-foreground leading-tight">
+                        Dashboard
+                    </h2>
+                    <p className="text-muted-foreground text-sm leading-none mt-1">Bem-vinda de volta, {user?.displayName?.split(' ')[0]}!</p>
+                </div>
+                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                    <SelectTrigger className="w-[180px] h-9 rounded-xl border-dashed bg-primary/5 text-primary font-bold text-xs">
+                        <Filter className="h-3 w-3 mr-2" />
+                        <SelectValue placeholder="Período" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Vitalício (Máximo)</SelectItem>
+                        {monthsOptions.map(m => (
+                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
             <div className="flex items-center gap-3">
                 <Button 
@@ -125,11 +171,12 @@ export default function DashboardPage() {
             {/* Left: Stats Stack */}
             <div className="lg:col-span-3 space-y-4">
                 <StatsStack 
-                    totalRevenue={summary?.totalRevenue || 0}
-                    totalProfit={totalProfit}
-                    totalOrders={summary?.totalOrders || 0}
-                    pendingOrders={summary?.pendingOrders || 0}
+                    totalRevenue={stats.totalRevenue}
+                    totalProfit={stats.totalProfit}
+                    totalOrders={stats.totalOrders}
+                    pendingOrders={stats.pendingOrders}
                     isPrivacyMode={isPrivacyMode}
+                    periodLabel={selectedPeriod === 'all' ? 'Total Acumulado' : monthsOptions.find(m => m.value === selectedPeriod)?.label || 'Mensal'}
                 />
                 <WhatsNew />
             </div>
@@ -144,7 +191,7 @@ export default function DashboardPage() {
                 <div className="bg-card rounded-2xl border p-6 shadow-sm h-full flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Atividade</h3>
-                        <Badge variant="outline" className="text-[10px]">Últimos 30 dias</Badge>
+                        <Badge variant="outline" className="text-[10px]">Geral</Badge>
                     </div>
                     
                     <div className="space-y-6 flex-grow">
@@ -175,7 +222,7 @@ export default function DashboardPage() {
                         <div className="pt-4 border-t">
                             <div className="flex items-center gap-2 mb-2">
                                 <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-xs font-medium text-muted-foreground">Status do Mês</span>
+                                <span className="text-xs font-medium text-muted-foreground">Eficiência de Entrega</span>
                             </div>
                             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
                                 <div 
