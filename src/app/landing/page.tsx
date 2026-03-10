@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Header } from '@/components/landing/header';
@@ -8,8 +7,8 @@ import { AllFeatures } from '@/components/landing/all-features';
 import { MobileAccessSection } from '@/components/landing/mobile-access-section';
 import { Cta } from '@/components/landing/cta';
 import { Footer } from '@/components/landing/footer';
-import { SocialProof } from '@/components/landing/social-proof';
 import { FaqSection } from '@/components/landing/faq-section';
+import { StaggerTestimonials } from '@/components/ui/stagger-testimonials';
 
 export default function LandingPage() {
   return (
@@ -21,7 +20,7 @@ export default function LandingPage() {
          <FeatureHighlights />
         </div>
         <AllFeatures />
-        <SocialProof />
+        <StaggerTestimonials />
         <MobileAccessSection />
         <FaqSection />
         <Cta />
