@@ -1,6 +1,6 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import { Headset, Clock, Users, Star, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -22,15 +22,6 @@ const images = [
 export function HeroSection() {
     const [index, setIndex] = useState(0);
     const containerRef = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end start"]
-    });
-
-    // Ajuste na opacidade: Mantém 100% até 40% do scroll, depois desvanece
-    const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
-    const opacity = useTransform(scrollYProgress, [0, 0.4, 0.9, 1], [1, 1, 0, 0]);
-    const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.95]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -72,7 +63,7 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 pointer-events-none" />
       </div>
 
-      <motion.div style={{ y, opacity, scale }} className="container mx-auto px-4 md:px-6 relative z-10">
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -140,16 +131,6 @@ export function HeroSection() {
             >
               <a href="#recursos">Conhecer Recursos</a>
             </Button>
-          </motion.div>
-
-          {/* Widgets de Benefícios */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.4 }}
-            className="mt-20"
-          >
-            
           </motion.div>
 
            {/* Preview do Sistema (Mockup Tridimensional) */}
@@ -228,7 +209,7 @@ export function HeroSection() {
             </div>
           </motion.div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
