@@ -126,8 +126,8 @@ function MonthProgress({ summary }: { summary: UserSummary | null }) {
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <div className="hidden lg:flex items-center gap-3 px-3 py-1.5 rounded-full border bg-background/50 cursor-pointer group transition-colors hover:bg-muted/30">
-                    <div className="relative h-6 w-6">
+                <div className="flex items-center gap-2 lg:gap-3 px-2 py-1.5 lg:px-3 lg:py-1.5 rounded-full border bg-background/50 cursor-pointer group transition-colors hover:bg-muted/30">
+                    <div className="relative h-6 w-6 shrink-0">
                         <svg className="h-full w-full" viewBox="0 0 36 36">
                             <circle className="stroke-muted fill-none" strokeWidth="3" cx="18" cy="18" r="16" />
                             <circle 
@@ -143,10 +143,10 @@ function MonthProgress({ summary }: { summary: UserSummary | null }) {
                         </svg>
                         <span className="absolute inset-0 flex items-center justify-center text-[8px] font-black">{progress}%</span>
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground whitespace-nowrap">Meta Financeira 💰</span>
+                    <span className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground whitespace-nowrap hidden sm:inline">Meta 💰</span>
                 </div>
             </PopoverTrigger>
-            <PopoverContent side="bottom" className="w-64 bg-background/95 backdrop-blur-md border shadow-xl p-4">
+            <PopoverContent side="bottom" align="end" className="w-64 bg-background/95 backdrop-blur-md border shadow-xl p-4">
                 <div className="space-y-4">
                     <div className="space-y-1">
                         <div className="flex items-center justify-between mb-1">
@@ -194,6 +194,14 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
     const { data: summary } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
+
+    const progress = useMemo(() => {
+        if (!summary) return 0;
+        const currentMonthKey = format(new Date(), 'yyyy-MM');
+        const currentRevenue = summary.monthlyRevenue?.[currentMonthKey] || 0;
+        const goal = summary.monthlyGoal || 5000;
+        return Math.min(Math.round((currentRevenue / goal) * 100), 100);
+    }, [summary]);
 
     const handleToggleClick = () => {
         if (!isPasswordSet) {
@@ -346,6 +354,22 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                     <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                                 </div>
                             </DropdownMenuLabel>
+                            
+                            {!isPrivacyMode && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <div className="px-3 py-3 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sua Meta</p>
+                                            <span className="text-[10px] font-black text-primary">{progress}%</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                            <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${progress}%` }} />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                                 onSelect={() => {
