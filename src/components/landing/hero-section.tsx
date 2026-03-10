@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -102,7 +103,7 @@ export function HeroSection() {
             <span className="text-primary">
               pedidos, prazos e pagamentos
             </span>{' '}
-            do seu ateliê em um só lugar
+            em um só lugar
           </motion.h1>
 
           <motion.p
