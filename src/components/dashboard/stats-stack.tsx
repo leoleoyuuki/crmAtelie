@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card } from "@/components/ui/card";
@@ -88,12 +87,14 @@ export function StatsStack({
             <Card className="lg:hidden bg-card border-none shadow-2xl overflow-hidden rounded-[2rem]">
                 {/* Header Card (Balanço do Mês) */}
                 <div className="bg-primary p-6 text-primary-foreground relative">
-                    {/* Grid Pattern Background */}
+                    {/* Grid Pattern Background with Edge Fade Mask */}
                     <div 
-                        className="absolute inset-0 opacity-[0.08] pointer-events-none" 
+                        className="absolute inset-0 opacity-[0.15] pointer-events-none" 
                         style={{ 
                             backgroundImage: `linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)`,
-                            backgroundSize: '20px 20px' 
+                            backgroundSize: '20px 20px',
+                            maskImage: 'radial-gradient(circle at center, black, transparent 90%)',
+                            WebkitMaskImage: 'radial-gradient(circle at center, black, transparent 90%)'
                         }}
                     ></div>
                     
