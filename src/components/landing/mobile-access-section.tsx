@@ -69,7 +69,7 @@ export function MobileAccessSection() {
                         <Smartphone className="h-6 w-6" />
                     </div>
                     <div>
-                        <h4 className="font-bold text-lg">PWA Performance</h4>
+                        <h4 className="font-bold text-lg">APP Móvel</h4>
                         <p className="text-sm text-muted-foreground">Funciona em iOS e Android sem precisar baixar nada pela loja.</p>
                     </div>
                 </div>
