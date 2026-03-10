@@ -76,16 +76,16 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
       }}
     >
       <div className="flex items-center gap-4 mb-6">
-        <img
+        {/* <img
             src={testimonial.imgSrc}
             alt={`${testimonial.by.split(',')[0]}`}
             className="h-14 w-14 rounded-full border-2 border-primary/20 object-cover"
-        />
+        /> */}
         <Quote className={cn("h-8 w-8 opacity-20", isCenter ? "text-primary-foreground" : "text-primary")} />
       </div>
       
       <h3 className={cn(
-        "text-lg sm:text-xl font-headline font-bold leading-relaxed",
+        "text-sm sm:text-xl font-headline font-bold leading-relaxed",
         isCenter ? "text-primary-foreground" : "text-foreground"
       )}>
         "{testimonial.testimonial}"
