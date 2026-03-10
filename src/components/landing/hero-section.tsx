@@ -13,9 +13,9 @@ const benefits = [
 ];
 
 const images = [
-    { src: "/images/dashboard.png", alt: "Dashboard principal" },
-    { src: "/images/print.png", alt: "Impressão de comprovante" },
-    { src: "/images/costs.png", alt: "Controle de custos" }
+    { src: "/images/dashboard1.png", alt: "Dashboard principal" },
+    { src: "/images/print1.png", alt: "Impressão de comprovante" },
+    { src: "/images/costs1.png", alt: "Controle de custos" }
 ];
 
 export function HeroSection() {
