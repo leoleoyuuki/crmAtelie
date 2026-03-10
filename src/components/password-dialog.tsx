@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -12,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useContext, useEffect } from 'react';
 import { PasswordContext } from '@/contexts/password-context';
@@ -25,6 +25,7 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
   const { isPasswordSet, verifyPassword, setPassword, generateAndCopyPassword } = useContext(PasswordContext);
   const { toast } = useToast();
   const [passwordInput, setPasswordInput] = useState('');
+  const [shouldPersist, setShouldPersist] = useState(false);
   const [isSettingNewPassword, setIsSettingNewPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -34,12 +35,13 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
       setPasswordInput('');
       setNewPassword('');
       setConfirmPassword('');
+      setShouldPersist(false);
       setIsSettingNewPassword(!isPasswordSet);
     }
   }, [isOpen, isPasswordSet]);
 
   const handleVerify = () => {
-    if (verifyPassword(passwordInput)) {
+    if (verifyPassword(passwordInput, shouldPersist)) {
       toast({ title: 'Acesso liberado!', description: 'O modo de privacidade foi desativado.' });
       onOpenChange(false);
     } else {
@@ -73,9 +75,9 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
       return (
         <>
           <DialogHeader>
-            <DialogTitle>Configurar Senha de Visualização</DialogTitle>
+            <DialogTitle className="font-headline text-2xl">Configurar Senha</DialogTitle>
             <DialogDescription>
-              Esta será a senha usada para mostrar dados financeiros. Guarde-a em um local seguro. Se perdida, não poderá ser recuperada.
+              Esta senha protege seus dados financeiros. Guarde-a em um local seguro.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -86,6 +88,7 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                className="h-12"
               />
             </div>
             <div className="space-y-2">
@@ -95,12 +98,13 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                className="h-12"
               />
             </div>
-             <Button variant="outline" size="sm" onClick={handleGeneratePassword}>Gerar Senha Segura</Button>
+             <Button variant="outline" size="sm" onClick={handleGeneratePassword} className="w-full">Gerar Senha Segura</Button>
           </div>
           <DialogFooter>
-            <Button onClick={handleSetPassword}>Salvar Senha</Button>
+            <Button onClick={handleSetPassword} className="w-full h-12 font-bold">Salvar Senha</Button>
           </DialogFooter>
         </>
       );
@@ -109,29 +113,53 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
     return (
       <>
         <DialogHeader>
-          <DialogTitle>Digite a Senha</DialogTitle>
+          <DialogTitle className="font-headline text-2xl">Digite a Senha</DialogTitle>
           <DialogDescription>
             Para visualizar os dados financeiros, por favor, insira a senha de acesso.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="password-input" className="text-right">
-              Senha
-            </Label>
+        <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="password-input">Senha de Acesso</Label>
             <Input
               id="password-input"
               type="password"
-              className="col-span-3"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
+              className="h-12"
+              autoFocus
             />
           </div>
+
+          <div className="flex items-start space-x-3 p-4 rounded-xl bg-muted/30 border border-dashed">
+            <Checkbox 
+                id="persist" 
+                checked={shouldPersist} 
+                onCheckedChange={(checked) => setShouldPersist(checked as boolean)}
+                className="mt-1"
+            />
+            <div className="grid gap-1.5 leading-none">
+                <label
+                    htmlFor="persist"
+                    className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                    Sempre abrir sem privacidade
+                </label>
+                <p className="text-xs text-muted-foreground">
+                    O app não pedirá senha nas próximas vezes que você abrir este navegador.
+                </p>
+            </div>
+          </div>
         </div>
-        <DialogFooter>
-            <a onClick={() => setIsSettingNewPassword(true)} className="text-sm text-muted-foreground hover:underline cursor-pointer mr-auto">Esqueceu ou quer redefinir a senha?</a>
-            <Button onClick={handleVerify}>Desbloquear</Button>
+        <DialogFooter className="flex-col gap-4">
+            <Button onClick={handleVerify} className="w-full h-12 font-bold shadow-lg">Desbloquear Dados</Button>
+            <button 
+                onClick={() => setIsSettingNewPassword(true)} 
+                className="text-xs text-muted-foreground hover:text-primary transition-colors underline underline-offset-4"
+            >
+                Esqueceu ou quer redefinir a senha?
+            </button>
         </DialogFooter>
       </>
     );
@@ -139,7 +167,7 @@ export function PasswordDialog({ isOpen, onOpenChange }: PasswordDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-sm:top-[25%] max-sm:translate-y-0">
+      <DialogContent className="sm:max-w-[425px] rounded-3xl">
         {renderContent()}
       </DialogContent>
     </Dialog>

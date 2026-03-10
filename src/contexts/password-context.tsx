@@ -10,7 +10,7 @@ interface PasswordContextType {
   isPrivacyMode: boolean;
   isPasswordSet: boolean;
   togglePrivacyMode: () => void;
-  verifyPassword: (password: string) => boolean;
+  verifyPassword: (password: string, shouldPersist?: boolean) => boolean;
   setPassword: (password: string) => void;
   generateAndCopyPassword: () => string;
 }
@@ -24,6 +24,8 @@ export const PasswordContext = createContext<PasswordContextType>({
   generateAndCopyPassword: () => '',
 });
 
+const PERSIST_KEY = 'atelierflow_privacy_persist_unlocked';
+
 export const PasswordProvider = ({ children }: { children: ReactNode }) => {
   const [isPrivacyMode, setIsPrivacyMode] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -33,6 +35,16 @@ export const PasswordProvider = ({ children }: { children: ReactNode }) => {
   
   const isPasswordSet = !!profile?.passwordHash;
   const passwordHash = profile?.passwordHash || null;
+
+  // Verifica persistência no carregamento
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isAlwaysUnlocked = localStorage.getItem(PERSIST_KEY) === 'true';
+      if (isAlwaysUnlocked) {
+        setIsPrivacyMode(false);
+      }
+    }
+  }, []);
 
   const simpleHash = (str: string) => {
     let hash = 0;
@@ -56,11 +68,16 @@ export const PasswordProvider = ({ children }: { children: ReactNode }) => {
       });
   };
 
-  const verifyPassword = (password: string): boolean => {
+  const verifyPassword = (password: string, shouldPersist: boolean = false): boolean => {
     if (!passwordHash) return false;
     const isCorrect = simpleHash(password) === passwordHash;
     if (isCorrect) {
       setIsPrivacyMode(false);
+      if (shouldPersist) {
+        localStorage.setItem(PERSIST_KEY, 'true');
+      } else {
+        localStorage.removeItem(PERSIST_KEY);
+      }
     }
     return isCorrect;
   };
@@ -70,6 +87,8 @@ export const PasswordProvider = ({ children }: { children: ReactNode }) => {
       setIsDialogOpen(true);
     } else {
       setIsPrivacyMode(true);
+      // Se o usuário trancar manualmente, não alteramos a persistência para a próxima sessão, 
+      // mas mantemos trancado nesta sessão.
     }
   }, [isPrivacyMode]);
 
