@@ -14,9 +14,9 @@ const benefits = [
 ];
 
 const images = [
-    { src: "https://picsum.photos/seed/dash1/1200/800", alt: "Dashboard principal" },
-    { src: "https://picsum.photos/seed/print1/1200/800", alt: "Impressão de comprovante" },
-    { src: "https://picsum.photos/seed/costs1/1200/800", alt: "Controle de custos" }
+    { src: "/images/dashboard1.png", alt: "Dashboard principal" },
+    { src: "/images/print1.png", alt: "Tarefas" },
+    { src: "/images/costs1.png", alt: "Controle de custos" }
 ];
 
 export function HeroSection() {
@@ -149,20 +149,7 @@ export function HeroSection() {
             transition={{ delay: 1.4 }}
             className="mt-20"
           >
-            <div className="flex flex-wrap justify-center items-center gap-4 sm:gap-8">
-              {benefits.map((benefit, i) => (
-                <motion.div 
-                    key={benefit.text} 
-                    className="flex items-center gap-3 bg-white/40 dark:bg-black/40 px-5 py-3 rounded-2xl border border-white/20 backdrop-blur-md shadow-lg"
-                    whileHover={{ y: -5, scale: 1.02 }}
-                >
-                  <div className={cn("p-2 rounded-xl", benefit.bg)}>
-                    <benefit.icon className={cn("h-4 w-4", benefit.color)} />
-                  </div>
-                  <span className="text-xs sm:text-sm font-bold text-foreground/80">{benefit.text}</span>
-                </motion.div>
-              ))}
-            </div>
+            
           </motion.div>
 
            {/* Preview do Sistema (Mockup Tridimensional) */}
@@ -172,7 +159,7 @@ export function HeroSection() {
             transition={{ delay: 1.6, type: "spring", damping: 25, stiffness: 80 }}
             className="relative mt-24 px-4 sm:px-0"
           >
-             <div className="relative aspect-[16/9] max-w-5xl mx-auto group">
+             <div className="relative aspect-[16/9] max-w-6xl mx-auto group">
                 {/* Frame do Navegador / App */}
                 <div className="absolute inset-0 bg-white/5 border border-white/20 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden">
                     {/* Browser Toolbar UI */}
