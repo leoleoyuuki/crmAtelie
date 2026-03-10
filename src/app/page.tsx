@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from 'next/link';
+import { format } from 'date-fns';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -49,6 +50,12 @@ export default function DashboardPage() {
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
 
   const monthsOptions = useMemo(() => getMonths(), []);
+
+  // Define o mês atual como padrão após a montagem do componente para evitar erro de hidratação
+  useEffect(() => {
+    const currentMonth = format(new Date(), 'yyyy-MM');
+    setSelectedPeriod(currentMonth);
+  }, []);
 
   const stats = useMemo(() => {
     if (!summary) return { totalRevenue: 0, totalProfit: 0, totalOrders: 0, pendingOrders: 0 };
