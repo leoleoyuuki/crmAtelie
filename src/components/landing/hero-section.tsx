@@ -129,17 +129,17 @@ export function HeroSection() {
                         {/* Dynamic Island */}
                         <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-3xl z-50" />
                         
-                        {/* Status Bar Space */}
+                        {/* Status Bar Space
                         <div className="h-8 w-full flex justify-between items-center px-8 pt-4 opacity-40">
                             <span className="text-[10px] font-black">9:41</span>
-                        </div>
+                        </div> */}
                         {/* Mobile Image */}
                         <div className="flex-1 relative">
                             <Image
                                 src="/images/dashboard3.png"
                                 alt="AtelierFlow Dashboard Mobile"
                                 fill
-                                className="object-cover object-top"
+                                className="object-fit object-top"
                                 priority
                             />
                         </div>
