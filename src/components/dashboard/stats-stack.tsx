@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card } from "@/components/ui/card";
@@ -33,18 +34,16 @@ export function StatsStack({
         }).format(val);
     };
 
-    // Verifica se o rótulo do período corresponde à visão vitalícia
     const isLifetime = periodLabel === "Total Acumulado" || periodLabel === "Máximo";
 
     return (
-        <div className="flex flex-col gap-4">
-            {/* Desktop View (Legacy) */}
-            <div className="hidden lg:flex flex-col gap-3">
+        <div className="flex flex-col gap-4 h-full">
+            <div className="hidden lg:flex flex-col gap-3 h-full">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1">
                     Indicadores: <span className="text-primary">{periodLabel}</span>
                 </p>
                 
-                <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group border-primary/20 bg-primary/5">
+                <Card className="flex-1 p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group border-primary/20 bg-primary/5">
                     <div className="bg-primary/10 p-3 rounded-xl group-hover:bg-primary/20 transition-colors">
                         <TrendingUp className="h-5 w-5 text-primary" />
                     </div>
@@ -55,7 +54,7 @@ export function StatsStack({
                     {isPrivacyMode && <EyeOff className="h-3 w-3 text-muted-foreground ml-auto opacity-50" />}
                 </Card>
 
-                <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
+                <Card className="flex-1 p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
                     <div className="bg-muted/50 p-3 rounded-xl group-hover:bg-muted transition-colors">
                         <DollarSign className="h-5 w-5 text-muted-foreground" />
                     </div>
@@ -65,7 +64,7 @@ export function StatsStack({
                     </div>
                 </Card>
 
-                <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
+                <Card className="flex-1 p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
                     <div className="bg-blue-500/10 p-3 rounded-xl group-hover:bg-blue-500/20 transition-colors">
                         <Package className="h-5 w-5 text-blue-600" />
                     </div>
@@ -75,7 +74,7 @@ export function StatsStack({
                     </div>
                 </Card>
 
-                <Card className="p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
+                <Card className="flex-1 p-4 flex items-center gap-4 hover:border-primary/50 transition-colors shadow-sm group">
                     <div className="bg-orange-500/10 p-3 rounded-xl group-hover:bg-orange-500/20 transition-colors">
                         <ClipboardList className="h-5 w-5 text-orange-600" />
                     </div>
@@ -86,11 +85,8 @@ export function StatsStack({
                 </Card>
             </div>
 
-            {/* Mobile View (Inspired by the Image) */}
             <Card className="lg:hidden bg-card border-none shadow-2xl overflow-hidden rounded-[2rem]">
-                {/* Header Card (Balanço do Mês ou Lucro desde o início) */}
                 <div className="bg-primary p-6 text-primary-foreground relative">
-                    {/* Grid Pattern Background with Edge Fade Mask */}
                     <div 
                         className="absolute inset-0 opacity-[0.15] pointer-events-none" 
                         style={{ 
@@ -115,7 +111,6 @@ export function StatsStack({
                     </h3>
                 </div>
 
-                {/* Sub Stats Row */}
                 <div className="grid grid-cols-3 divide-x bg-card">
                     <div className="p-4 flex flex-col gap-0.5 items-center text-center">
                         <p className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">Faturamento</p>

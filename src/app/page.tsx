@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useContext, useMemo } from 'react';
@@ -51,7 +52,6 @@ export default function DashboardPage() {
 
   const monthsOptions = useMemo(() => getMonths(), []);
 
-  // Define o mês atual como padrão após a montagem do componente para evitar erro de hidratação
   useEffect(() => {
     const currentMonth = format(new Date(), 'yyyy-MM');
     setSelectedPeriod(currentMonth);
@@ -71,7 +71,6 @@ export default function DashboardPage() {
         };
     }
 
-    // Filtered by month
     const rev = summary.monthlyRevenue?.[selectedPeriod] || 0;
     const cost = summary.monthlyCosts?.[selectedPeriod] || 0;
     const ord = summary.monthlyOrders?.[selectedPeriod] || 0;
@@ -129,7 +128,6 @@ export default function DashboardPage() {
 
     return (
        <div className="space-y-8">
-          {/* Header & Actions */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-col gap-1">
                 <p className="text-xs font-bold text-primary uppercase tracking-widest md:hidden">Página Inicial</p>
@@ -179,10 +177,7 @@ export default function DashboardPage() {
 
           <WelcomeGuide />
 
-          {/* Main Grid Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* Left: Stats Stack */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             <div className="lg:col-span-3">
                 <StatsStack 
                     totalRevenue={stats.totalRevenue}
@@ -194,50 +189,48 @@ export default function DashboardPage() {
                 />
             </div>
 
-            {/* Center: Ownership/Distribution */}
             <div className="lg:col-span-6">
                 <ServiceDistributionChart data={serviceDistributionData} />
             </div>
 
-            {/* Right: Activity/Summary */}
-            <div className="lg:col-span-3 space-y-6">
-                <div className="bg-card rounded-2xl border p-6 shadow-sm flex flex-col">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Atividade</h3>
-                        <Badge variant="outline" className="text-[10px]">Geral</Badge>
+            <div className="lg:col-span-3 flex flex-col gap-6">
+                <div className="bg-card rounded-2xl border p-4 shadow-sm flex flex-col flex-1 h-full">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Atividade</h3>
+                        <Badge variant="outline" className="text-[9px] px-1.5 h-4">Geral</Badge>
                     </div>
                     
-                    <div className="space-y-6 flex-grow">
-                        <Link href="/tarefas" className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors group">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-primary/20 p-2 rounded-lg">
-                                    <AlertCircle className="h-4 w-4 text-primary" />
+                    <div className="space-y-4 flex-grow flex flex-col justify-between">
+                        <Link href="/tarefas" className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors group">
+                            <div className="flex items-center gap-2.5">
+                                <div className="bg-primary/20 p-1.5 rounded-lg">
+                                    <AlertCircle className="h-3.5 w-3.5 text-primary" />
                                 </div>
-                                <span className="text-sm font-bold">Tarefas Críticas</span>
+                                <span className="text-xs font-bold">Tarefas Críticas</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <span className="text-sm font-black text-primary">{summary?.pendingOrders || 0}</span>
-                                <ArrowRight className="h-3 w-3 text-primary transition-transform group-hover:translate-x-1" />
+                                <span className="text-xs font-black text-primary">{summary?.pendingOrders || 0}</span>
+                                <ArrowRight className="h-2.5 w-3 text-primary transition-transform group-hover:translate-x-1" />
                             </div>
                         </Link>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 rounded-xl border bg-muted/20">
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Concluídos</p>
-                                <p className="text-xl font-black">{summary?.totalOrders ? summary.totalOrders - (summary.pendingOrders || 0) : 0}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="p-3 rounded-xl border bg-muted/20">
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Concluídos</p>
+                                <p className="text-lg font-black leading-tight">{summary?.totalOrders ? summary.totalOrders - (summary.pendingOrders || 0) : 0}</p>
                             </div>
-                            <div className="p-4 rounded-xl border bg-muted/20">
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Em Aberto</p>
-                                <p className="text-xl font-black text-primary">{summary?.pendingOrders || 0}</p>
+                            <div className="p-3 rounded-xl border bg-muted/20">
+                                <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Em Aberto</p>
+                                <p className="text-lg font-black text-primary leading-tight">{summary?.pendingOrders || 0}</p>
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t">
-                            <div className="flex items-center gap-2 mb-2">
+                        <div className="pt-3 border-t">
+                            <div className="flex items-center gap-2 mb-1.5">
                                 <Clock className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-xs font-medium text-muted-foreground">Eficiência de Entrega</span>
+                                <span className="text-[10px] font-medium text-muted-foreground">Eficiência de Entrega</span>
                             </div>
-                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                                 <div 
                                     className="h-full bg-primary transition-all duration-1000" 
                                     style={{ width: `${Math.min(((summary?.totalOrders || 1) - (summary?.pendingOrders || 0)) / (summary?.totalOrders || 1) * 100, 100)}%` }}
@@ -247,14 +240,12 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Whats New Card - Now Smaller and repositioned */}
                 <div className="hidden md:block">
                     <WhatsNew />
                 </div>
             </div>
           </div>
 
-          {/* Revenue & Profit Section */}
           <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
              <div className="bg-card rounded-3xl border shadow-sm overflow-hidden">
                 <div className="p-6 border-b bg-muted/5 flex items-center justify-between">
@@ -269,7 +260,6 @@ export default function DashboardPage() {
              </div>
           </div>
 
-          {/* Recent Orders Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="font-headline font-bold text-2xl">Pedidos Recentes</h3>

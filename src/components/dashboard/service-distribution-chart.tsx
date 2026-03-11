@@ -37,18 +37,18 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
   }, [data])
 
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader className="items-center pb-0">
-        <CardTitle className="font-headline">Distribuição de Serviços</CardTitle>
-        <CardDescription>
-          Detalhamento dos tipos de pedidos no sistema.
+    <Card className="flex flex-col h-full overflow-hidden">
+      <CardHeader className="items-center pb-2 pt-4">
+        <CardTitle className="font-headline text-xl">Distribuição de Serviços</CardTitle>
+        <CardDescription className="text-[10px] uppercase tracking-widest font-bold">
+          Detalhamento dos tipos de pedidos
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex-1 pb-0 flex flex-col justify-center">
         <ChartContainer
           config={chartConfig}
           id={id}
-          className="mx-auto aspect-square max-h-[300px]"
+          className="mx-auto aspect-square max-h-[240px] w-full"
         >
           <PieChart>
             <ChartTooltip
@@ -59,13 +59,13 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
                   formatter={(value, name, item) => (
                     <div className="flex items-center gap-2 w-full">
                       <div 
-                        className="h-2.5 w-2.5 shrink-0 rounded-[2px]" 
+                        className="h-2 w-2 shrink-0 rounded-[2px]" 
                         style={{ backgroundColor: (item as any).payload.fill }} 
                       />
                       <div className="flex flex-1 justify-between gap-4 leading-none">
-                        <span className="text-muted-foreground">{name}</span>
-                        <span className="font-mono font-medium tabular-nums text-foreground">
-                          {value} itens
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold">{name}</span>
+                        <span className="font-mono font-black tabular-nums text-foreground text-xs">
+                          {value}
                         </span>
                       </div>
                     </div>
@@ -77,16 +77,17 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
               data={data}
               dataKey="count"
               nameKey="service"
-              innerRadius={60}
-              strokeWidth={5}
+              innerRadius={50}
+              outerRadius={80}
+              strokeWidth={4}
               activeIndex={0}
               activeShape={({ outerRadius = 0, ...props }: PieSectorDataItem) => (
                 <g>
-                  <Sector {...props} outerRadius={outerRadius + 10} />
+                  <Sector {...props} outerRadius={outerRadius + 6} />
                   <Sector
                     {...props}
                     outerRadius={outerRadius}
-                    innerRadius={outerRadius - 8}
+                    innerRadius={outerRadius - 6}
                   />
                 </g>
               )}
@@ -97,23 +98,27 @@ export function ServiceDistributionChart({ data }: ServiceDistributionChartProps
             </Pie>
             <ChartLegend
               content={<ChartLegendContent nameKey="service" />}
-              className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+              className="flex-wrap gap-x-4 gap-y-1 [&>*]:basis-1/4 [&>*]:justify-center text-[9px] uppercase font-bold"
             />
           </PieChart>
         </ChartContainer>
       </CardContent>
-      <CardContent className="flex-1 justify-center pb-4 flex items-center">
+      <CardFooter className="justify-center pb-4 pt-2 flex items-center">
         {totalOrders > 0 && (
           <div className="flex items-center justify-center text-center">
-            <span className="text-2xl font-bold">
+            <span className="text-xl font-black">
               {totalOrders}
             </span>
-            <span className="ml-2 text-sm text-muted-foreground">
+            <span className="ml-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
               Itens Totais
             </span>
           </div>
         )}
-      </CardContent>
+      </CardFooter>
     </Card>
   )
+}
+
+function CardFooter({ children, className }: { children: React.ReactNode, className?: string }) {
+    return <div className={className}>{children}</div>
 }
