@@ -4,7 +4,6 @@ import { ShieldCheck, TrendingUp, Clock, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-import placeholderData from '@/app/lib/placeholder-images.json';
 
 const highlights = [
   {
@@ -12,7 +11,7 @@ const highlights = [
     icon: ShieldCheck,
     title: 'Prazos Sob Controle',
     description: 'Centralize todas as ordens de serviço em um painel inteligente que prioriza automaticamente o que é urgente.',
-    image: placeholderData.placeholderImages.find(img => img.id === 'feature-prazos')?.url || 'https://picsum.photos/seed/prazos/800/600',
+    image: 'https://images.unsplash.com/photo-1618410325698-018bb3eb2318?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     color: 'text-orange-500',
     bgColor: 'bg-orange-500/10',
   },
@@ -21,7 +20,7 @@ const highlights = [
     icon: TrendingUp,
     title: 'Lucro Real',
     description: 'O dashboard financeiro mostra seu faturamento e custos de forma clara, ajudando você a crescer com segurança.',
-    image: placeholderData.placeholderImages.find(img => img.id === 'feature-lucro')?.url || 'https://picsum.photos/seed/lucro/800/600',
+    image: 'https://images.unsplash.com/photo-1625461291092-13d0c45608b3?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     color: 'text-primary',
     bgColor: 'bg-primary/10',
   },
@@ -30,7 +29,7 @@ const highlights = [
     icon: Clock,
     title: 'Gestão Unificada',
     description: 'Substitua cadernos e anotações soltas por um sistema que integra pedidos, clientes, preços e finanças.',
-    image: placeholderData.placeholderImages.find(img => img.id === 'feature-gestao')?.url || 'https://picsum.photos/seed/gestao/800/600',
+    image: 'https://plus.unsplash.com/premium_photo-1706189731991-39c4e4697d05?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
     color: 'text-secondary',
     bgColor: 'bg-secondary/10',
   },
