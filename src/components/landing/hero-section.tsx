@@ -1,9 +1,8 @@
-
 'use client';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Star, Sparkles, CheckCircle2, Share, Plus, Layers } from 'lucide-react';
+import { Star, Sparkles, CheckCircle2 } from 'lucide-react';
 import { trackFbqEvent } from '@/lib/fpixel';
 import { cn } from '@/lib/utils';
 import { Safari } from '@/components/ui/safari';
@@ -127,6 +126,9 @@ export function HeroSection() {
                 >
                     {/* Interface Content */}
                     <div className="rounded-[2.4rem] overflow-hidden w-full h-full bg-background relative flex flex-col">
+                        {/* Dynamic Island */}
+                        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-3xl z-50" />
+                        
                         {/* Status Bar Space */}
                         <div className="h-8 w-full flex justify-between items-center px-8 pt-4 opacity-40">
                             <span className="text-[10px] font-black">9:41</span>

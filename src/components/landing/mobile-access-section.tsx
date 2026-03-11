@@ -1,4 +1,3 @@
-
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../icons/logo';
@@ -110,6 +109,9 @@ export function MobileAccessSection() {
                         className="relative border-zinc-900 bg-zinc-900 border-[10px] rounded-[3.5rem] h-[600px] w-[290px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] ring-1 ring-white/20 overflow-hidden transform-gpu"
                     >
                         <div className="rounded-[2.8rem] overflow-hidden w-full h-full bg-background relative flex flex-col">
+                            {/* Dynamic Island */}
+                            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-7 bg-black rounded-3xl z-50" />
+                            
                             <div className="h-12 w-full flex justify-between items-center px-8 pt-2">
                                 <span className="text-[11px] font-black tracking-tight">9:41</span>
                                 <div className="flex gap-1.5 items-center">
