@@ -213,24 +213,17 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
 
             const summaryRef = doc(db, 'summaries', user.uid);
             
-            // Distribution Map Increments
-            const distMap: Record<string, any> = {};
-            order.items.forEach(item => {
-                const type = item.serviceType || 'Outros';
-                distMap[type] = increment(1);
-            });
-
             const summaryUpdates: any = {
                 totalOrders: increment(1),
                 pendingOrders: increment(1),
-                monthlyOrders: {
-                    [monthKey]: increment(1)
-                },
-                monthlyPending: {
-                    [monthKey]: increment(1)
-                },
-                serviceDistribution: distMap
+                [`monthlyOrders.${monthKey}`]: increment(1),
+                [`monthlyPending.${monthKey}`]: increment(1),
             };
+
+            order.items.forEach(item => {
+                const type = item.serviceType || 'Outros';
+                summaryUpdates[`serviceDistribution.${type}`] = increment(1);
+            });
 
             transaction.set(summaryRef, summaryUpdates, { merge: true });
         });
@@ -260,7 +253,9 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
             const newStatus = updatedData.status;
             const creationMonthKey = format(currentOrder.createdAt, 'yyyy-MM');
 
-            // --- 1. Handle Service Distribution Changes if items updated ---
+            const summaryUpdates: any = {};
+
+            // --- 1. Handle Service Distribution Changes ---
             if (updatedData.items) {
                 const currentDist: Record<string, number> = {};
                 currentOrder.items.forEach(item => {
@@ -274,36 +269,24 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
                     newDist[type] = (newDist[type] || 0) + 1;
                 });
 
-                const distUpdates: any = {};
                 const allKeys = new Set([...Object.keys(currentDist), ...Object.keys(newDist)]);
                 
                 allKeys.forEach(type => {
                     const diff = (newDist[type] || 0) - (currentDist[type] || 0);
                     if (diff !== 0) {
-                        distUpdates[type] = increment(diff);
+                        summaryUpdates[`serviceDistribution.${type}`] = increment(diff);
                     }
                 });
-
-                if (Object.keys(distUpdates).length > 0) {
-                    transaction.set(summaryRef, { serviceDistribution: distUpdates }, { merge: true });
-                }
             }
 
             // --- 2. Handle status change logic ---
             if (currentStatus === 'Concluído' && newStatus && newStatus !== 'Concluído') {
-                // Re-opening a concluded order
                 const revenueDecrement = currentOrder.totalValue;
-
-                transaction.set(summaryRef, {
-                    totalRevenue: increment(-revenueDecrement),
-                    pendingOrders: increment(1),
-                    monthlyPending: {
-                        [creationMonthKey]: increment(1)
-                    },
-                    monthlyRevenue: {
-                        [creationMonthKey]: increment(-revenueDecrement)
-                    }
-                }, { merge: true });
+                
+                summaryUpdates.totalRevenue = increment(-revenueDecrement);
+                summaryUpdates.pendingOrders = increment(1);
+                summaryUpdates[`monthlyPending.${creationMonthKey}`] = increment(1);
+                summaryUpdates[`monthlyRevenue.${creationMonthKey}`] = increment(-revenueDecrement);
 
                 if (currentOrder.materialsUsed && currentOrder.materialsUsed.length > 0) {
                     for (const used of currentOrder.materialsUsed) {
@@ -315,22 +298,15 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
                     }
                 }
                 
-                 transaction.update(orderRef, { ...updatedData, materialsUsed: [] });
+                transaction.update(orderRef, { ...updatedData, materialsUsed: [] });
 
             } else if (currentStatus !== 'Concluído' && newStatus === 'Concluído') {
-                // Concluding via manual update
                 const revenueIncrement = currentOrder.totalValue;
                 
-                transaction.set(summaryRef, {
-                    totalRevenue: increment(revenueIncrement),
-                    pendingOrders: increment(-1),
-                    monthlyPending: {
-                        [creationMonthKey]: increment(-1)
-                    },
-                    monthlyRevenue: {
-                        [creationMonthKey]: increment(revenueIncrement)
-                    }
-                }, { merge: true });
+                summaryUpdates.totalRevenue = increment(revenueIncrement);
+                summaryUpdates.pendingOrders = increment(-1);
+                summaryUpdates[`monthlyPending.${creationMonthKey}`] = increment(-1);
+                summaryUpdates[`monthlyRevenue.${creationMonthKey}`] = increment(revenueIncrement);
 
                 transaction.update(orderRef, updatedData);
             } else {
@@ -338,7 +314,11 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
                 if (updatedData.dueDate && !(updatedData.dueDate instanceof Timestamp)) {
                     updatePayload.dueDate = Timestamp.fromDate(updatedData.dueDate);
                 }
-                 transaction.update(orderRef, updatePayload);
+                transaction.update(orderRef, updatePayload);
+            }
+
+            if (Object.keys(summaryUpdates).length > 0) {
+                transaction.set(summaryRef, summaryUpdates, { merge: true });
             }
         });
 
@@ -372,25 +352,22 @@ export async function deleteOrder(orderId: string) {
 
             const summaryUpdate: any = {
                 totalOrders: increment(-1),
-                monthlyOrders: { [creationMonthKey]: increment(-1) },
+                [`monthlyOrders.${creationMonthKey}`]: increment(-1),
             };
 
             if (orderData.status === 'Concluído') {
                 summaryUpdate.totalRevenue = increment(-revenueDecrement);
-                summaryUpdate.monthlyRevenue = { [creationMonthKey]: increment(-revenueDecrement) };
+                summaryUpdate[`monthlyRevenue.${creationMonthKey}`] = increment(-revenueDecrement);
             } else {
                 summaryUpdate.pendingOrders = increment(-1);
-                summaryUpdate.monthlyPending = { [creationMonthKey]: increment(-1) };
+                summaryUpdate[`monthlyPending.${creationMonthKey}`] = increment(-1);
             }
 
-            // Decrement Distribution
             if (orderData.items) {
-                const distUpdates: Record<string, any> = {};
                 orderData.items.forEach(item => {
                     const type = item.serviceType || 'Outros';
-                    distUpdates[type] = increment(-1);
+                    summaryUpdate[`serviceDistribution.${type}`] = increment(-1);
                 });
-                summaryUpdate.serviceDistribution = distUpdates;
             }
 
             transaction.set(summaryRef, summaryUpdate, { merge: true });
@@ -546,9 +523,7 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
 
         const summaryRef = doc(db, 'summaries', user.uid);
         transaction.set(summaryRef, {
-            monthlyCosts: {
-                [purchaseMonthKey]: increment(costIncrement)
-            }
+            [`monthlyCosts.${purchaseMonthKey}`]: increment(costIncrement)
         }, { merge: true });
 
         const materialQuery = query(
@@ -602,9 +577,7 @@ export async function deletePurchase(purchaseId: string): Promise<{ success: boo
         const costDecrement = purchaseData.cost;
 
         transaction.set(summaryRef, {
-            monthlyCosts: {
-                [purchaseMonthKey]: increment(-costDecrement)
-            }
+            [`monthlyCosts.${purchaseMonthKey}`]: increment(-costDecrement)
         }, { merge: true });
 
         transaction.delete(purchaseRef);
@@ -637,9 +610,7 @@ export async function addFixedCost(costData: Omit<FixedCost, 'id' | 'userId'>) {
 
         const summaryRef = doc(db, 'summaries', user.uid);
         transaction.set(summaryRef, {
-            monthlyCosts: {
-                [costMonthKey]: increment(costIncrement)
-            }
+            [`monthlyCosts.${costMonthKey}`]: increment(costIncrement)
         }, { merge: true });
     }).catch(error => {
         console.error("Add fixed cost transaction failed: ", error);
@@ -665,9 +636,7 @@ export async function deleteFixedCost(costId: string): Promise<{ success: boolea
         const costDecrement = costData.cost;
 
         transaction.set(summaryRef, {
-            monthlyCosts: {
-                [costMonthKey]: increment(-costDecrement)
-            }
+            [`monthlyCosts.${costMonthKey}`]: increment(-costDecrement)
         }, { merge: true });
 
         transaction.delete(costRef);
@@ -806,12 +775,8 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
             transaction.set(summaryRef, {
                 totalRevenue: increment(revenueIncrement),
                 pendingOrders: increment(-1),
-                monthlyPending: {
-                    [creationMonthKey]: increment(-1)
-                },
-                monthlyRevenue: {
-                    [creationMonthKey]: increment(revenueIncrement)
-                }
+                [`monthlyPending.${creationMonthKey}`]: increment(-1),
+                [`monthlyRevenue.${creationMonthKey}`]: increment(revenueIncrement)
             }, { merge: true });
 
 

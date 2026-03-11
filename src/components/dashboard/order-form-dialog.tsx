@@ -359,7 +359,11 @@ export function OrderFormDialog({
   };
 
    const dialogContent = (
-    <DialogContent className="sm:max-w-3xl flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] p-0 overflow-hidden">
+    <DialogContent 
+        className="sm:max-w-3xl flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] p-0 overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+    >
         <DialogHeader className="p-6 pb-2">
             <DialogTitle className="font-headline text-2xl">{isEditing ? "Editar Pedido" : "Novo Pedido"}</DialogTitle>
             <DialogDescription>

@@ -110,7 +110,11 @@ export function CustomerFormDialog({
   };
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-[425px] h-auto max-h-[90dvh] flex flex-col p-0 overflow-hidden">
+    <DialogContent 
+        className="sm:max-w-[425px] h-auto max-h-[90dvh] flex flex-col p-0 overflow-hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+    >
       <DialogHeader className="p-6 pb-2">
         <DialogTitle className="font-headline text-2xl">{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
         <DialogDescription>
