@@ -142,7 +142,7 @@ export function MobileAccessSection() {
                         className="w-full flex justify-center px-4"
                     >
                         <Safari 
-                          src="/images/dashboard1.png" 
+                          src="/images/dashboard5.png" 
                           className="max-w-[1000px] w-full"
                         />
                     </motion.div>

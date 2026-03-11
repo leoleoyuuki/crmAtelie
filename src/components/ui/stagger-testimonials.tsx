@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const testimonials = [
   {
@@ -11,21 +11,18 @@ const testimonials = [
     testimonial: "O AtelierFlow transformou minha gestão financeira. Agora sei exatamente quanto lucro em cada peça.",
     by: "Natalia",
     role: "Costura Criativa",
-    imgSrc: "https://picsum.photos/seed/natalia/150/150"
   },
   {
     tempId: 1,
     testimonial: "Finalmente consegui organizar meus pedidos e visualizar os números do meu ateliê com clareza.",
     by: "Alcimara",
     role: "Artesanato & Cia",
-    imgSrc: "https://picsum.photos/seed/alcimara/150/150"
   },
   {
     tempId: 2,
     testimonial: "O sistema é incrível para não se perder com os prazos. Meus clientes adoram a organização.",
     by: "Nathan",
     role: "Alfaiataria Moderna",
-    imgSrc: "https://picsum.photos/seed/nathan/150/150"
   }
 ];
 
