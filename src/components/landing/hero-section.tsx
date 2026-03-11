@@ -101,12 +101,12 @@ export function HeroSection() {
             {/* Desktop Mockup (Safari) */}
             <div className="hidden md:block max-w-5xl mx-auto group">
                 <Safari 
-                  src="/images/dashboard1.png" 
+                  src="/images/dashboard5.png" 
                   className="transition-transform duration-700 hover:scale-[1.01]"
                 />
                 
                 {/* Floating Elements for Desktop */}
-                <div className="absolute -top-6 -right-6 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20 z-20">
+                <div className="absolute -bottom-6 -right-6 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20 z-20">
                     <div className="bg-green-500/20 p-1.5 rounded-full">
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
                     </div>
