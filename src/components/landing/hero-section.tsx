@@ -113,7 +113,7 @@ export function HeroSection() {
                 <Button
                     size="lg"
                     asChild
-                    className="w-full sm:w-auto text-lg px-12 py-8 rounded-2xl shadow-[0_20px_50px_-15px_rgba(var(--primary-rgb),0.4)] transition-all font-bold group"
+                    className="w-full sm:w-auto text-base px-8 py-6 rounded-2xl shadow-[0_20px_50px_-15px_rgba(var(--primary-rgb),0.4)] transition-all font-bold group"
                     onClick={handleLeadClick}
                 >
                     <a href="/login" className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export function HeroSection() {
               size="lg"
               variant="ghost"
               asChild
-              className="w-full sm:w-auto text-lg px-10 py-8 hover:bg-primary/5 transition-all border border-white/10 hover:border-primary/20 backdrop-blur-xl rounded-2xl font-bold"
+              className="w-full sm:w-auto text-base px-8 py-6 hover:bg-primary/5 transition-all border border-white/10 hover:border-primary/20 backdrop-blur-xl rounded-2xl font-bold"
             >
               <a href="#recursos">Conhecer Recursos</a>
             </Button>
