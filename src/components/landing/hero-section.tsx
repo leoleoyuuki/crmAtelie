@@ -8,9 +8,9 @@ import { trackFbqEvent } from '@/lib/fpixel';
 import { cn } from '@/lib/utils';
 
 const images = [
-    { src: "https://picsum.photos/seed/dash1/1200/800", alt: "Dashboard principal" },
-    { src: "https://picsum.photos/seed/dash2/1200/800", alt: "Tarefas" },
-    { src: "https://picsum.photos/seed/dash3/1200/800", alt: "Controle de custos" }
+    { src: "/images/dashboard1.png", alt: "Dashboard principal" },
+    { src: "/images/print1.png", alt: "Tarefas" },
+    { src: "/images/costs1.png", alt: "Controle de custos" }
 ];
 
 export function HeroSection() {
