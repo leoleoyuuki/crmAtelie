@@ -77,7 +77,7 @@ export function HeroSection() {
           </motion.div>
 
           {/* Tipografia Cinética */}
-          <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold font-headline tracking-tight text-foreground leading-[1.05] mb-8">
+          <h1 className="text-4xl sm:text-6xl md:text-6xl font-bold font-headline tracking-tight text-foreground leading-[1.05] mb-8">
             {words.map((word, i) => (
               <motion.span
                 key={i}
@@ -138,11 +138,11 @@ export function HeroSection() {
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.6, type: "spring", damping: 25, stiffness: 80 }}
-            className="relative mt-24 px-4 sm:px-0"
+            className="relative mt-12 px-4 sm:px-0"
           >
              <div className="relative aspect-[16/9] max-w-6xl mx-auto group">
                 {/* Frame do Navegador / App */}
-                <div className="absolute inset-0 bg-white/5 border border-white/20 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden">
+                <div className="absolute inset-0 bg-white/5 border border-white/20 backdrop-blur-3xl rounded-[1rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] overflow-hidden">
                     {/* Browser Toolbar UI */}
                     <div className="h-10 border-b border-white/10 flex items-center px-6 gap-2 bg-white/5">
                         <div className="flex gap-1.5">
