@@ -1,7 +1,6 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import Logo from '../icons/logo';
-import { Sparkles, Wifi, Signal, ArrowRight, Smartphone, CheckCircle2, Laptop, Printer, Monitor } from 'lucide-react';
+import { Sparkles, ArrowRight, Smartphone, CheckCircle2, Printer, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
@@ -28,7 +27,7 @@ export function MobileAccessSection() {
       desc: "Adicione o AtelierFlow à tela inicial do seu celular e tenha a experiência de um aplicativo nativo. Gerencie pedidos e envie comprovantes direto do balcão.",
       features: [
         { icon: Smartphone, title: "Instalação Simples", desc: "Sem baixar pela loja, direto do navegador." },
-        { icon: CheckCircle2, title: "Acesso Rápido", desc: "Notificações e contatos sempre à mão no atendimento." }
+        { icon: CheckCircle2, title: "Acesso Rápido", desc: "Contatos e prazos sempre à mão no atendimento." }
       ],
       linkText: "Saiba como instalar no seu celular"
     }
@@ -38,7 +37,7 @@ export function MobileAccessSection() {
 
   return (
     <div className="py-24 sm:py-40 relative overflow-hidden bg-background">
-      {/* Elementos de Fundo Otimizados */}
+      {/* Elementos de Fundo */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute top-1/4 -left-20 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] transform-gpu" />
         <div className="absolute bottom-1/4 -right-20 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] transform-gpu" />
@@ -93,57 +92,47 @@ export function MobileAccessSection() {
             </div>
           </motion.div>
 
-          <div className="relative flex justify-center lg:justify-end transform-gpu min-h-[500px] items-center">
+          <div className="relative flex justify-center lg:justify-end transform-gpu min-h-[550px] items-center">
             <AnimatePresence mode="wait">
                 {!isMobile ? (
-                    /* Mockup de iPhone (Mostrado no Desktop para destacar mobilidade) */
+                    /* Mobile Mockup (iPhone) - Exibido no Desktop */
                     <motion.div 
                         key="iphone-mockup"
-                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: [0, -20, 0] }}
-                        exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                        transition={{ 
-                            y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-                            default: { duration: 0.5 }
-                        }}
-                        className="relative border-zinc-900 bg-zinc-900 border-[10px] rounded-[3.5rem] h-[600px] w-[290px] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.4)] ring-1 ring-white/20 overflow-hidden transform-gpu"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="flex justify-center py-10 relative"
                     >
-                        <div className="rounded-[2.8rem] overflow-hidden w-full h-full bg-background relative flex flex-col">
-                            {/* Dynamic Island */}
-                            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-24 h-7 bg-black rounded-3xl z-50" />
-                            
-                            <div className="h-12 w-full flex justify-between items-center px-8 pt-2">
-                                <span className="text-[11px] font-black tracking-tight">9:41</span>
-                                <div className="flex gap-1.5 items-center">
-                                    <Signal size={10} strokeWidth={3} />
-                                    <Wifi size={10} strokeWidth={3} />
-                                    <div className="w-5 h-2.5 border border-foreground/30 rounded-[2px] relative">
-                                        <div className="absolute top-0.5 left-0.5 bottom-0.5 right-1 bg-foreground rounded-[1px]" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex-1 p-5 space-y-6">
-                                <div className="flex items-center gap-2 mb-6">
-                                    <div className="bg-primary/10 p-1.5 rounded-lg">
-                                        <Logo className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <span className="font-headline font-bold text-sm text-primary">AtelierFlow</span>
-                                </div>
-                                <div className="relative aspect-[9/16] w-full rounded-2xl overflow-hidden shadow-inner border border-muted/20 bg-muted/5">
-                                    <Image 
-                                        src="/images/dashboard3.png" 
-                                        alt="AtelierFlow no Celular" 
-                                        fill 
+                        <motion.div 
+                            animate={{ y: [0, -15, 0] }}
+                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                            className="relative border-zinc-900 bg-zinc-900 border-[8px] rounded-[3rem] h-[550px] w-[270px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/20 overflow-hidden"
+                        >
+                            {/* Interface Content */}
+                            <div className="rounded-[2.4rem] overflow-hidden w-full h-full bg-background relative flex flex-col">
+                                {/* Dynamic Island */}
+                                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-3xl z-50" />
+                                
+                                {/* Mobile Image */}
+                                <div className="flex-1 relative">
+                                    <Image
+                                        src="/images/dashboard3.png"
+                                        alt="AtelierFlow Dashboard Mobile"
+                                        fill
                                         className="object-cover object-top"
+                                        priority
                                     />
                                 </div>
+                                {/* Home Indicator */}
+                                <div className="h-1 w-24 bg-foreground/10 rounded-full mx-auto mb-2" />
                             </div>
-                            <div className="h-1.5 w-32 bg-foreground/10 rounded-full mx-auto mb-2" />
-                        </div>
-                        <div className="absolute top-0 right-0 w-full h-full pointer-events-none rounded-[3.5rem] bg-gradient-to-tr from-transparent via-white/5 to-white/10 z-20" />
+                        </motion.div>
+                        
+                        {/* Glow behind phone */}
+                        <div className="absolute inset-0 bg-primary/20 blur-[100px] -z-10 rounded-full" />
                     </motion.div>
                 ) : (
-                    /* Mockup de Safari (Mostrado no Mobile para destacar versão desktop) */
+                    /* Mockup de Safari - Exibido no Mobile */
                     <motion.div 
                         key="desktop-mockup"
                         initial={{ opacity: 0, scale: 0.8, y: 20 }}
