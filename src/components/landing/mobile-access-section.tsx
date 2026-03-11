@@ -1,10 +1,12 @@
+
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from '../icons/logo';
-import { Sparkles, Wifi, Signal, ArrowRight, Smartphone, CheckCircle2, Laptop, Printer, Monitor, Share, Plus, Layers } from 'lucide-react';
+import { Sparkles, Wifi, Signal, ArrowRight, Smartphone, CheckCircle2, Laptop, Printer, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
+import { MacbookMockUp } from '@/components/ui/macbook-mockup';
 
 export function MobileAccessSection() {
   const isMobile = useIsMobile();
@@ -95,7 +97,7 @@ export function MobileAccessSection() {
           <div className="relative flex justify-center lg:justify-end transform-gpu min-h-[500px] items-center">
             <AnimatePresence mode="wait">
                 {!isMobile ? (
-                    /* Mockup de iPhone (Mostrado no Desktop) */
+                    /* Mockup de iPhone (Mostrado no Desktop para destacar mobilidade) */
                     <motion.div 
                         key="iphone-mockup"
                         initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -128,7 +130,7 @@ export function MobileAccessSection() {
                                 <div className="relative aspect-[9/16] w-full rounded-2xl overflow-hidden shadow-inner border border-muted/20 bg-muted/5">
                                     <Image 
                                         src="/images/dashboard3.png" 
-                                        alt="App no Celular" 
+                                        alt="AtelierFlow no Celular" 
                                         fill 
                                         className="object-cover object-top"
                                     />
@@ -139,51 +141,16 @@ export function MobileAccessSection() {
                         <div className="absolute top-0 right-0 w-full h-full pointer-events-none rounded-[3.5rem] bg-gradient-to-tr from-transparent via-white/5 to-white/10 z-20" />
                     </motion.div>
                 ) : (
-                    /* Mockup de Desktop (Mostrado no Mobile) */
+                    /* Mockup de Macbook (Mostrado no Mobile para destacar versão desktop) */
                     <motion.div 
                         key="desktop-mockup"
                         initial={{ opacity: 0, scale: 0.8, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.8, y: 20 }}
                         transition={{ duration: 0.5 }}
-                        className="w-full max-w-xl group"
+                        className="w-full flex justify-center px-4"
                     >
-                        <div className="bg-zinc-900/5 backdrop-blur-3xl border border-white/20 rounded-2xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden relative transform-gpu transition-transform">
-                            {/* Safari Header */}
-                            <div className="h-8 w-full bg-white/10 border-b border-white/10 flex items-center px-4 gap-3">
-                                <div className="flex gap-1.5">
-                                    <div className="w-2 h-2 rounded-full bg-[#FF5F57]" />
-                                    <div className="w-2 h-2 rounded-full bg-[#FFBD2E]" />
-                                    <div className="w-2 h-2 rounded-full bg-[#28C840]" />
-                                </div>
-                                <div className="flex-1 max-w-[200px] mx-auto h-5 bg-black/10 rounded flex items-center justify-center px-2">
-                                    <span className="text-[8px] font-medium opacity-40">atelierflow.com.br</span>
-                                </div>
-                            </div>
-                            {/* Browser Content */}
-                            <div className="relative aspect-video">
-                                <Image
-                                    src="/images/dashboard1.png"
-                                    alt="AtelierFlow Dashboard Desktop"
-                                    fill
-                                    className="object-cover object-top"
-                                />
-                            </div>
-                        </div>
-                        {/* Floating Printer Badge */}
-                        <motion.div 
-                            animate={{ y: [0, -10, 0] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                            className="absolute -bottom-6 -right-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md p-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20 z-30"
-                        >
-                            <div className="bg-primary/20 p-2 rounded-full">
-                                <Printer className="h-4 w-4 text-primary" />
-                            </div>
-                            <div className="flex flex-col items-start pr-2">
-                                <span className="text-[8px] font-black uppercase text-muted-foreground">Recurso Pro</span>
-                                <span className="text-[10px] font-bold">Imprimir Comprovante</span>
-                            </div>
-                        </motion.div>
+                        <MacbookMockUp src="/images/dashboard1.png" />
                     </motion.div>
                 )}
             </AnimatePresence>
