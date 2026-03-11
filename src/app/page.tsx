@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useContext, useMemo } from 'react';
@@ -202,7 +201,7 @@ export default function DashboardPage() {
 
             {/* Right: Activity/Summary */}
             <div className="lg:col-span-3 space-y-6">
-                <div className="bg-card rounded-2xl border p-6 shadow-sm h-full flex flex-col">
+                <div className="bg-card rounded-2xl border p-6 shadow-sm flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Atividade</h3>
                         <Badge variant="outline" className="text-[10px]">Geral</Badge>
@@ -247,11 +246,12 @@ export default function DashboardPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-          </div>
 
-          <div className="hidden md:block">
-            <WhatsNew />
+                {/* Whats New Card - Now Smaller and repositioned */}
+                <div className="hidden md:block">
+                    <WhatsNew />
+                </div>
+            </div>
           </div>
 
           {/* Revenue & Profit Section */}
