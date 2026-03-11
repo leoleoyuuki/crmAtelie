@@ -1,3 +1,4 @@
+
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowRight, Smartphone, CheckCircle2, Printer, Monitor } from 'lucide-react';
@@ -92,7 +93,7 @@ export function MobileAccessSection() {
             </div>
           </motion.div>
 
-          <div className="relative flex justify-center lg:justify-end transform-gpu min-h-[550px] items-center">
+          <div className="relative flex justify-center lg:justify-end transform-gpu min-h-fit lg:min-h-[600px] items-center py-10 lg:py-0">
             <AnimatePresence mode="wait">
                 {!isMobile ? (
                     /* Mobile Mockup (iPhone) - Exibido no Desktop */
@@ -132,18 +133,18 @@ export function MobileAccessSection() {
                         <div className="absolute inset-0 bg-primary/20 blur-[100px] -z-10 rounded-full" />
                     </motion.div>
                 ) : (
-                    /* Mockup de Safari - Exibido no Mobile */
+                    /* Mockup de Safari - Exibido no Mobile (Usuário Mobile vendo versão Desktop) */
                     <motion.div 
                         key="desktop-mockup"
-                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, y: 20 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ duration: 0.5 }}
-                        className="w-full flex justify-center px-4"
+                        className="w-full flex justify-center"
                     >
                         <Safari 
                           src="/images/dashboard5.png" 
-                          className="max-w-[1000px] w-full"
+                          className="w-full shadow-2xl"
                         />
                     </motion.div>
                 )}
