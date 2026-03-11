@@ -506,7 +506,7 @@ export function OrderFormDialog({
   if (trigger) {
     return (
       <>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
             {dialogContent}
         </Dialog>
@@ -522,7 +522,7 @@ export function OrderFormDialog({
   
   return (
     <>
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
             {dialogContent}
         </Dialog>
          <CustomerFormDialog

@@ -119,7 +119,7 @@ export function ConcludeOrderDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
       <DialogContent className="sm:max-w-xl flex flex-col h-[90dvh] sm:h-auto sm:max-h-[90vh] p-0 overflow-hidden">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="font-headline text-2xl text-primary">Concluir Pedido</DialogTitle>

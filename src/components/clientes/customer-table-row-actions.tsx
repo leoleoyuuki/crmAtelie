@@ -62,7 +62,7 @@ export function CustomerTableRowActions({ customer, onCustomerDeleted }: Custome
             <Button variant="ghost" size="icon" className="h-8 w-8 p-0" onClick={() => setIsEditDialogOpen(true)}>
                 <Pencil className="h-4 w-4" />
             </Button>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
                 <span className="sr-only">Abrir menu</span>

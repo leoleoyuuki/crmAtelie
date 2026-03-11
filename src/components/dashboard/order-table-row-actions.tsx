@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -106,7 +107,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
                     <span className="sr-only">Concluir Pedido</span>
                 </Button>
             )}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
                   <span className="sr-only">Abrir menu</span>
