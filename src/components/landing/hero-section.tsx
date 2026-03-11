@@ -1,28 +1,12 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Star, Sparkles, CheckCircle2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Star, Sparkles, CheckCircle2, ChevronLeft, ChevronRight, Share, Plus, Layers } from 'lucide-react';
 import { trackFbqEvent } from '@/lib/fpixel';
 import { cn } from '@/lib/utils';
 
-const images = [
-    { src: "/images/dashboard1.png", alt: "Dashboard principal" },
-    { src: "/images/print1.png", alt: "Tarefas" },
-    { src: "/images/costs1.png", alt: "Controle de custos" }
-];
-
 export function HeroSection() {
-    const [index, setIndex] = useState(0);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setIndex(prevIndex => (prevIndex + 1) % images.length);
-        }, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
     const handleLeadClick = () => {
         trackFbqEvent('Lead');
     };
@@ -32,7 +16,7 @@ export function HeroSection() {
 
   return (
     <div className="relative overflow-hidden min-h-screen flex items-center pt-20 pb-32">
-      {/* Background Blobs - Optimized */}
+      {/* Background Visual Elements */}
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
         <div className="absolute top-[10%] left-[10%] w-[30%] h-[30%] bg-primary/10 rounded-full blur-[80px]" />
         <div className="absolute bottom-[20%] right-[10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[100px]" />
@@ -87,11 +71,11 @@ export function HeroSection() {
             <Button
                 size="lg"
                 asChild
-                className="w-full sm:w-auto h-14 px-8 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all font-bold group"
+                className="w-full sm:w-auto h-12 px-8 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all font-bold group"
                 onClick={handleLeadClick}
             >
                 <a href="/login" className="flex items-center gap-2">
-                    <Star className="h-5 w-5 fill-current" />
+                    <Star className="h-4 w-4 fill-current" />
                     Testar 7 dias grátis
                 </a>
             </Button>
@@ -100,43 +84,95 @@ export function HeroSection() {
               size="lg"
               variant="ghost"
               asChild
-              className="w-full sm:w-auto h-14 px-8 border border-white/10 hover:border-primary/20 backdrop-blur-md rounded-2xl font-bold"
+              className="w-full sm:w-auto h-12 px-8 border border-white/10 hover:border-primary/20 backdrop-blur-md rounded-2xl font-bold"
             >
               <a href="#recursos">Conhecer Recursos</a>
             </Button>
           </motion.div>
 
+           {/* Dashboard Preview Section */}
            <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.8 }}
-            className="relative mt-16 px-4 sm:px-0 transform-gpu"
+            transition={{ delay: 1, duration: 1, type: "spring" }}
+            className="relative mt-20 px-4 sm:px-0 transform-gpu"
           >
-             <div className="relative aspect-[16/9] max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-muted/20 backdrop-blur-sm">
-                <AnimatePresence mode='wait'>
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="absolute inset-0"
-                    >
+            {/* Desktop Mockup (Safari) */}
+            <div className="hidden md:block max-w-5xl mx-auto group">
+                <div className="bg-zinc-900/5 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden relative transition-transform duration-700 hover:scale-[1.01]">
+                    {/* Safari Header */}
+                    <div className="h-12 w-full bg-white/10 border-b border-white/10 flex items-center px-6 gap-4">
+                        <div className="flex gap-2">
+                            <div className="w-3 h-3 rounded-full bg-[#FF5F57] shadow-inner" />
+                            <div className="w-3 h-3 rounded-full bg-[#FFBD2E] shadow-inner" />
+                            <div className="w-3 h-3 rounded-full bg-[#28C840] shadow-inner" />
+                        </div>
+                        <div className="flex-1 max-w-2xl mx-auto h-7 bg-black/10 rounded-lg flex items-center justify-center px-4">
+                            <div className="flex items-center gap-2 opacity-40">
+                                <div className="w-3 h-3 rounded-sm border border-current" />
+                                <span className="text-[10px] font-medium tracking-tight">atelierflow.com.br</span>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 opacity-40">
+                            <Share className="w-4 h-4" />
+                            <Plus className="w-4 h-4" />
+                            <Layers className="w-4 h-4" />
+                        </div>
+                    </div>
+                    {/* Browser Content */}
+                    <div className="relative aspect-[16/10]">
                         <Image
-                            src={images[index].src}
-                            alt={images[index].alt}
+                            src="/images/dashboard1.png"
+                            alt="AtelierFlow Dashboard Desktop"
                             fill
-                            className="object-cover"
+                            className="object-cover object-top"
                             priority
                         />
-                    </motion.div>
-                </AnimatePresence>
-
-                {/* Overlays - Simplified */}
-                <div className="absolute top-4 right-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-xs font-bold">Pedido Concluído</span>
+                    </div>
                 </div>
+                
+                {/* Floating Elements for Desktop */}
+                <div className="absolute -top-6 -right-6 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20 z-20">
+                    <div className="bg-green-500/20 p-1.5 rounded-full">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                        <span className="text-[10px] font-black uppercase text-muted-foreground tracking-tighter">Status</span>
+                        <span className="text-xs font-bold">Pedido Concluído</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Mockup (iPhone) */}
+            <div className="md:hidden flex justify-center py-10 relative">
+                <motion.div 
+                    animate={{ y: [0, -15, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    className="relative border-zinc-900 bg-zinc-900 border-[8px] rounded-[3rem] h-[550px] w-[270px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/20 overflow-hidden"
+                >
+                    {/* Interface Content */}
+                    <div className="rounded-[2.4rem] overflow-hidden w-full h-full bg-background relative flex flex-col">
+                        {/* Status Bar Space */}
+                        <div className="h-8 w-full flex justify-between items-center px-8 pt-4 opacity-40">
+                            <span className="text-[10px] font-black">9:41</span>
+                        </div>
+                        {/* Mobile Image */}
+                        <div className="flex-1 relative">
+                            <Image
+                                src="/images/dashboard3.png"
+                                alt="AtelierFlow Dashboard Mobile"
+                                fill
+                                className="object-cover object-top"
+                                priority
+                            />
+                        </div>
+                        {/* Home Indicator */}
+                        <div className="h-1 w-24 bg-foreground/10 rounded-full mx-auto mb-2" />
+                    </div>
+                </motion.div>
+                
+                {/* Glow behind phone */}
+                <div className="absolute inset-0 bg-primary/20 blur-[100px] -z-10 rounded-full" />
             </div>
           </motion.div>
         </div>
