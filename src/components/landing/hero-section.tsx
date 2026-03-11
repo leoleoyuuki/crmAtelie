@@ -1,10 +1,12 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Star, Sparkles, CheckCircle2, ChevronLeft, ChevronRight, Share, Plus, Layers } from 'lucide-react';
+import { Star, Sparkles, CheckCircle2, Share, Plus, Layers } from 'lucide-react';
 import { trackFbqEvent } from '@/lib/fpixel';
 import { cn } from '@/lib/utils';
+import { Safari } from '@/components/ui/safari';
 
 export function HeroSection() {
     const handleLeadClick = () => {
@@ -69,9 +71,9 @@ export function HeroSection() {
             className="mt-12 flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <Button
-                size="lg"
+                size="default"
                 asChild
-                className="w-full sm:w-auto h-12 px-8 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all font-bold group"
+                className="w-full sm:w-auto h-11 px-6 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all font-bold group"
                 onClick={handleLeadClick}
             >
                 <a href="/login" className="flex items-center gap-2">
@@ -81,10 +83,10 @@ export function HeroSection() {
             </Button>
             
             <Button
-              size="lg"
+              size="default"
               variant="ghost"
               asChild
-              className="w-full sm:w-auto h-12 px-8 border border-white/10 hover:border-primary/20 backdrop-blur-md rounded-2xl font-bold"
+              className="w-full sm:w-auto h-11 px-6 border border-white/10 hover:border-primary/20 backdrop-blur-md rounded-2xl font-bold"
             >
               <a href="#recursos">Conhecer Recursos</a>
             </Button>
@@ -99,37 +101,10 @@ export function HeroSection() {
           >
             {/* Desktop Mockup (Safari) */}
             <div className="hidden md:block max-w-5xl mx-auto group">
-                <div className="bg-zinc-900/5 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] overflow-hidden relative transition-transform duration-700 hover:scale-[1.01]">
-                    {/* Safari Header */}
-                    <div className="h-12 w-full bg-white/10 border-b border-white/10 flex items-center px-6 gap-4">
-                        <div className="flex gap-2">
-                            <div className="w-3 h-3 rounded-full bg-[#FF5F57] shadow-inner" />
-                            <div className="w-3 h-3 rounded-full bg-[#FFBD2E] shadow-inner" />
-                            <div className="w-3 h-3 rounded-full bg-[#28C840] shadow-inner" />
-                        </div>
-                        <div className="flex-1 max-w-2xl mx-auto h-7 bg-black/10 rounded-lg flex items-center justify-center px-4">
-                            <div className="flex items-center gap-2 opacity-40">
-                                <div className="w-3 h-3 rounded-sm border border-current" />
-                                <span className="text-[10px] font-medium tracking-tight">atelierflow.com.br</span>
-                            </div>
-                        </div>
-                        <div className="flex gap-3 opacity-40">
-                            <Share className="w-4 h-4" />
-                            <Plus className="w-4 h-4" />
-                            <Layers className="w-4 h-4" />
-                        </div>
-                    </div>
-                    {/* Browser Content */}
-                    <div className="relative aspect-[16/10]">
-                        <Image
-                            src="/images/dashboard1.png"
-                            alt="AtelierFlow Dashboard Desktop"
-                            fill
-                            className="object-cover object-top"
-                            priority
-                        />
-                    </div>
-                </div>
+                <Safari 
+                  src="/images/dashboard1.png" 
+                  className="transition-transform duration-700 hover:scale-[1.01]"
+                />
                 
                 {/* Floating Elements for Desktop */}
                 <div className="absolute -top-6 -right-6 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-white/20 z-20">

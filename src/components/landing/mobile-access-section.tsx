@@ -6,7 +6,7 @@ import { Sparkles, Wifi, Signal, ArrowRight, Smartphone, CheckCircle2, Laptop, P
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
-import { MacbookMockUp } from '@/components/ui/macbook-mockup';
+import { Safari } from '@/components/ui/safari';
 
 export function MobileAccessSection() {
   const isMobile = useIsMobile();
@@ -141,7 +141,7 @@ export function MobileAccessSection() {
                         <div className="absolute top-0 right-0 w-full h-full pointer-events-none rounded-[3.5rem] bg-gradient-to-tr from-transparent via-white/5 to-white/10 z-20" />
                     </motion.div>
                 ) : (
-                    /* Mockup de Macbook (Mostrado no Mobile para destacar versão desktop) */
+                    /* Mockup de Safari (Mostrado no Mobile para destacar versão desktop) */
                     <motion.div 
                         key="desktop-mockup"
                         initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -150,7 +150,10 @@ export function MobileAccessSection() {
                         transition={{ duration: 0.5 }}
                         className="w-full flex justify-center px-4"
                     >
-                        <MacbookMockUp src="/images/dashboard1.png" />
+                        <Safari 
+                          src="/images/dashboard1.png" 
+                          className="max-w-[1000px] w-full"
+                        />
                     </motion.div>
                 )}
             </AnimatePresence>
