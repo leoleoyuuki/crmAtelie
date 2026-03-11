@@ -69,14 +69,11 @@ const TestimonialCard = ({
       }}
     >
       <div className="flex items-center gap-4 mb-6">
-        <div className="h-12 w-12 rounded-full overflow-hidden bg-muted">
-            <img src={testimonial.imgSrc} alt={testimonial.by} className="h-full w-full object-cover" />
-        </div>
         <Quote className={cn("h-6 w-6 opacity-20", isCenter ? "text-primary-foreground" : "text-primary")} />
       </div>
       
       <h3 className={cn(
-        "text-lg sm:text-xl font-headline font-bold leading-relaxed line-clamp-4",
+        "text-md sm:text-xl font-headline font-bold leading-relaxed line-clamp-4",
         isCenter ? "text-primary-foreground" : "text-foreground"
       )}>
         "{testimonial.testimonial}"
