@@ -9,13 +9,20 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Save, CalculatorIcon } from 'lucide-react';
+import { Plus, Trash2, Save, CalculatorIcon, ChevronDown } from 'lucide-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { db } from '@/firebase/config';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { addPriceTableItem } from '@/lib/data';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome do produto é obrigatório'),
@@ -97,52 +104,83 @@ export function QuoteCalculatorForm() {
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
 
-  async function onSubmit(data: FormValues) {
+  async function handleSave(data: FormValues, destination: 'catalog' | 'priceTable' | 'both') {
     if (!user) {
         toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado.' });
         return;
     }
 
     setIsSaving(true);
+    
     try {
-        const payload = {
-            userId: user.uid,
-            name: data.name,
-            description: data.description || '',
-            professionalCostPerHour: data.professionalCostPerHour,
-            professionalHours: data.professionalHours,
-            realEstateCostPerHour: data.isMonthlyRealEstate 
-                ? ((data.realEstateMonthlyCost || 0) / ((data.realEstateWeeklyHours || 1) * 4.33)) 
-                : data.realEstateCostPerHour,
-            realEstateHours: data.realEstateHours,
-            materials: data.materials.map(m => ({
-                ...m,
-                totalCost: m.quantity * m.unitCost
-            })),
-            totalMaterialCost,
-            totalCost,
-            marginType: data.marginType,
-            marginValue: data.marginValue,
-            profit,
-            finalPrice,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        };
+        // Save to Catalog
+        if (destination === 'catalog' || destination === 'both') {
+            const catalogPayload = {
+                userId: user.uid,
+                name: data.name,
+                description: data.description || '',
+                professionalCostPerHour: data.professionalCostPerHour,
+                professionalHours: data.professionalHours,
+                realEstateCostPerHour: data.isMonthlyRealEstate 
+                    ? ((data.realEstateMonthlyCost || 0) / ((data.realEstateWeeklyHours || 1) * 4.33)) 
+                    : data.realEstateCostPerHour,
+                realEstateHours: data.realEstateHours,
+                materials: data.materials.map((m: any) => ({
+                    ...m,
+                    totalCost: Number(m.quantity) * Number(m.unitCost)
+                })),
+                totalMaterialCost,
+                totalCost,
+                marginType: data.marginType,
+                marginValue: data.marginValue,
+                profit,
+                finalPrice,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            };
+            await addDoc(collection(db, 'catalogProducts'), catalogPayload);
+        }
 
-        await addDoc(collection(db, 'catalogProducts'), payload);
+        // Save to Price Table
+        if (destination === 'priceTable' || destination === 'both') {
+            await addPriceTableItem({
+                serviceName: data.name,
+                description: data.description || '',
+                price: finalPrice,
+            });
+        }
         
+        const destinationText = destination === 'both' 
+            ? 'Catálogo e na Tabela de Preços' 
+            : (destination === 'catalog' ? 'Catálogo' : 'Tabela de Preços');
+
         toast({
-            title: 'Produto salvo no catálogo!',
-            description: 'Você já pode utilizá-lo para gerar pedidos rápidos.',
+            title: `Salvo com sucesso!`,
+            description: `Produto registrado no ${destinationText}.`,
         });
 
-        router.push('/catalogo');
+        // Redirect based on primary destination
+        if (destination === 'priceTable') {
+            router.push('/tabela-precos');
+        } else {
+            router.push('/catalogo');
+        }
+
     } catch (err) {
         console.error(err);
-        toast({ variant: 'destructive', title: 'Erro', description: 'Falha ao salvar produto no catálogo.' });
+        toast({ 
+            variant: 'destructive', 
+            title: 'Erro ao salvar', 
+            description: 'Não foi possível completar o salvamento.' 
+        });
     } finally {
         setIsSaving(false);
     }
+  }
+
+  // Define this for the form handleSubmit compatibility
+  async function onSubmit(data: FormValues) {
+      await handleSave(data, 'catalog');
   }
 
   return (
@@ -428,14 +466,33 @@ export function QuoteCalculatorForm() {
                 </Card>
                 
                 <div className="pt-4 lg:hidden">
-                    <Button type="submit" size="lg" className="w-full text-base font-bold shadow-xl" disabled={isSaving}>
-                        {isSaving ? "Salvando..." : (
-                            <>
-                                <Save className="h-5 w-5 mr-2" />
-                                Salvar no Catálogo de Produtos
-                            </>
-                        )}
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button type="button" size="lg" className="w-full text-base font-bold shadow-xl" disabled={isSaving}>
+                                {isSaving ? "Salvando..." : (
+                                    <>
+                                        <Save className="h-5 w-5 mr-2" />
+                                        Salvar Orçamento
+                                        <ChevronDown className="h-4 w-4 ml-2" />
+                                    </>
+                                )}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-64 rounded-xl p-2">
+                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
+                                <Save className="h-4 w-4 mr-2 text-primary" />
+                                <span>Salvar no Catálogo</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
+                                <CalculatorIcon className="h-4 w-4 mr-2 text-primary" />
+                                <span>Salvar na Tabela de Preços</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer font-bold border-t mt-1 pt-3">
+                                <Save className="h-4 w-4 mr-2 text-primary" />
+                                <span>Salvar em Ambos</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </form>
             </Form>
@@ -488,20 +545,44 @@ export function QuoteCalculatorForm() {
                         </div>
                     </div>
 
-                    <Button 
-                        type="button" 
-                        size="lg" 
-                        className="w-full text-base font-bold shadow-xl lg:flex hidden" 
-                        disabled={isSaving}
-                        onClick={form.handleSubmit(onSubmit)}
-                    >
-                        {isSaving ? "Salvando..." : (
-                            <>
-                                <Save className="h-5 w-5 mr-2" />
-                                Salvar no Catálogo
-                            </>
-                        )}
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button 
+                                type="button" 
+                                size="lg" 
+                                className="w-full text-base font-bold shadow-xl lg:flex hidden" 
+                                disabled={isSaving}
+                            >
+                                {isSaving ? "Salvando..." : (
+                                    <>
+                                        <Save className="h-5 w-5 mr-2" />
+                                        Salvar Orçamento
+                                        <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                                    </>
+                                )}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
+                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
+                                <div className="flex flex-col text-left">
+                                    <span className="font-bold text-sm">Salvar no Catálogo</span>
+                                    <span className="text-[10px] text-muted-foreground">Ficha técnica completa com materiais</span>
+                                </div>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
+                                <div className="flex flex-col text-left">
+                                    <span className="font-bold text-sm">Salvar na Tabela de Preços</span>
+                                    <span className="text-[10px] text-muted-foreground">Apenas nome e preço final</span>
+                                </div>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer border-t mt-1 pt-3 bg-primary/5">
+                                <div className="flex flex-col text-left">
+                                    <span className="font-bold text-sm text-primary">Salvar em Ambos</span>
+                                    <span className="text-[10px] text-primary/70">Registros no catálogo e na tabela</span>
+                                </div>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </Card>
 
