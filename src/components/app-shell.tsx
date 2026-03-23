@@ -71,6 +71,7 @@ import type { UserProfile, UserSummary } from "@/lib/types";
 import { OrderFormDialog } from "./dashboard/order-form-dialog";
 import { CustomerFormDialog } from "./dashboard/customer-form-dialog";
 import { PurchaseFormDialog } from "./compras/purchase-form-dialog";
+import { SaleFormDialog } from "./vendas/sale-form-dialog";
 
 function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
     if (!expiresAt) return null;
@@ -400,6 +401,7 @@ function BottomNavigation() {
     const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
     const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
     const [isPurchaseFormOpen, setIsPurchaseFormOpen] = useState(false);
+    const [isSaleFormOpen, setIsSaleFormOpen] = useState(false);
     
     const leftItems = [
         { href: "/", label: "Início", icon: LayoutDashboard },
@@ -460,6 +462,10 @@ function BottomNavigation() {
                                     <DollarSign className="mr-3 h-4 w-4 text-secondary" />
                                     <span className="font-bold">Registrar Compra</span>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsSaleFormOpen(true)} className="rounded-xl py-3 cursor-pointer">
+                                    <Tags className="mr-3 h-4 w-4 text-green-500" />
+                                    <span className="font-bold">Registrar Venda</span>
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -501,6 +507,11 @@ function BottomNavigation() {
                 isOpen={isPurchaseFormOpen} 
                 setIsOpen={setIsPurchaseFormOpen} 
                 onPurchaseCreated={() => {}} 
+            />
+            <SaleFormDialog 
+                isOpen={isSaleFormOpen} 
+                setIsOpen={setIsSaleFormOpen} 
+                onSaleCreated={() => {}} 
             />
         </>
     );

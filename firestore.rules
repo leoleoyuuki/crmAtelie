@@ -137,6 +137,16 @@ service cloud.firestore {
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
 
+    match /sales/{saleId} {
+      // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
+      allow get, update, delete: if isAccountActive() && isResourceOwner();
+      // Apenas usuários com conta ativa podem listar suas vendas.
+      allow list: if isAccountActive();
+      // Apenas usuários com conta ativa podem registrar vendas para si.
+      allow create: if isAccountActive() && isCreatingOwnResource();
+    }
+
+
     
     match /summaries/{summaryId} {
       // O dono do sumário pode ler.

@@ -18,7 +18,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { Order, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost } from '@/lib/types';
+import { Order, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost, Sale } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -919,5 +919,59 @@ export async function updateMonthlyGoal(userId: string, goal: number): Promise<v
         } satisfies SecurityRuleContext);
         errorEmitter.emit('permission-error', permissionError);
         throw serverError;
+    });
+}
+
+// Sales Functions
+export async function addSale(saleData: Omit<Sale, 'id' | 'userId' | 'createdAt'>) {
+    const user = auth.currentUser;
+    if (!user) throw new Error("Usuário não autenticado.");
+
+    await runTransaction(db, async (transaction) => {
+        const saleMonthKey = format(saleData.date, 'yyyy-MM');
+
+        // Read summary FIRST (Firestore transactions require all reads before writes)
+        const summaryRef = doc(db, 'summaries', user.uid);
+        const summarySnap = await transaction.get(summaryRef);
+
+        // Firestore rejects undefined values - remove optional fields if not set
+        const cleanSaleData = Object.fromEntries(
+            Object.entries({ ...saleData, userId: user.uid, date: Timestamp.fromDate(saleData.date), createdAt: serverTimestamp() })
+              .filter(([, v]) => v !== undefined)
+        );
+        const saleRef = doc(collection(db, 'sales'));
+        transaction.set(saleRef, cleanSaleData);
+
+        const summaryUpdates = {
+            totalRevenue: increment(saleData.price),
+            [`monthlyRevenue.${saleMonthKey}`]: increment(saleData.price),
+            totalSalesRevenue: increment(saleData.price),
+            totalSalesProfit: increment(saleData.profit),
+            [`monthlySalesRevenue.${saleMonthKey}`]: increment(saleData.price),
+            [`monthlySalesProfit.${saleMonthKey}`]: increment(saleData.profit),
+        };
+
+        if (summarySnap.exists()) {
+            transaction.update(summaryRef, summaryUpdates);
+        } else {
+            // Document doesn't exist yet, create it with initial values
+            transaction.set(summaryRef, {
+                userId: user.uid,
+                totalRevenue: saleData.price,
+                totalOrders: 0,
+                pendingOrders: 0,
+                monthlyRevenue: { [saleMonthKey]: saleData.price },
+                monthlyCosts: {},
+                monthlyOrders: {},
+                monthlyPending: {},
+                totalSalesRevenue: saleData.price,
+                totalSalesProfit: saleData.profit,
+                monthlySalesRevenue: { [saleMonthKey]: saleData.price },
+                monthlySalesProfit: { [saleMonthKey]: saleData.profit },
+            });
+        }
+    }).catch(error => {
+        console.error("Add sale transaction failed: ", error);
+        throw new Error("Falha ao registrar venda.");
     });
 }

@@ -178,7 +178,7 @@ export function CustomerFormDialog({
 
   if (trigger) {
       return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>{trigger}</DialogTrigger>
           {dialogContent}
         </Dialog>
@@ -186,7 +186,7 @@ export function CustomerFormDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={false}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {dialogContent}
     </Dialog>
   );

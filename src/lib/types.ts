@@ -123,6 +123,10 @@ export interface UserSummary {
   monthlyPending: { [key: string]: number }; // YYYY-MM format - Total pending created in month
   serviceDistribution?: { [key: string]: number };
   monthlyGoal?: number;
+  totalSalesRevenue?: number;
+  totalSalesProfit?: number;
+  monthlySalesRevenue?: { [key: string]: number };
+  monthlySalesProfit?: { [key: string]: number };
 }
 
 export interface CatalogProductMaterial {
@@ -150,5 +154,19 @@ export interface CatalogProduct {
   finalPrice: number; // totalCost + profit
   createdAt: Date;
   updatedAt?: Date;
+}
+
+export interface Sale {
+  id: string;
+  userId: string;
+  productName: string;
+  catalogProductId?: string;
+  customerId?: string;
+  customerName?: string;
+  cost: number;
+  price: number;
+  profit: number;
+  date: Date;
+  createdAt: Date;
 }
 

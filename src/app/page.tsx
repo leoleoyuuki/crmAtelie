@@ -16,9 +16,17 @@ import { useUser } from '@/firebase/auth/use-user';
 import { ProfitChart } from '@/components/dashboard/profit-chart';
 import { WelcomeGuide } from '@/components/dashboard/welcome-guide';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, UserPlus, Sparkles, ArrowRight, Clock, AlertCircle, Filter } from 'lucide-react';
+import { PlusCircle, UserPlus, Sparkles, ArrowRight, Clock, AlertCircle, Filter, Tags, DollarSign } from 'lucide-react';
 import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
 import { CustomerFormDialog } from '@/components/dashboard/customer-form-dialog';
+import { SaleFormDialog } from '@/components/vendas/sale-form-dialog';
+import { PurchaseFormDialog } from '@/components/compras/purchase-form-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { WhatsNew } from '@/components/dashboard/whats-new';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -49,6 +57,8 @@ export default function DashboardPage() {
   
   const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+  const [isSaleFormOpen, setIsSaleFormOpen] = useState(false);
+  const [isPurchaseFormOpen, setIsPurchaseFormOpen] = useState(false);
 
   const monthsOptions = useMemo(() => getMonths(), []);
 
@@ -156,21 +166,56 @@ export default function DashboardPage() {
                 </Select>
                 
                 <div className="hidden md:flex items-center gap-3">
-                    <Button 
-                        variant="outline" 
-                        className="rounded-xl font-bold border-primary text-primary hover:bg-primary/5"
-                        onClick={() => setIsCustomerFormOpen(true)}
-                    >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Novo Cliente
-                    </Button>
-                    <Button 
-                        className="rounded-xl font-bold shadow-lg shadow-primary/20"
-                        onClick={() => setIsOrderFormOpen(true)}
-                    >
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Novo Pedido
-                    </Button>
+                    <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger asChild>
+                            <Button className="rounded-xl font-bold shadow-lg shadow-primary/20">
+                                <PlusCircle className="h-4 w-4 mr-2" />
+                                Adicionar
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
+                            <DropdownMenuItem 
+                                onSelect={() => setIsOrderFormOpen(true)} 
+                                className="rounded-xl py-3 px-4 cursor-pointer flex flex-col items-start gap-0.5"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <PlusCircle className="h-4 w-4 text-primary" />
+                                    <span className="font-bold text-sm">Novo Pedido</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground ml-6">Registre uma nova encomenda de cliente</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onSelect={() => setIsSaleFormOpen(true)} 
+                                className="rounded-xl py-3 px-4 cursor-pointer flex flex-col items-start gap-0.5"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Tags className="h-4 w-4 text-green-600" />
+                                    <span className="font-bold text-sm">Registrar Venda</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground ml-6">Venda direta de produto pronta-entrega</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onSelect={() => setIsCustomerFormOpen(true)} 
+                                className="rounded-xl py-3 px-4 cursor-pointer flex flex-col items-start gap-0.5"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <UserPlus className="h-4 w-4 text-primary" />
+                                    <span className="font-bold text-sm">Novo Cliente</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground ml-6">Cadastre um novo cliente no sistema</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onSelect={() => setIsPurchaseFormOpen(true)} 
+                                className="rounded-xl py-3 px-4 cursor-pointer flex flex-col items-start gap-0.5"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <DollarSign className="h-4 w-4 text-secondary" />
+                                    <span className="font-bold text-sm">Registrar Compra</span>
+                                </div>
+                                <span className="text-xs text-muted-foreground ml-6">Registro de compra de material ou insumo</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
           </div>
@@ -280,6 +325,16 @@ export default function DashboardPage() {
                 setIsOpen={setIsCustomerFormOpen} 
                 onCustomerCreated={handleDataMutation}
                 onCustomerUpdated={handleDataMutation}
+            />
+            <SaleFormDialog 
+                isOpen={isSaleFormOpen} 
+                setIsOpen={setIsSaleFormOpen} 
+                onSaleCreated={handleDataMutation}
+            />
+            <PurchaseFormDialog 
+                isOpen={isPurchaseFormOpen} 
+                setIsOpen={setIsPurchaseFormOpen} 
+                onPurchaseCreated={handleDataMutation}
             />
        </div>
     );
