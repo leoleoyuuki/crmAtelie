@@ -127,6 +127,16 @@ service cloud.firestore {
       // Apenas usuários com conta ativa podem criar registros de custos para si.
       allow create: if isAccountActive() && isCreatingOwnResource();
     }
+
+    match /catalogProducts/{productId} {
+      // Apenas usuários com conta ativa e que são donos do recurso podem ler/escrever.
+      allow get, update, delete: if isAccountActive() && isResourceOwner();
+      // Apenas usuários com conta ativa podem listar seus catálogos.
+      allow list: if isAccountActive();
+      // Apenas usuários com conta ativa podem criar catálogos para si.
+      allow create: if isAccountActive() && isCreatingOwnResource();
+    }
+
     
     match /summaries/{summaryId} {
       // O dono do sumário pode ler.

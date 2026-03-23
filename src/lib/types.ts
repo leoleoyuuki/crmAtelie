@@ -124,3 +124,31 @@ export interface UserSummary {
   serviceDistribution?: { [key: string]: number };
   monthlyGoal?: number;
 }
+
+export interface CatalogProductMaterial {
+  name: string;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+}
+
+export interface CatalogProduct {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  professionalCostPerHour: number;
+  professionalHours: number;
+  realEstateCostPerHour: number;
+  realEstateHours: number;
+  materials: CatalogProductMaterial[];
+  totalMaterialCost: number;
+  totalCost: number; // sum of material costs + professional labor + real estate
+  marginType: 'percentage' | 'fixed';
+  marginValue: number; // either the % or the R$ amount
+  profit: number; // calculated profit
+  finalPrice: number; // totalCost + profit
+  createdAt: Date;
+  updatedAt?: Date;
+}
+

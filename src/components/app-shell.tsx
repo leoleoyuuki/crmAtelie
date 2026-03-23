@@ -36,7 +36,9 @@ import {
     ChevronDown,
     Target,
     CalendarDays,
-    Plus
+    Plus,
+    Calculator,
+    BookCopy
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -529,12 +531,14 @@ export default function AppShell({ children, profile }: { children: React.ReactN
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },
     { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
+    { href: "/calculadora", label: "Calculadora", icon: Calculator },
     { href: "/ajuda", label: "Central de Ajuda", icon: BookOpen },
   ];
   
   const inventoryMenuItems = [
       { href: "/estoque", label: "Inventário", icon: Archive },
       { href: "/compras", label: "Registro de Compras", icon: DollarSign },
+      { href: "/catalogo", label: "Catálogo de Produtos", icon: BookCopy },
   ]
 
   const adminMenuItems = [
