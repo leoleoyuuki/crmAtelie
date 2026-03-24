@@ -82,7 +82,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
     if (!user) {
       // Permitir acesso público à Landing, Login e Blog
-      const isPublicPath = pathname === '/landing' || pathname === '/login' || pathname.startsWith('/blog');
+      const isPublicPath = pathname === '/landing' || pathname === '/login' || pathname.startsWith('/blog') || pathname.startsWith('/freetools');
       if (!isPublicPath) {
           return; 
       }
@@ -136,7 +136,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     if (pathname === '/login') {
         return <LoginPage />;
     }
-    if (pathname.startsWith('/blog')) {
+    if (pathname.startsWith('/blog') || pathname.startsWith('/freetools')) {
         return <div className="w-full">{children}</div>;
     }
     return <LandingPage />;

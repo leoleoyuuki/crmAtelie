@@ -170,3 +170,10 @@ export interface Sale {
   createdAt: Date;
 }
 
+export interface Lead {
+  id: string;
+  name: string;
+  phone: string;
+  source: string;
+  createdAt: Date;
+}

@@ -45,7 +45,7 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function QuoteCalculatorForm() {
+export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }) {
   const { user } = useUser();
   const { toast } = useToast();
   const router = useRouter();
@@ -180,6 +180,10 @@ export function QuoteCalculatorForm() {
 
   // Define this for the form handleSubmit compatibility
   async function onSubmit(data: FormValues) {
+      if (isPublic) {
+          toast({ title: 'Simulação concluída', description: 'Para salvar orçamentos, crie sua conta no AtelierFlow!' });
+          return;
+      }
       await handleSave(data, 'catalog');
   }
 
@@ -465,35 +469,37 @@ export function QuoteCalculatorForm() {
                     </CardContent>
                 </Card>
                 
-                <div className="pt-4 lg:hidden">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button type="button" size="lg" className="w-full text-base font-bold shadow-xl" disabled={isSaving}>
-                                {isSaving ? "Salvando..." : (
-                                    <>
-                                        <Save className="h-5 w-5 mr-2" />
-                                        Salvar Orçamento
-                                        <ChevronDown className="h-4 w-4 ml-2" />
-                                    </>
-                                )}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-64 rounded-xl p-2">
-                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
-                                <Save className="h-4 w-4 mr-2 text-primary" />
-                                <span>Salvar no Catálogo</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
-                                <CalculatorIcon className="h-4 w-4 mr-2 text-primary" />
-                                <span>Salvar na Tabela de Preços</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer font-bold border-t mt-1 pt-3">
-                                <Save className="h-4 w-4 mr-2 text-primary" />
-                                <span>Salvar em Ambos</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+                {!isPublic && (
+                    <div className="pt-4 lg:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button type="button" size="lg" className="w-full text-base font-bold shadow-xl" disabled={isSaving}>
+                                    {isSaving ? "Salvando..." : (
+                                        <>
+                                            <Save className="h-5 w-5 mr-2" />
+                                            Salvar Orçamento
+                                            <ChevronDown className="h-4 w-4 ml-2" />
+                                        </>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-64 rounded-xl p-2">
+                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
+                                    <Save className="h-4 w-4 mr-2 text-primary" />
+                                    <span>Salvar no Catálogo</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
+                                    <CalculatorIcon className="h-4 w-4 mr-2 text-primary" />
+                                    <span>Salvar na Tabela de Preços</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer font-bold border-t mt-1 pt-3">
+                                    <Save className="h-4 w-4 mr-2 text-primary" />
+                                    <span>Salvar em Ambos</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                )}
             </form>
             </Form>
         </div>
@@ -545,44 +551,57 @@ export function QuoteCalculatorForm() {
                         </div>
                     </div>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button 
-                                type="button" 
-                                size="lg" 
-                                className="w-full text-base font-bold shadow-xl lg:flex hidden" 
-                                disabled={isSaving}
-                            >
-                                {isSaving ? "Salvando..." : (
-                                    <>
-                                        <Save className="h-5 w-5 mr-2" />
-                                        Salvar Orçamento
-                                        <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
-                                    </>
-                                )}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
-                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
-                                <div className="flex flex-col text-left">
-                                    <span className="font-bold text-sm">Salvar no Catálogo</span>
-                                    <span className="text-[10px] text-muted-foreground">Ficha técnica completa com materiais</span>
-                                </div>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
-                                <div className="flex flex-col text-left">
-                                    <span className="font-bold text-sm">Salvar na Tabela de Preços</span>
-                                    <span className="text-[10px] text-muted-foreground">Apenas nome e preço final</span>
-                                </div>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer border-t mt-1 pt-3 bg-primary/5">
-                                <div className="flex flex-col text-left">
-                                    <span className="font-bold text-sm text-primary">Salvar em Ambos</span>
-                                    <span className="text-[10px] text-primary/70">Registros no catálogo e na tabela</span>
-                                </div>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {!isPublic ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button 
+                                    type="button" 
+                                    size="lg" 
+                                    className="w-full text-base font-bold shadow-xl lg:flex hidden" 
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? "Salvando..." : (
+                                        <>
+                                            <Save className="h-5 w-5 mr-2" />
+                                            Salvar Orçamento
+                                            <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                                        </>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
+                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
+                                    <div className="flex flex-col text-left">
+                                        <span className="font-bold text-sm">Salvar no Catálogo</span>
+                                        <span className="text-[10px] text-muted-foreground">Ficha técnica completa com materiais</span>
+                                    </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
+                                    <div className="flex flex-col text-left">
+                                        <span className="font-bold text-sm">Salvar na Tabela de Preços</span>
+                                        <span className="text-[10px] text-muted-foreground">Apenas nome e preço final</span>
+                                    </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer border-t mt-1 pt-3 bg-primary/5">
+                                    <div className="flex flex-col text-left">
+                                        <span className="font-bold text-sm text-primary">Salvar em Ambos</span>
+                                        <span className="text-[10px] text-primary/70">Registros no catálogo e na tabela</span>
+                                    </div>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <Button 
+                            type="button" 
+                            size="lg" 
+                            variant="secondary"
+                            className="w-full text-base font-bold shadow-lg border-2 border-primary/20 hover:border-primary/50 transition-all group"
+                            onClick={() => window.open('/login', '_blank')}
+                        >
+                            <Save className="h-5 w-5 mr-2 text-primary group-hover:scale-110 transition-transform" />
+                            Criar Conta para Salvar
+                        </Button>
+                    )}
                 </div>
             </Card>
 
