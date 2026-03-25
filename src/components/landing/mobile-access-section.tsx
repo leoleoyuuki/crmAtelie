@@ -38,8 +38,20 @@ export function MobileAccessSection() {
 
   return (
     <div className="py-24 sm:py-40 relative overflow-hidden bg-background">
+      {/* Crumpled Paper Texture Overlay */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none opacity-[0.05] dark:opacity-[0.03]"
+        style={{
+          backgroundImage: 'url(/images/crumpled-paper-texture.png)',
+          backgroundRepeat: 'repeat',
+          backgroundSize: '400px 400px',
+          mixBlendMode: 'multiply',
+        }}
+        aria-hidden="true"
+      />
+      
       {/* Elementos de Fundo */}
-      <div className="absolute inset-0 -z-10 pointer-events-none">
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/4 -left-20 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] transform-gpu" />
         <div className="absolute bottom-1/4 -right-20 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] transform-gpu" />
       </div>

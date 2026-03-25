@@ -12,6 +12,17 @@ export function Cta() {
 
   return (
     <div className="py-24 sm:py-32 relative overflow-hidden bg-primary/5">
+      {/* Crepe Paper Texture Overlay */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] dark:opacity-[0.08]"
+        style={{
+          backgroundImage: 'url(/images/crepe-paper-primary.png)',
+          backgroundRepeat: 'repeat',
+          backgroundSize: '400px 400px',
+          mixBlendMode: 'multiply',
+        }}
+        aria-hidden="true"
+      />
       <div className="container mx-auto px-4 md:px-6 text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}

@@ -14,9 +14,21 @@ export function Header() {
     <motion.header 
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-xl"
+      className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/60 backdrop-blur-xl relative overflow-hidden"
     >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+      {/* Crumpled Paper Texture Overlay */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none opacity-[0.15] dark:opacity-[0.10]"
+        style={{
+          backgroundImage: 'url(/images/crumpled-paper-texture.png)',
+          backgroundRepeat: 'repeat',
+          backgroundSize: '400px 400px',
+          mixBlendMode: 'multiply',
+        }}
+        aria-hidden="true"
+      />
+
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6 relative z-10">
         <Link href="/" className="flex items-center gap-2 group">
           <motion.div
             whileHover={{ rotate: 180 }}

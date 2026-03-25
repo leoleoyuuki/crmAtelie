@@ -1,160 +1,200 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import React, { useRef, useEffect, useState } from 'react';
+import { Instagram, MessageCircle, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
-const testimonials = [
+const testimonialsRow1 = [
   {
-    tempId: 0,
-    testimonial: "O AtelierFlow transformou minha gestão financeira. Agora sei exatamente quanto lucro em cada peça.",
-    by: "Natalia",
+    id: 1,
+    content: "A diferença não está no preço. Pra mim pelo menos é muito mais rápido montar orçamentos e entender o lucro real de cada peça. A interface é linda, intuitiva e o fluxo de impressões térmicas me economizou muito tempo.",
+    author: "Natália",
     role: "Costura Criativa",
+    handle: "@nataliacostura",
+    source: "instagram"
   },
   {
-    tempId: 1,
-    testimonial: "Finalmente consegui organizar meus pedidos e visualizar os números do meu ateliê com clareza.",
-    by: "Alcimara",
+    id: 2,
+    content: "Parei de usar planilhas que travavam! O AtelierFlow faz os cálculos automáticos de margem de lucro, e os clientes amam a organização e os PDFs com a minha marca.",
+    author: "Alcimara",
     role: "Artesanato & Cia",
+    handle: "@alcimara.artes",
+    source: "whatsapp"
   },
   {
-    tempId: 2,
-    testimonial: "O sistema é incrível para não se perder com os prazos. Meus clientes adoram a organização.",
-    by: "Nathan",
-    role: "Alfaiataria Moderna",
+    id: 3,
+    content: "Um detalhe bobo: o dashboard do celular é IDÊNTICO a um aplicativo, super fluído. Posso olhar o histórico de qualquer cliente do meu bolso, em segundos.",
+    author: "Doce Papel",
+    role: "Papelaria",
+    handle: "@docepapel.atelie",
+    source: "threads"
+  },
+  {
+    id: 4,
+    content: "Sempre que pergunto 'qual vai ser a próxima novidade?', vocês lançam algo novo e me surpreendem!! Muito rápido, recomendo 1000 vezes.",
+    author: "Carla Laços",
+    role: "Acessórios Infantis",
+    handle: "@carlaribeirow",
+    source: "instagram"
+  },
+  {
+    id: 5,
+    content: "O AtelierFlow transformou minha gestão financeira. Agora sei exatamente quanto lucro em cada peça que faço por encomenda.",
+    author: "Marly Artes",
+    role: "Crochê",
+    handle: "@marlycroche",
+    source: "whatsapp"
   }
 ];
 
-interface TestimonialCardProps {
-  position: number;
-  testimonial: typeof testimonials[0];
-  handleMove: (steps: number) => void;
-  cardSize: number;
-}
+const testimonialsRow2 = [
+  {
+    id: 6,
+    content: "Eu fiquei besta com a qualidade, já tô migrando todas as minhas encomendas ativas pra cá o mais rápido possível!!",
+    author: "Rafaela Tricô",
+    role: "Tricot Moderno",
+    handle: "@rafa.tricot",
+    source: "instagram"
+  },
+  {
+    id: 7,
+    content: "Ok, o AtelierFlow é realmente MUITO bom. Acabei de realizar a migração e, finalmente, tenho tudo centralizado. Sem mais bloquinhos de papel perdidos pela mesa.",
+    author: "Ju Marrone",
+    role: "Costura de Roupas",
+    handle: "@ju.costuras",
+    source: "threads"
+  },
+  {
+    id: 8,
+    content: "Gente, parabéns! O software tá super ajustado para artesanato. Estou explorando todas as funcionalidades e é incrível e intuitivo.",
+    author: "Bordados da Ana",
+    role: "Bordado Livre",
+    handle: "@anabordados",
+    source: "whatsapp"
+  },
+  {
+    id: 9,
+    content: "Cara, testei MUITOS aplicativos antes... e nenhum foca de verdade no modelo de 'pedidos complexos'. Aqui eu gerencio prazos, recebimentos parcelados, perfeitamente.",
+    author: "Leo Custom",
+    role: "Pintura em Porcelana",
+    handle: "@leocustom_art",
+    source: "instagram"
+  },
+  {
+    id: 10,
+    content: "Eu acordo pensando: como a gente ficava sem isso antes? A experiência do cliente na hora de ver o orçamento e as datas nunca foi tão profissional.",
+    author: "Mimos da Gabi",
+    role: "Lembrancinhas",
+    handle: "@gabi.mimos",
+    source: "threads"
+  }
+];
 
-const TestimonialCard = ({ 
-  position, 
-  testimonial, 
-  handleMove, 
-  cardSize 
-}: TestimonialCardProps) => {
-  const isCenter = position === 0;
-
+const TestimonialCard = ({ data }: { data: typeof testimonialsRow1[0] }) => {
   return (
-    <motion.div
-      onClick={() => handleMove(position)}
-      initial={false}
-      animate={{
-        x: `calc(-50% + ${(cardSize / 1.6) * position}px)`,
-        y: `calc(-50% + ${isCenter ? -20 : (position % 2 ? 10 : -10)}px)`,
-        scale: isCenter ? 1 : 0.85,
-        rotate: isCenter ? 0 : position * 2,
-        opacity: isCenter ? 1 : 0.4,
-        zIndex: 10 - Math.abs(position),
-      }}
-      transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      className={cn(
-        "absolute left-1/2 top-1/2 cursor-pointer p-6 sm:p-8 rounded-[2rem] border-2 transition-all transform-gpu",
-        isCenter 
-          ? "bg-primary text-primary-foreground border-primary shadow-2xl" 
-          : "bg-card text-card-foreground border-border grayscale blur-[0.5px]"
-      )}
-      style={{
-        width: cardSize,
-        height: cardSize,
-      }}
-    >
-      <div className="flex items-center gap-4 mb-6">
-        <Quote className={cn("h-6 w-6 opacity-20", isCenter ? "text-primary-foreground" : "text-primary")} />
+    <div className="w-[300px] sm:w-[350px] flex-shrink-0 bg-white/70 dark:bg-zinc-900/40 rounded-3xl p-6 sm:p-8 shadow-sm border border-black/5 dark:border-white/10 backdrop-blur-md transition-transform hover:-translate-y-1 hover:shadow-md cursor-default flex flex-col">
+      <div className="flex justify-between items-start mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+            {data.author[0]}
+          </div>
+          <div>
+            <h4 className="font-bold text-sm text-foreground flex items-center gap-1.5 leading-tight">
+              {data.author}
+              <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-black hidden sm:inline-block">
+                {data.role}
+              </span>
+            </h4>
+            <p className="text-xs text-muted-foreground font-medium">{data.handle}</p>
+          </div>
+        </div>
+        <div className="text-muted-foreground/40 mt-1">
+          {data.source === 'instagram' && <Instagram size={20} />}
+          {data.source === 'whatsapp' && <MessageCircle size={20} />}
+          {data.source === 'threads' && <Hash size={20} />}
+        </div>
       </div>
-      
-      <h3 className={cn(
-        "text-md sm:text-xl font-headline font-bold leading-relaxed line-clamp-4",
-        isCenter ? "text-primary-foreground" : "text-foreground"
-      )}>
-        "{testimonial.testimonial}"
-      </h3>
-      
-      <div className={cn(
-        "absolute bottom-8 left-8 right-8",
-        isCenter ? "text-primary-foreground/80" : "text-muted-foreground"
-      )}>
-        <p className="text-sm font-bold">{testimonial.by}</p>
-        <p className="text-xs italic opacity-70">{testimonial.role}</p>
+      <p className="text-sm sm:text-base text-foreground/80 leading-relaxed font-medium whitespace-normal">
+        {data.content}
+      </p>
+    </div>
+  );
+};
+
+const MarqueeRow = ({ items, direction = "left", speed = 40 }: { items: typeof testimonialsRow1, direction?: "left" | "right", speed?: number }) => {
+  return (
+    <div className="relative flex overflow-hidden w-full group">
+      <div 
+        className={cn("flex whitespace-nowrap min-w-full gap-6 px-3")}
+        style={{
+          animation: `marquee-${direction} ${speed}s linear infinite`,
+        }}
+      >
+        {/* Duplicate the children to create the infinite scroll effect */}
+        {[0, 1, 2].map((groupIndex) => (
+          <div key={groupIndex} className="flex gap-6">
+            {items.map((t) => (
+              <TestimonialCard key={`${groupIndex}-${t.id}`} data={t} />
+            ))}
+          </div>
+        ))}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
 export const StaggerTestimonials: React.FC = () => {
-  const [cardSize, setCardSize] = useState(340);
-  const [testimonialsList, setTestimonialsList] = useState(testimonials);
-
-  const handleMove = (steps: number) => {
-    if (steps === 0) return;
-    const newList = [...testimonialsList];
-    if (steps > 0) {
-      for (let i = 0; i < steps; i++) {
-        const item = newList.shift();
-        if (item) newList.push(item);
-      }
-    } else {
-      for (let i = 0; i < Math.abs(steps); i++) {
-        const item = newList.pop();
-        if (item) newList.unshift(item);
-      }
-    }
-    setTestimonialsList(newList);
-  };
-
-  useEffect(() => {
-    const updateSize = () => {
-      setCardSize(window.innerWidth < 640 ? 280 : 340);
-    };
-    updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, []);
-
   return (
-    <div className="relative w-full h-[550px] overflow-hidden bg-muted/5 py-20">
-      <div className="container mx-auto px-4 relative z-20 text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-headline font-bold mb-4">O que dizem nossos artesãos</h2>
-        <p className="text-muted-foreground max-w-xl mx-auto">Histórias reais de quem transformou o ateliê com o AtelierFlow.</p>
+    <div className="relative w-full overflow-hidden bg-background pb-20 pt-16">
+      {/* 
+        Linear Gradient Transition 
+        Starts EXACTLY with the color of the previous section (muted/20) to eliminate the sharp line,
+        then gracefully blends into a primary tint, and finally fades to transparent.
+      */}
+      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-muted/20 via-primary/10 to-transparent z-10 pointer-events-none" />
+
+      {/* Crepe Paper Texture Overlay */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none opacity-[0.06] dark:opacity-[0.04]"
+        style={{
+          backgroundImage: 'url(/images/crepe-paper-muted.png)',
+          backgroundRepeat: 'repeat',
+          backgroundSize: '400px 400px',
+          mixBlendMode: 'multiply',
+        }}
+        aria-hidden="true"
+      />
+
+      <div className="container mx-auto px-4 relative z-20 text-center mb-16 pt-10">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-headline font-bold mb-6 text-foreground tracking-tight">
+          Resultados Provados. <br className="sm:hidden" />
+          <span className="text-primary italic">Impacto Poderoso.</span>
+        </h2>
+        <p className="text-muted-foreground font-medium max-w-xl mx-auto text-lg">
+          Aprovado por artesãos que revolucionaram a forma de gerenciar seus negócios.
+        </p>
       </div>
 
-      <div className="relative h-[350px] transform-gpu">
-        {testimonialsList.map((testimonial, index) => {
-            const position = index - Math.floor(testimonialsList.length / 2);
-            return (
-            <TestimonialCard
-                key={testimonial.tempId}
-                testimonial={testimonial}
-                handleMove={handleMove}
-                position={position}
-                cardSize={cardSize}
-            />
-            );
-        })}
+      <div className="relative z-20 flex flex-col gap-6 w-full mask-edges">
+        <MarqueeRow items={testimonialsRow1} direction="left" speed={60} />
+        <MarqueeRow items={testimonialsRow2} direction="right" speed={55} />
       </div>
 
-      <div className="absolute bottom-10 left-1/2 flex -translate-x-1/2 gap-4 z-30">
-        <button
-          onClick={() => handleMove(-1)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white border shadow-md hover:bg-muted transition-colors"
-          aria-label="Anterior"
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button
-          onClick={() => handleMove(1)}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white border shadow-md hover:bg-muted transition-colors"
-          aria-label="Próximo"
-        >
-          <ChevronRight className="h-6 w-6" />
-        </button>
-      </div>
+      <style jsx global>{`
+        @keyframes marquee-left {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.33%); }
+        }
+        @keyframes marquee-right {
+          0% { transform: translateX(-33.33%); }
+          100% { transform: translateX(0); }
+        }
+        .mask-edges {
+          -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+          mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+      `}</style>
     </div>
   );
 };
