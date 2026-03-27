@@ -1,14 +1,23 @@
 
 'use client';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ArrowRight, Smartphone, CheckCircle2, Printer, Monitor } from 'lucide-react';
+import { Sparkles, ArrowRight, Smartphone, CheckCircle2, Printer, Monitor, Download, MousePointer2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
 import { Safari } from '@/components/ui/safari';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export function MobileAccessSection() {
   const isMobile = useIsMobile();
+  const [showModal, setShowModal] = useState(false);
 
   // Definição dos conteúdos baseados no dispositivo
   const content = {
@@ -99,10 +108,80 @@ export function MobileAccessSection() {
                 ))}
             </div>
 
-            <div className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] cursor-pointer group w-fit transition-all">
+            <div 
+                onClick={() => setShowModal(true)}
+                className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] cursor-pointer group w-fit transition-all hover:opacity-80"
+            >
                 {currentContent.linkText}
                 <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
             </div>
+
+            <Dialog open={showModal} onOpenChange={setShowModal}>
+                <DialogContent className="sm:max-w-[450px] border-primary/10 bg-background/95 backdrop-blur-xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-headline font-bold flex items-center gap-2">
+                            {isMobile ? <Monitor className="h-6 w-6 text-primary" /> : <Smartphone className="h-6 w-6 text-primary" />}
+                            {isMobile ? "Acessar no Computador" : "Instalar no Celular"}
+                        </DialogTitle>
+                        <DialogDescription className="text-base pt-2">
+                            {isMobile 
+                                ? "Tenha uma visão profissional completa do seu ateliê em uma tela maior." 
+                                : "Leve seu ateliê no bolso com a experiência de um aplicativo nativo."}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-4">
+                        <div className="space-y-4">
+                            <div className="flex gap-4 p-4 rounded-2xl bg-muted/30 border border-primary/5">
+                                <div className="bg-primary/10 h-8 w-8 rounded-lg flex items-center justify-center text-primary shrink-0 font-bold text-sm">1</div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-foreground">Acesse o endereço</p>
+                                    <p className="text-sm text-muted-foreground font-medium">
+                                        Abra o site <span className="text-primary font-bold">atelierflow.com.br</span> no navegador.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 p-4 rounded-2xl bg-muted/30 border border-primary/5">
+                                <div className="bg-primary/10 h-8 w-8 rounded-lg flex items-center justify-center text-primary shrink-0 font-bold text-sm">2</div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-foreground">
+                                        {isMobile ? "Faça Login" : "Adicione à Tela de Início"}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground font-medium">
+                                        {isMobile 
+                                            ? "Entre com sua conta para sincronizar todos os seus dados instantaneamente." 
+                                            : "No iPhone toque em 'Compartilhar' e 'Tela de Início'. No Android toque nos '3 pontos' e 'Instalar'."}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                                <div className="bg-primary/20 h-8 w-8 rounded-lg flex items-center justify-center text-primary shrink-0">
+                                    <Download className="h-4 w-4" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-bold text-primary">Instale como Aplicativo</p>
+                                    <p className="text-sm text-muted-foreground font-medium">
+                                        {isMobile 
+                                            ? "No computador, clique no ícone de instalação na barra de endereços para ter o ícone do App na sua área de trabalho."
+                                            : "Isso criará um ícone na sua tela inicial para acesso rápido, igual a um aplicativo baixado na loja."}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-center pt-2">
+                        <button 
+                            onClick={() => setShowModal(false)}
+                            className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-sm transition-transform active:scale-95 shadow-lg shadow-primary/20"
+                        >
+                            Entendi
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
           </motion.div>
 
           <div className="relative flex justify-center lg:justify-end transform-gpu min-h-fit lg:min-h-[600px] items-center py-10 lg:py-0">

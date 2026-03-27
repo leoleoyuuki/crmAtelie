@@ -24,10 +24,10 @@ export default function LandingPage() {
           <div id="recursos" className="w-full">
             <FeatureHighlights />
           </div>
-          <AllFeatures />
-          <StaggerTestimonials />
-          <MobileAccessSection />
           <FaqSection />
+          <StaggerTestimonials />
+          <AllFeatures />
+          <MobileAccessSection />
           <Cta />
         </main>
         <Footer />
