@@ -346,7 +346,9 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                             <Button variant="ghost" className="relative h-9 w-9 rounded-full border-2 border-muted hover:border-primary/50 transition-all p-0">
                                 <Avatar className="h-full w-full">
                                     <AvatarImage src={user.photoURL ?? ''} alt="Avatar" />
-                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.displayName?.charAt(0)}</AvatarFallback>
+                                    <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                                        {user.displayName ? user.displayName.substring(0, 2).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
                                 </Avatar>
                             </Button>
                         </DropdownMenuTrigger>

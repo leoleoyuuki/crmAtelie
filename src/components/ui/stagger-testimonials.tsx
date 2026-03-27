@@ -122,7 +122,7 @@ const TestimonialCard = ({ data }: { data: typeof testimonialsRow1[0] }) => {
   );
 };
 
-const MarqueeRow = ({ items, direction = "left", speed = 40 }: { items: typeof testimonialsRow1, direction?: "left" | "right", speed?: number }) => {
+const MarqueeRow = ({ items, direction = "left", speed = 10 }: { items: typeof testimonialsRow1, direction?: "left" | "right", speed?: number }) => {
   return (
     <div className="relative flex overflow-hidden w-full group">
       <div 
@@ -177,8 +177,8 @@ export const StaggerTestimonials: React.FC = () => {
       </div>
 
       <div className="relative z-20 flex flex-col gap-6 w-full mask-edges">
-        <MarqueeRow items={testimonialsRow1} direction="left" speed={60} />
-        <MarqueeRow items={testimonialsRow2} direction="right" speed={55} />
+        <MarqueeRow items={testimonialsRow1} direction="left" speed={20} />
+        <MarqueeRow items={testimonialsRow2} direction="right" speed={18} />
       </div>
 
       <style jsx global>{`
