@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "br.com.atelierflow.twa",
+        "sha256_cert_fingerprints": ["D0:92:F6:7D:06:A7:46:54:48:EC:50:CE:56:47:97:CB:9B:38:A5:E2:BD:A7:EC:0A:D4:D2:D3:82:56:A5:49:D6"]
+      }
+    }]
