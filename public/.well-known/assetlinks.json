@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "br.com.atelierflow.twa",
-        "sha256_cert_fingerprints": ["D0:92:F6:7D:06:A7:46:54:48:EC:50:CE:56:47:97:CB:9B:38:A5:E2:BD:A7:EC:0A:D4:D2:D3:82:56:A5:49:D6"]
+        "package_name": "br.com.atelierflow.www.twa",
+        "sha256_cert_fingerprints": ["42:56:1B:98:8B:0E:C0:F3:E5:72:37:30:6E:A2:1E:18:0B:D6:EE:62:3C:5A:63:AF:7F:64:4B:C3:B9:42:68:48"]
       }
     }]
