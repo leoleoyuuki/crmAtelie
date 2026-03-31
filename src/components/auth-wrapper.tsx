@@ -142,7 +142,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     return <LandingPage />;
   }
 
-  if (pathname === '/ativacao' || pathname.startsWith('/admin') || pathname.startsWith('/blog')) {
+  if (pathname === '/ativacao' || pathname === '/ativacao/sucesso' || pathname.startsWith('/admin') || pathname.startsWith('/blog')) {
     return <div className="w-full">{children}</div>;
   }
 

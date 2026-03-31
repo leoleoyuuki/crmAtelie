@@ -319,18 +319,34 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
         const isDevelopment = process.env.NODE_ENV === 'development';
         const userEmail = isDevelopment ? 'test_user_12345678@testuser.com' : user.email;
 
-        const response = await fetch('/api/mercadopago', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ plan: plan, userId: user.uid, userEmail: userEmail }),
-        });
-        const data = await response.json();
-        if (response.ok && data.init_point) {
-            window.location.href = data.init_point;
+        if (plan === 'mensal') {
+            const response = await fetch('/api/stripe/create-checkout-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ priceId: 'price_1TH4efQ2pW7qaWNpxcYEQTb1', userId: user.uid, userEmail: userEmail }),
+            });
+            const data = await response.json();
+            if (response.ok && data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error(data.error || 'Erro ao criar sessão de checkout.');
+            }
         } else {
-            throw new Error(data.error || 'Erro ao criar preferência de pagamento.');
+            const response = await fetch('/api/mercadopago', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ plan: plan, userId: user.uid, userEmail: userEmail }),
+            });
+            const data = await response.json();
+            if (response.ok && data.init_point) {
+                window.location.href = data.init_point;
+            } else {
+                throw new Error(data.error || 'Erro ao criar preferência de pagamento.');
+            }
         }
     } catch (error: any) {
         console.error(error);
