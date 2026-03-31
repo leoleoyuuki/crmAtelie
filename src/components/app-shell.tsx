@@ -38,7 +38,8 @@ import {
     CalendarDays,
     Plus,
     Calculator,
-    BookCopy
+    BookCopy,
+    Settings
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -282,7 +283,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     };
 
     return (
-        <header className="flex h-16 items-center gap-4 border-b bg-card/50 backdrop-blur-md px-4 lg:px-8 sticky top-0 z-30">
+        <header className="flex h-16 items-center gap-4 bg-background px-4 lg:px-8 sticky top-0 z-30">
             <div className="flex items-center gap-4">
                 {/* Somente visível no Mobile */}
                 <div className="flex items-center gap-2 md:hidden">
@@ -590,6 +591,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
     { href: "/tabela-precos", label: "Tabela de Preços", icon: Tags },
     { href: "/calculadora", label: "Calculadora", icon: Calculator },
     { href: "/ajuda", label: "Central de Ajuda", icon: BookOpen },
+    { href: "/configuracoes", label: "Configurações", icon: Settings },
   ];
   
   const inventoryMenuItems = [
@@ -620,7 +622,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
   return (
       <div className="flex min-h-screen w-full bg-background">
         <Sidebar className="border-r border-border/50 shadow-sm" collapsible="icon">
-          <SidebarHeader className="h-14 flex flex-row items-center px-4 border-b border-border/50">
+          <SidebarHeader className="h-14 flex flex-row items-center px-4">
             <div className="flex items-center gap-2">
               <div className="bg-primary/10 p-1 rounded-lg">
                 <Logo className="h-5 w-5 text-primary" />
@@ -718,7 +720,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                 </SidebarGroup>
               )}
           </SidebarContent>
-          <SidebarFooter className="p-2 border-t border-border/50">
+          <SidebarFooter className="p-2">
              <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 mx-2 mb-4 group-data-[collapsible=icon]:hidden transition-all hover:bg-primary/10">
                 <div className="bg-primary/10 w-8 h-8 rounded-lg flex items-center justify-center mb-3">
                     <MessageSquare className="h-4 w-4 text-primary" />
