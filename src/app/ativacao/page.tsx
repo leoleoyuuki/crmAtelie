@@ -325,7 +325,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ priceId: 'price_1TH4efQ2pW7qaWNpxcYEQTb1', userId: user.uid, userEmail: userEmail }),
+                body: JSON.stringify({ priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MENSAL, userId: user.uid, userEmail: userEmail }),
             });
             const data = await response.json();
             if (response.ok && data.url) {
