@@ -194,8 +194,9 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     const { user } = useUser();
     const { auth } = useAuth();
     const { toast } = useToast();
-    const { isPrivacyMode, togglePrivacyMode, isPasswordSet } = useContext(PasswordContext);
+    const { isPrivacyMode, isPasswordSet, togglePrivacyMode } = useContext(PasswordContext);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
+    const [isPortalLoading, setIsPortalLoading] = useState(false);
     const { data: summary } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
 
     const progress = useMemo(() => {
@@ -248,6 +249,38 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
         return format(profile.expiresAt, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     }, [profile?.expiresAt]);
 
+    const handleManageSubscription = async () => {
+        if (!user || isPortalLoading) return;
+        
+        setIsPortalLoading(true);
+        try {
+            const response = await fetch('/api/stripe/create-portal-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.uid }),
+            });
+
+            const data = await response.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                toast({ 
+                    variant: "destructive", 
+                    title: "Erro ao abrir portal", 
+                    description: data.error || "Não foi possível carregar o portal da Stripe." 
+                });
+            }
+        } catch (error) {
+            toast({ 
+                variant: "destructive", 
+                title: "Erro de conexão", 
+                description: "Tente novamente em instantes." 
+            });
+        } finally {
+            setIsPortalLoading(false);
+        }
+    };
+
     return (
         <header className="flex h-16 items-center gap-4 border-b bg-card/50 backdrop-blur-md px-4 lg:px-8 sticky top-0 z-30">
             <div className="flex items-center gap-4">
@@ -295,10 +328,21 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                         </p>
                                     </div>
                                 )}
+
+                                {profile?.stripeCustomerId && (
+                                    <Button 
+                                        className="w-full text-[10px] font-bold h-9 rounded-xl shadow-lg shadow-primary/10"
+                                        onClick={handleManageSubscription}
+                                        disabled={isPortalLoading}
+                                    >
+                                        {isPortalLoading ? "Carregando..." : "Gerenciar Assinatura"}
+                                    </Button>
+                                )}
                             </div>
                         </PopoverContent>
                     </Popover>
                 )}
+
             </div>
 
             <div className="flex-1" />
