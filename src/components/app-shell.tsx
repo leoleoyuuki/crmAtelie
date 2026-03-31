@@ -283,7 +283,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     };
 
     return (
-        <header className="flex h-16 items-center gap-4 bg-background px-4 lg:px-8 sticky top-0 z-30">
+        <header className="flex h-16 items-center gap-4 bg-background px-4 lg:px-8 z-30">
             <div className="flex items-center gap-4">
                 {/* Somente visível no Mobile */}
                 <div className="flex items-center gap-2 md:hidden">
@@ -754,11 +754,11 @@ export default function AppShell({ children, profile }: { children: React.ReactN
         </Sidebar>
         
         <main className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-            <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
             <div 
                 className="flex-1 overflow-y-auto"
                 style={{ paddingBottom: '140px' }}
             >
+                <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
                 {children}
             </div>
             <BottomNavigation />
