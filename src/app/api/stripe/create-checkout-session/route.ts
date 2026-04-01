@@ -16,11 +16,15 @@ export async function POST(req: Request) {
       );
     }
 
+    const isAnnual = priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANUAL;
+
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       discounts: [{
-        promotion_code: 'promo_1THEQfQ2pW7qaWNptEQ3opgj',
+        promotion_code: isAnnual 
+          ? 'promo_1THFkFQ2pW7qaWNpGiQ2lmvY' 
+          : 'promo_1THEQfQ2pW7qaWNptEQ3opgj',
       }],
       subscription_data: {
         metadata: {

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase, useDocument } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Key, Star, Phone, Printer, Check, ArrowRight } from 'lucide-react';
+import { MessageSquare, LogOut, Loader2, Key, Star, Phone, Printer, Check, ArrowRight, ArrowLeft, Sparkles, BarChart3, FileText } from 'lucide-react';
 import { initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
@@ -167,107 +167,107 @@ function CodeActivationTab() {
   )
 }
 
-const PlanCard = ({ 
-    title, 
-    price, 
-    period, 
-    subtitle, 
-    benefit, 
-    isHighlighted, 
-    onSelect, 
-    isLoading, 
-    icon: Icon, 
-    buttonText = "Assinar Agora",
-    features = []
-}: {
-  title: string,
-  price: string,
-  period: string,
-  subtitle: string,
-  benefit?: string;
-  isHighlighted?: boolean,
-  onSelect: () => void,
-  isLoading?: boolean,
-  icon?: any,
-  buttonText?: string;
-  features?: string[];
-}) => {
-  return (
-    <div
-      className={cn(
-        "rounded-3xl border bg-card text-card-foreground transition-all duration-300 relative flex flex-col p-6 sm:p-8",
-        isHighlighted 
-            ? "border-primary ring-4 ring-primary/10 shadow-2xl md:scale-105 z-10 pt-14 sm:pt-16" 
-            : "hover:border-muted-foreground/30 shadow-sm"
-      )}
-    >
-      {isHighlighted && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-            <Badge className="bg-primary text-primary-foreground px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl whitespace-nowrap border-2 border-background">
-                Recomendado
-            </Badge>
-        </div>
-      )}
-      
-      <div className="space-y-2 mb-6">
-        <h3 className="text-2xl font-bold font-headline">{title}</h3>
-        <p className="text-sm text-muted-foreground leading-snug min-h-[40px]">{subtitle}</p>
-      </div>
-
-      <div className="mb-8">
-        <div className="flex items-baseline flex-wrap gap-1">
-          <span className={cn(
-              "font-black tracking-tighter",
-              price.length > 10 ? "text-2xl" : "text-4xl"
-          )}>{price}</span>
-          <span className="text-muted-foreground font-medium text-sm">/{period}</span>
-        </div>
-        {benefit && (
-          <p className="text-sm font-extrabold text-primary mt-2 uppercase tracking-wide bg-primary/5 inline-block px-2 py-0.5 rounded">
-            {benefit}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-4 flex-grow mb-8">
-        {features.map((feature, i) => (
-            <div key={i} className="flex items-start gap-3">
-                <div className="bg-primary/10 p-0.5 rounded-full mt-0.5 shrink-0">
-                    <Check className="h-3.5 w-3.5 text-primary stroke-[3px]" />
-                </div>
-                <span className="text-sm text-foreground/80 leading-tight">{feature}</span>
-            </div>
-        ))}
-      </div>
-
-      <Button 
-        className={cn(
-            "w-full h-12 rounded-xl font-bold group",
-            isHighlighted ? "bg-primary text-primary-foreground shadow-lg hover:shadow-primary/20" : ""
-        )} 
-        variant={isHighlighted ? "default" : "outline"} 
-        disabled={isLoading} 
-        onClick={onSelect}
-      >
-        {isLoading ? <Loader2 className="animate-spin" /> : (
-            <>
-                {buttonText}
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </>
-        )}
-      </Button>
-    </div>
-  );
-};
-
 const planDetails = {
-    mensal: { price: 99.90 },
-    anual: { price: 990.00 },
+    mensal: { price: 62.00 },
+    anual: { price: 859.00 },
 };
 
+/* ====================
+   BILLING TOGGLE
+   ==================== */
+function BillingToggle({ selected, onChange }: { selected: 'mensal' | 'anual', onChange: (v: 'mensal' | 'anual') => void }) {
+  return (
+    <div className="inline-flex items-center bg-muted/50 rounded-full p-1.5 shadow-inner relative border border-black/5">
+      <button
+        onClick={() => onChange('mensal')}
+        className={cn(
+          "px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-500 relative z-10",
+          selected === 'mensal'
+            ? "text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        Mensal
+      </button>
+      <button
+        onClick={() => onChange('anual')}
+        className={cn(
+          "px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-500 relative z-10 flex items-center gap-1.5",
+          selected === 'anual'
+            ? "text-primary-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        Anual
+        {selected !== 'anual' && (
+          <span className="absolute -top-3 -right-2 bg-[#E11D48] text-white text-[10px] px-2 py-0.5 rounded-full font-black animate-bounce shadow-lg">
+            -R$200
+          </span>
+        )}
+      </button>
+      
+      {/* Animated Background Slide */}
+      <div 
+        className={cn(
+          "absolute inset-y-1.5 rounded-full bg-primary shadow-lg transition-all duration-500 ease-out z-0",
+          selected === 'mensal' ? "left-1.5 w-[90px]" : "left-[100px] w-[100px]"
+        )}
+      />
+    </div>
+  )
+}
+
+/* ====================
+   FEATURES IA SECTION
+   ==================== */
+const iaFeatures = [
+  {
+    icon: Sparkles,
+    title: "Gestão de Pedidos Inteligente",
+    description: "Organize todos os pedidos do seu ateliê com status, prazos e alertas automáticos."
+  },
+  {
+    icon: BarChart3,
+    title: "Dashboard Financeiro Completo",
+    description: "Controle total do caixa, receitas e custos do seu ateliê em um só lugar."
+  },
+  {
+    icon: FileText,
+    title: "Relatórios e Fichas Técnicas",
+    description: "Gere fichas técnicas profissionais e relatórios detalhados de forma automática."
+  }
+];
+
+/* ====================
+   FEEDBACK SECTION
+   ==================== */
+const feedbackMessages = [
+  {
+    name: "Camila R.",
+    role: "Ateliê de Bolos",
+    message: "Depois que comecei a usar o AtelierFlow, nunca mais perdi um pedido. O sistema é lindo e prático!",
+    time: "10:45"
+  },
+  {
+    name: "Juliana M.",
+    role: "Confeiteira",
+    message: "Vocês são top demais! Nunca vi um sistema tão bonito para confeitaria. Amei!",
+    time: "11:21"
+  },
+  {
+    name: "Patricia S.",
+    role: "Ateliê Doce Arte",
+    message: "Estou explorando todas as funcionalidades e está incrível, lindo, intuitivo. Recomendo!",
+    time: "14:32"
+  }
+];
+
+/* ====================
+   PLAN SELECTION (REDESIGNED)
+   ==================== */
 function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
   const { user } = useUser();
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [billingCycle, setBillingCycle] = useState<'mensal' | 'anual'>('mensal');
   const [isLoading, setIsLoading] = useState(false);
   const [isTrialLoading, setIsTrialLoading] = useState(false);
   const { toast } = useToast();
@@ -290,19 +290,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
     }
   };
 
-  const handleWhatsAppSpecialClick = () => {
-    const phoneNumber = "5511921494313";
-    const message = "Olá! Tenho interesse no Combo Automação do AtelierFlow que inclui a impressora térmica.";
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
   const createPreference = async (plan: Plan) => {
-    if (plan === 'especial') {
-        handleWhatsAppSpecialClick();
-        return;
-    }
-
     trackFbqEvent('InitiateCheckout', {
         content_name: plan,
         currency: 'BRL',
@@ -314,48 +302,34 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
         return;
     }
     setIsLoading(true);
-    setSelectedPlan(plan);
     try {
         const isDevelopment = process.env.NODE_ENV === 'development';
-        const userEmail = isDevelopment ? 'test_user_12345678@testuser.com' : user.email;
-
-        if (plan === 'mensal') {
-            const response = await fetch('/api/stripe/create-checkout-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MENSAL, userId: user.uid, userEmail: user.email }),
-            });
-            const data = await response.json();
-            if (response.ok && data.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error(data.error || 'Erro ao criar sessão de checkout.');
-            }
+        
+        const response = await fetch('/api/stripe/create-checkout-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                priceId: plan === 'mensal' ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MENSAL : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANUAL, 
+                userId: user.uid, 
+                userEmail: user.email 
+            }),
+        });
+        const data = await response.json();
+        if (response.ok && data.url) {
+            window.location.href = data.url;
         } else {
-            const response = await fetch('/api/mercadopago', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ plan: plan, userId: user.uid, userEmail: userEmail }),
-            });
-            const data = await response.json();
-            if (response.ok && data.init_point) {
-                window.location.href = data.init_point;
-            } else {
-                throw new Error(data.error || 'Erro ao criar preferência de pagamento.');
-            }
+            throw new Error(data.error || 'Erro ao criar sessão de checkout.');
         }
     } catch (error: any) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erro de Pagamento', description: error.message || 'Não foi possível iniciar o pagamento. Tente novamente.' });
-        setSelectedPlan(null);
         setIsLoading(false);
     }
   };
 
+  // Free trial card (before trial started)
   if (!profile?.trialStarted) {
       return (
         <Card className="border-primary bg-primary/5 shadow-2xl max-w-md mx-auto rounded-3xl p-4 overflow-hidden relative">
@@ -398,65 +372,156 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
       );
   }
 
+  // ==============================
+  // MAIN: POST-TRIAL PLAN SELECTION
+  // ==============================
+  const features = [
+    "Gestão de Pedidos Completa",
+    "Cadastro de Clientes",
+    "Dashboard Financeiro",
+    "Suporte via WhatsApp",
+    "Relatórios Profissionais",
+    "PDFs sem marca d'água",
+  ];
+
   return (
-    <div className="space-y-12">
-        <div className="text-center space-y-4 px-4">
-            <h2 className="text-4xl md:text-5xl font-black font-headline tracking-tight">Escolha o seu plano</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto text-sm md:text-base">Seu período de teste terminou. Selecione o plano que melhor se adapta ao momento do seu ateliê.</p>
-        </div>
+    <div>
+      {/* === TWO COLUMN LAYOUT === */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 max-w-6xl mx-auto px-4">
+        
+        {/* ===== LEFT: PRICING CARD ===== */}
+        <div className="space-y-4">
+          {/* Toggle */}
+          <BillingToggle selected={billingCycle} onChange={setBillingCycle} />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8 items-stretch max-w-6xl mx-auto px-4 md:px-8">
-            <PlanCard 
-                title="Plano Mensal"
-                price="R$99,90"
-                period="mês"
-                subtitle="Flexibilidade total para quem está começando agora."
-                features={[
-                    "Gestão de Pedidos",
-                    "Cadastro de Clientes",
-                    "Dashboard Financeiro",
-                    "Suporte via WhatsApp",
-                    "Relatórios Básicos"
-                ]}
-                onSelect={() => createPreference('mensal')}
-                isLoading={isLoading && selectedPlan === 'mensal'}
-            />
+          {/* Plan Name */}
+          <h2 className="text-2xl md:text-3xl font-black font-headline tracking-tight text-foreground">
+            AtelierFlow Pro
+          </h2>
+
+          {/* Price */}
+          <div className="relative">
+            {billingCycle === 'mensal' ? (
+              <>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-muted-foreground text-base">R$</span>
+                  <span className="text-5xl md:text-6xl font-black tracking-tighter text-foreground">62</span>
+                  <span className="text-5xl md:text-6xl font-black tracking-tighter text-foreground">,00</span>
+                  <span className="text-muted-foreground font-medium text-sm ml-1">/mês</span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Por 3 meses, depois R$97,00/mês
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-muted-foreground text-base">R$</span>
+                      <span className="text-5xl md:text-6xl font-black tracking-tighter text-foreground">859</span>
+                      <span className="text-5xl md:text-6xl font-black tracking-tighter text-foreground">,00</span>
+                      <span className="text-muted-foreground font-medium text-sm ml-1">/ano</span>
+                    </div>
+                    <span className="bg-primary/10 text-primary text-[11px] px-2.5 py-1 rounded-full font-bold border border-primary/20">
+                      ECONOMIZE R$ 200
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Pagamento único de <span className="line-through opacity-50">R$1.059,00</span> <span className="font-bold text-foreground">R$859,00</span>
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Features — 2 columns */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
+            {features.map((feature, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="bg-primary/15 p-0.5 rounded-full shrink-0">
+                  <Check className="h-3.5 w-3.5 text-primary stroke-[3px]" />
+                </div>
+                <span className="text-sm text-foreground font-medium">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Button */}
+          <Button 
+            size="lg"
+            className="w-full max-w-sm text-base py-7 rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] group relative overflow-hidden bg-primary hover:bg-primary/90"
+            onClick={() => createPreference(billingCycle)}
+            disabled={isLoading}
+          >
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
             
-            <PlanCard 
-                title="Plano Anual"
-                price="12x R$82,50"
-                period="ano"
-                subtitle="O favorito dos ateliês profissionais que buscam economia."
-                benefit="2 MESES DE DESCONTO"
-                isHighlighted
-                features={[
-                    "Tudo do Plano Mensal",
-                    "Prioridade no Suporte",
-                    "R$ 990,00 à vista (Opção PIX)",
-                    "12x Sem Juros no Cartão"
-                ]}
-                onSelect={() => createPreference('anual')}
-                isLoading={isLoading && selectedPlan === 'anual'}
-            />
-
-            <PlanCard 
-                title="Combo Automação"
-                price="Sob Consulta"
-                period="especial"
-                subtitle="Hardware + Software. A solução definitiva para seu balcão."
-                buttonText="Falar com Consultor"
-                icon={Printer}
-                features={[
-                    "Tudo do Plano Anual",
-                    "Impressora Térmica 58mm",
-                    "Configuração Remota",
-                    "Treinamento VIP",
-                    "Garantia Estendida"
-                ]}
-                onSelect={() => createPreference('especial')}
-                isLoading={false}
-            />
+            {isLoading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <>
+                ASSINAR ATELIERFLOW
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
+              </>
+            )}
+          </Button>
+          <style jsx>{`
+            @keyframes shimmer {
+              100% { transform: translateX(100%); }
+            }
+          `}</style>
         </div>
+
+        {/* ===== RIGHT: FEEDBACK + IA ===== */}
+        <div className="space-y-4">
+          {/* Feedback Section */}
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+              Feedback de Usuários
+            </h3>
+            <div className="space-y-2.5">
+              {feedbackMessages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "rounded-xl px-3 py-2.5 max-w-[85%]",
+                    i % 2 === 0
+                      ? "bg-primary/5 border border-primary/10 mr-auto"
+                      : "bg-muted ml-auto"
+                  )}
+                >
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[11px] font-bold text-primary">{msg.name}</span>
+                    <span className="text-[9px] text-muted-foreground">· {msg.role}</span>
+                  </div>
+                  <p className="text-[13px] text-foreground/80 leading-snug">{msg.message}</p>
+                  <span className="text-[9px] text-muted-foreground float-right mt-0.5">{msg.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* IA Features Section */}
+          <div className="rounded-2xl border bg-card p-5 shadow-sm">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+              AtelierFlow — Recursos
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              {iaFeatures.map((feature, i) => (
+                <div key={i} className="text-center space-y-1.5">
+                  <div className="bg-primary/10 w-10 h-10 rounded-xl flex items-center justify-center mx-auto">
+                    <feature.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <h4 className="text-xs font-bold text-foreground leading-tight">{feature.title}</h4>
+                  <p className="text-[10px] text-muted-foreground leading-snug">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   )
 }
@@ -465,6 +530,7 @@ export default function AtivacaoPage() {
   const { auth } = useFirebase();
   const { user } = useUser();
   const { data: profile, loading: profileLoading } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
+  const [activeTab, setActiveTab] = useState('plan');
 
   const handleWhatsAppClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -483,69 +549,85 @@ export default function AtivacaoPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background/50">
-        <header className="w-full p-6 md:p-8 shrink-0">
+    <div className="flex min-h-screen flex-col bg-[#F5F5F3] relative overflow-hidden">
+        {/* === DECORATIVE GRADIENTS/GLOWS === */}
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-secondary/10 rounded-full blur-[100px] pointer-events-none" />
+        
+        {/* Subtle mesh background pattern */}
+        <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
+
+        <header className="w-full px-6 py-3 md:px-8 md:py-4 shrink-0 relative z-10">
             <div className="flex items-center gap-2 max-w-6xl mx-auto">
-                <Logo className="h-8 w-8 text-primary" />
-                <span className="font-headline font-bold text-xl">AtelierFlow</span>
+                <Logo className="h-7 w-7 text-primary" />
+                <span className="font-headline font-bold text-lg text-foreground">AtelierFlow</span>
             </div>
         </header>
         
-        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-            <div className="w-full max-w-6xl space-y-12 pb-12">
+        <main className="flex-1 flex flex-col items-center justify-center px-4 py-2 md:px-8 md:py-4 relative z-10">
+            <div className="w-full max-w-6xl space-y-6">
                 {!profile?.phone ? (
                     <div className="max-w-md mx-auto w-full">
                         <PhoneCollectionStep user={user} />
                     </div>
                 ) : (
-                    <Tabs defaultValue="plan" className="w-full">
-                        <div className="flex justify-center mb-8">
-                            <TabsList className="bg-muted p-1 rounded-xl">
-                                <TabsTrigger value="plan" className="rounded-lg px-8">
-                                    {!profile.trialStarted ? "Ativar Teste" : "Planos"}
-                                </TabsTrigger>
-                                <TabsTrigger value="code" className="rounded-lg px-8">Usar Código</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsContent value="plan" className="mt-0 outline-none">
                             <PlanSelectionTab profile={profile} />
                         </TabsContent>
                         
                         <TabsContent value="code" className="mt-0 outline-none">
-                            <div className="max-w-md mx-auto">
-                                <Card className="rounded-3xl shadow-xl p-4">
+                            <div className="max-w-md mx-auto space-y-4">
+                                <button
+                                    onClick={() => setActiveTab('plan')}
+                                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none p-0"
+                                >
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Voltar aos Planos
+                                </button>
+                                <Card className="rounded-3xl shadow-xl p-4 border-white/20 bg-white/60 backdrop-blur-md">
                                     <CodeActivationTab />
                                 </Card>
                             </div>
                         </TabsContent>
+
+                        <div className="w-full flex items-center justify-center gap-4 pt-2">
+                            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5" onClick={handleWhatsAppClick}>
+                                <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+                                Chamar no WhatsApp
+                            </Button>
+                            <span className="text-muted-foreground/30">|</span>
+                            {activeTab === 'plan' ? (
+                                <button
+                                    onClick={() => setActiveTab('code')}
+                                    className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none px-0 py-0"
+                                >
+                                    <Key className="mr-1.5 h-3.5 w-3.5" />
+                                    Usar Código
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => setActiveTab('plan')}
+                                    className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none px-0 py-0"
+                                >
+                                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+                                    Ver Planos
+                                </button>
+                            )}
+                            <span className="text-muted-foreground/30">|</span>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                onClick={() => auth.signOut()}
+                            >
+                                <LogOut className="mr-1.5 h-3.5 w-3.5" />
+                                Sair ({user?.email})
+                            </Button>
+                        </div>
                     </Tabs>
                 )}
-
-                <div className="w-full text-center space-y-6">
-                    <div className="max-w-xs mx-auto">
-                        <Separator className="bg-muted-foreground/20" />
-                    </div>
-                    <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                            Alguma dúvida antes de assinar?
-                        </p>
-                        <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5" onClick={handleWhatsAppClick}>
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Chamar no WhatsApp
-                        </Button>
-                    </div>
-                    
-                    <Button
-                        variant="link"
-                        size="sm"
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => auth.signOut()}
-                    >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Sair da conta ({user?.email})
-                    </Button>
-                </div>
             </div>
         </main>
     </div>
