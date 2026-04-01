@@ -592,16 +592,16 @@ export default function AtivacaoPage() {
                             </div>
                         </TabsContent>
 
-                        <div className="w-full flex items-center justify-center gap-4 pt-2">
-                            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5" onClick={handleWhatsAppClick}>
+                        <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-4 sm:pt-2">
+                            <Button variant="ghost" size="sm" className="text-primary font-bold hover:bg-primary/5 w-full sm:w-auto" onClick={handleWhatsAppClick}>
                                 <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
                                 Chamar no WhatsApp
                             </Button>
-                            <span className="text-muted-foreground/30">|</span>
+                            <span className="hidden sm:inline text-muted-foreground/30">|</span>
                             {activeTab === 'plan' ? (
                                 <button
                                     onClick={() => setActiveTab('code')}
-                                    className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none px-0 py-0"
+                                    className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none px-0 py-2 sm:py-0 w-full sm:w-auto"
                                 >
                                     <Key className="mr-1.5 h-3.5 w-3.5" />
                                     Usar Código
@@ -609,17 +609,17 @@ export default function AtivacaoPage() {
                             ) : (
                                 <button
                                     onClick={() => setActiveTab('plan')}
-                                    className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none px-0 py-0"
+                                    className="flex items-center justify-center text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer bg-transparent border-none px-0 py-2 sm:py-0 w-full sm:w-auto"
                                 >
                                     <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
                                     Ver Planos
                                 </button>
                             )}
-                            <span className="text-muted-foreground/30">|</span>
+                            <span className="hidden sm:inline text-muted-foreground/30">|</span>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-muted-foreground hover:text-foreground transition-colors"
+                                className="text-muted-foreground hover:text-foreground transition-colors w-full sm:w-auto"
                                 onClick={() => auth.signOut()}
                             >
                                 <LogOut className="mr-1.5 h-3.5 w-3.5" />
