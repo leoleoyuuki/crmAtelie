@@ -95,7 +95,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
     if (profile?.status !== 'active' && !isActivationPage && !isAdminPage && !isPublicButLoggedIn) {
       setShouldRedirect('/ativacao');
-    } else if (profile?.status === 'active' && isActivationPage) {
+    } else if (profile?.status === 'active' && profile?.stripeCustomerId && isActivationPage) {
       setShouldRedirect('/');
     } else {
       setShouldRedirect(null);

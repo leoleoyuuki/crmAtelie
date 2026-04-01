@@ -39,7 +39,8 @@ import {
     Plus,
     Calculator,
     BookCopy,
-    Settings
+    Settings,
+    ArrowRight
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -66,6 +67,7 @@ import {
 import { OnboardingModal } from "./dashboard/onboarding-modal";
 import { useToast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { SubscriptionDrawer } from "./subscription-drawer";
 import { Input } from "./ui/input";
 import { updateMonthlyGoal } from "@/lib/data";
 import type { UserProfile, UserSummary } from "@/lib/types";
@@ -327,6 +329,15 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                         <p className="text-[10px] text-muted-foreground">
                                             Válido até <span className="font-bold text-foreground">{formattedExpiryDate}</span>
                                         </p>
+                                        
+                                        {profile?.trialStarted && !profile?.stripeCustomerId && (
+                                            <Link href="/ativacao" className="block mt-2">
+                                                <Button size="sm" className="w-full text-[10px] font-bold h-9 rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground">
+                                                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                                                    Assinar Sistema
+                                                </Button>
+                                            </Link>
+                                        )}
                                     </div>
                                 )}
 
@@ -721,6 +732,8 @@ export default function AppShell({ children, profile }: { children: React.ReactN
               )}
           </SidebarContent>
           <SidebarFooter className="p-2">
+
+
              <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 mx-2 mb-4 group-data-[collapsible=icon]:hidden transition-all hover:bg-primary/10">
                 <div className="bg-primary/10 w-8 h-8 rounded-lg flex items-center justify-center mb-3">
                     <MessageSquare className="h-4 w-4 text-primary" />
@@ -762,6 +775,9 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                 {children}
             </div>
             <BottomNavigation />
+            
+            {/* Botão Flutuante Assinar */}
+            <SubscriptionDrawer profile={profile} />
         </main>
         
         <OnboardingModal open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen} />
