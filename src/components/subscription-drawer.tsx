@@ -98,6 +98,11 @@ export function SubscriptionDrawer({ profile }: { profile: UserProfile | null })
   if (!profile?.trialStarted || profile?.stripeCustomerId || !profile?.expiresAt || !isValid(profile.expiresAt)) {
       return null;
   }
+  
+  // Se a expiração for maior que 15 dias, não é mais trial (ex: admin com 1 ano ativo manual)
+  if (differenceInDays(profile.expiresAt, new Date()) > 15) {
+      return null;
+  }
 
   const daysLeft = Math.max(0, differenceInDays(profile.expiresAt, new Date()));
 

@@ -252,6 +252,13 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
         return format(profile.expiresAt, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     }, [profile?.expiresAt]);
 
+    const isTrialAccount = useMemo(() => {
+        if (!profile?.trialStarted || profile?.stripeCustomerId || !profile?.expiresAt || !isValid(profile.expiresAt)) {
+            return false;
+        }
+        return differenceInDays(profile.expiresAt, new Date()) <= 15;
+    }, [profile]);
+
     const handleManageSubscription = async () => {
         if (!user || isPortalLoading) return;
         
@@ -302,7 +309,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                     <Logo className="h-3.5 w-3.5 text-primary" />
                                 </div>
                                 <span className="text-xs font-bold truncate max-w-[120px]">{user.displayName?.split(' ')[0]}</span>
-                                <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && profile?.status !== 'active'} />
+                                <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={isTrialAccount} />
                                 <ChevronDown className="h-3 w-3 text-muted-foreground group-hover:text-foreground transition-colors" />
                             </div>
                         </PopoverTrigger>
@@ -312,9 +319,9 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Plano Atual</p>
                                     <div className="flex items-center justify-between">
                                         <h4 className="font-bold text-sm">
-                                            {profile?.status === 'active' ? (profile?.trialStarted ? 'Assinatura Ativa (Trial)' : 'Assinatura Ativa') : 'Assinatura Inativa'}
+                                            {profile?.status === 'active' ? (isTrialAccount ? 'Assinatura Ativa (Trial)' : 'Assinatura Ativa') : 'Assinatura Inativa'}
                                         </h4>
-                                        <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={profile?.trialStarted && profile?.status !== 'active'} />
+                                        <SubscriptionBadge expiresAt={profile?.expiresAt} isTrial={isTrialAccount} />
                                     </div>
                                 </div>
 
