@@ -19,7 +19,9 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      allow_promotion_codes: true,
+      discounts: [{
+        promotion_code: 'promo_1THEQfQ2pW7qaWNptEQ3opgj',
+      }],
       subscription_data: {
         metadata: {
           userId: userId,
