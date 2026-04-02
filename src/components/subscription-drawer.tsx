@@ -64,7 +64,7 @@ function BillingToggle({ selected, onChange }: { selected: 'mensal' | 'anual', o
       >
         Anual
         {selected !== 'anual' && (
-          <span className="absolute -top-2 -right-2 bg-[#E11D48] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black animate-bounce shadow-lg">
+          <span className="absolute -top-2 -right-2 bg-[#10b981] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black animate-bounce shadow-lg">
             -R$200
           </span>
         )}
@@ -215,7 +215,7 @@ export function SubscriptionDrawer({ profile }: { profile: UserProfile | null })
                     ) : (
                       <div className="flex flex-col items-center lg:items-start animate-in fade-in slide-in-from-bottom-2">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="bg-red-500/10 text-red-600 text-xs px-2.5 py-1 rounded-full font-black tracking-widest uppercase border border-red-500/20 shadow-sm flex items-center gap-1">
+                          <span className="bg-emerald-500/10 text-emerald-600 text-xs px-2.5 py-1 rounded-full font-black tracking-widest uppercase border border-emerald-500/20 shadow-sm flex items-center gap-1">
                             <Sparkles className="h-3 w-3" /> Economia de R$200
                           </span>
                         </div>
