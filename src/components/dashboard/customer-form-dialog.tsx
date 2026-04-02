@@ -7,6 +7,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Check, PhoneOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +34,9 @@ import { Customer } from "@/lib/types";
 
 const customerFormSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
-  phone: z.string().min(10, "Informe o DDD e o número completo."),
+  phone: z.string().refine(val => !val || val.length >= 10, {
+    message: "Informe o DDD e o número completo.",
+  }),
   email: z.string().email("E-mail inválido.").optional().or(z.literal('')),
 });
 
@@ -56,6 +60,7 @@ export function CustomerFormDialog({
   onCustomerUpdated,
 }: CustomerFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
+  const [noPhone, setNoPhone] = React.useState(false);
   const { toast } = useToast();
   const isEditing = !!customer;
 
@@ -81,11 +86,20 @@ export function CustomerFormDialog({
                 phone: customer.phone,
                 email: customer.email || "",
             });
+            setNoPhone(!customer.phone || customer.phone === "");
         } else {
             form.reset(defaultValues);
+            setNoPhone(false);
         }
     }
   }, [customer, form, isEditing, isOpen]);
+
+  useEffect(() => {
+    if (noPhone) {
+      form.setValue("phone", "");
+      form.clearErrors("phone");
+    }
+  }, [noPhone, form]);
 
   const onSubmit = async (data: CustomerFormValues) => {
     try {
@@ -143,9 +157,29 @@ export function CustomerFormDialog({
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>WhatsApp / Telefone</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>WhatsApp / Telefone</FormLabel>
+                    <Button
+                      type="button"
+                      variant={noPhone ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => setNoPhone(!noPhone)}
+                      className={cn(
+                        "h-7 px-2 text-[10px] uppercase font-bold transition-all gap-1.5",
+                        noPhone ? "bg-muted text-muted-foreground" : "text-primary border-primary/20 hover:bg-primary/5"
+                      )}
+                    >
+                      {noPhone ? <Check className="h-3 w-3" /> : <PhoneOff className="h-3 w-3" />}
+                      Sem WhatsApp
+                    </Button>
+                  </div>
                   <FormControl>
-                    <Input placeholder="ex: (11) 99999-9999" {...field} className="h-12 text-base" />
+                    <Input 
+                        placeholder={noPhone ? "Cliente não possui telefone" : "ex: (11) 99999-9999"} 
+                        {...field} 
+                        className="h-12 text-base" 
+                        disabled={noPhone}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -33,9 +33,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Order, OrderStatus, Customer, PriceTableItem } from "@/lib/types";
-import { addOrder, updateOrder, getCustomers, getPriceTableItems } from "@/lib/data";
+import { addOrder, updateOrder, getCustomers, getPriceTableItems, addCustomer } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, UserPlus, Trash2 } from "lucide-react";
+import { PlusCircle, UserPlus, Trash2, Search } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { Separator } from "../ui/separator";
 import { DatePickerWithDialog } from "../ui/date-picker";
@@ -59,7 +59,7 @@ type OrderFormValues = z.infer<typeof orderFormSchema>;
 
 const statuses: OrderStatus[] = ['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído'];
 
-function OrderItemForm({ index, control, remove, priceTableItems, setValue }: any) {
+function OrderItemForm({ index, control, remove, priceTableItems, setValue, onTriggerFetchPriceItems, isPriceItemsCached, isLoadingPriceItems }: any) {
     const [serviceSearch, setServiceSearch] = useState("");
     const [debouncedServiceSearch, setDebouncedServiceSearch] = useState("");
     const [isServiceSelectOpen, setIsServiceSelectOpen] = useState(false);
@@ -71,9 +71,25 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
         return () => clearTimeout(handler);
     }, [serviceSearch]);
 
-    const filteredServices = priceTableItems.filter((s: PriceTableItem) =>
-        s.serviceName.toLowerCase().includes(debouncedServiceSearch.toLowerCase())
-    );
+    // Trigger lazy fetch when 3+ chars and not yet cached
+    useEffect(() => {
+        if (debouncedServiceSearch.length >= 3 && !isPriceItemsCached) {
+            onTriggerFetchPriceItems();
+        }
+        if (debouncedServiceSearch.length >= 3) {
+            setIsServiceSelectOpen(true);
+        }
+    }, [debouncedServiceSearch, isPriceItemsCached, onTriggerFetchPriceItems]);
+
+    // Accent-insensitive normalization
+    const normalize = (str: string) =>
+        str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+    const filteredServices = debouncedServiceSearch.length >= 3
+        ? priceTableItems.filter((s: PriceTableItem) =>
+            normalize(s.serviceName).includes(normalize(debouncedServiceSearch))
+          )
+        : [];
 
     const handlePriceItemSelect = (itemId: string) => {
         if (!itemId) return;
@@ -84,7 +100,6 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
             setValue(`items.${index}.value`, selectedItem.price);
             setValue(`items.${index}.quantity`, 1);
             
-            // Update search input text and close menu
             setServiceSearch(selectedItem.serviceName);
             setIsServiceSelectOpen(false);
         }
@@ -103,14 +118,9 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
                 <FormLabel className="text-xs">Buscar na Tabela de Preços</FormLabel>
                 <div className="flex gap-2">
                     <Input
-                        placeholder="Nome do serviço..."
+                        placeholder="Digite 3+ letras..."
                         value={serviceSearch}
-                        onChange={(e) => {
-                            setServiceSearch(e.target.value);
-                            if (e.target.value.trim() !== "") {
-                                setIsServiceSelectOpen(true);
-                            }
-                        }}
+                        onChange={(e) => setServiceSearch(e.target.value)}
                         className="h-9"
                     />
                     <Select
@@ -119,17 +129,25 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue }: an
                         onOpenChange={setIsServiceSelectOpen}
                     >
                         <SelectTrigger className="h-9 w-12 p-0 flex justify-center">
-                            <PlusCircle className="h-4 w-4 text-muted-foreground" />
+                            <Search className="h-4 w-4 text-muted-foreground" />
                         </SelectTrigger>
                         <SelectContent align="end">
-                            {filteredServices.length > 0 ? (
-                                filteredServices.map((s: PriceTableItem) => (
-                                    <SelectItem key={s.id} value={s.id}>
-                                        {s.serviceName} - R${s.price.toFixed(2)}
-                                    </SelectItem>
-                                ))
-                            ) : (
-                                <div className="p-4 text-sm text-muted-foreground text-center">Nenhum serviço encontrado.</div>
+                            {isLoadingPriceItems && (
+                                <div className="p-4 text-sm text-muted-foreground text-center italic">Buscando serviços...</div>
+                            )}
+
+                            {!isLoadingPriceItems && debouncedServiceSearch.length < 3 && (
+                                <div className="p-4 text-sm text-muted-foreground text-center italic">Digite pelo menos 3 letras para buscar</div>
+                            )}
+
+                            {!isLoadingPriceItems && debouncedServiceSearch.length >= 3 && filteredServices.length > 0 && filteredServices.map((s: PriceTableItem) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                    {s.serviceName} - R${s.price.toFixed(2)}
+                                </SelectItem>
+                            ))}
+
+                            {!isLoadingPriceItems && debouncedServiceSearch.length >= 3 && filteredServices.length === 0 && (
+                                <div className="p-4 text-sm text-muted-foreground text-center italic">Nenhum serviço encontrado.</div>
                             )}
                         </SelectContent>
                     </Select>
@@ -222,13 +240,18 @@ export function OrderFormDialog({
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customersCached, setCustomersCached] = useState(false);
   const [priceTableItems, setPriceTableItems] = useState<PriceTableItem[]>([]);
+  const [priceTableCached, setPriceTableCached] = useState(false);
+  const [isLoadingPriceItems, setIsLoadingPriceItems] = useState(false);
   
   const [customerSearch, setCustomerSearch] = useState("");
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [isCustomerSelectOpen, setIsCustomerSelectOpen] = useState(false);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
 
   const isEditing = !!order;
   const { toast } = useToast();
@@ -237,38 +260,69 @@ export function OrderFormDialog({
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [fetchedCustomers, fetchedPriceItems] = await Promise.all([
-          getCustomers(),
-          getPriceTableItems(),
-        ]);
-        setCustomers(fetchedCustomers);
-        setPriceTableItems(fetchedPriceItems);
-      } catch (error) {
-        console.error("Failed to fetch data", error);
-      }
-    };
-
     if (isOpen) {
-      fetchData();
+      // Reset all caches when dialog reopens
+      setCustomersCached(false);
+      setCustomers([]);
+      setPriceTableCached(false);
+      setPriceTableItems([]);
     }
   }, [isOpen]);
+
+  const handleFetchPriceItems = React.useCallback(async () => {
+    if (priceTableCached || isLoadingPriceItems) return;
+    setIsLoadingPriceItems(true);
+    try {
+      const fetched = await getPriceTableItems();
+      setPriceTableItems(fetched);
+      setPriceTableCached(true);
+    } catch (error) {
+      console.error("Failed to fetch price items", error);
+    } finally {
+      setIsLoadingPriceItems(false);
+    }
+  }, [priceTableCached, isLoadingPriceItems]);
 
    useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedCustomerSearch(customerSearch);
-      if (customerSearch) {
-        setIsCustomerSelectOpen(true);
-      }
     }, 500);
     return () => clearTimeout(handler);
   }, [customerSearch]);
 
-  const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(debouncedCustomerSearch.toLowerCase()) ||
-    c.phone.includes(debouncedCustomerSearch)
-  );
+  // Fetch customers from Firestore only once, after 3+ chars typed
+  useEffect(() => {
+    if (debouncedCustomerSearch.length >= 3 && !customersCached) {
+      const fetchCustomers = async () => {
+        setIsLoadingCustomers(true);
+        try {
+          const fetched = await getCustomers();
+          setCustomers(fetched);
+          setCustomersCached(true);
+        } catch (error) {
+          console.error("Failed to fetch customers", error);
+        } finally {
+          setIsLoadingCustomers(false);
+        }
+      };
+      fetchCustomers();
+    }
+    if (debouncedCustomerSearch.length >= 3) {
+      setIsCustomerSelectOpen(true);
+    }
+  }, [debouncedCustomerSearch, customersCached]);
+
+  // Accent-insensitive normalization helper
+  const normalize = (str: string) =>
+    str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  const filteredCustomers = debouncedCustomerSearch.length >= 3
+    ? customers.filter(c => {
+        const search = normalize(debouncedCustomerSearch);
+        return normalize(c.name).includes(search) ||
+               (c.phone && c.phone.includes(debouncedCustomerSearch));
+      })
+    : [];
   
   const defaultValues: Partial<OrderFormValues> = {
     customerId: '',
@@ -346,16 +400,37 @@ export function OrderFormDialog({
     }
   };
 
-  const handleCustomerCreated = (newCustomer: Customer) => {
+  const handleCustomerCreated = async (newCustomer: Customer) => {
     setCustomers(prev => [newCustomer, ...prev]);
-    form.setValue('customerId', newCustomer.id);
+    form.setValue('customerId', newCustomer.id, { shouldValidate: true, shouldDirty: true });
     setIsCustomerSelectOpen(true);
-    onOrderCreated?.();
   };
 
   const handleCustomerUpdated = (updatedCustomer: Customer) => {
     setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
     form.setValue('customerId', updatedCustomer.id);
+  };
+
+  const handleQuickCreateCustomer = async () => {
+    if (!debouncedCustomerSearch.trim() || isCreatingCustomer) return;
+    
+    setIsCreatingCustomer(true);
+    try {
+        const newCustomer = await addCustomer({ 
+            name: debouncedCustomerSearch.trim(), 
+            phone: "", 
+            email: "" 
+        });
+        setCustomers(prev => [newCustomer, ...prev]);
+        form.setValue('customerId', newCustomer.id, { shouldValidate: true, shouldDirty: true });
+        toast({ title: "Cliente criado!", description: `${newCustomer.name} foi selecionada.` });
+        setCustomerSearch(""); // Clear search after creation
+        setIsCustomerSelectOpen(false); // Close select
+    } catch (error) {
+        toast({ variant: "destructive", title: "Erro ao criar cliente", description: "Tente novamente." });
+    } finally {
+        setIsCreatingCustomer(false);
+    }
   };
 
    const dialogContent = (
@@ -379,7 +454,7 @@ export function OrderFormDialog({
                         <div className="flex items-start gap-2">
                             <div className="flex-1 space-y-2">
                                 <Input
-                                    placeholder="Buscar por nome ou telefone..."
+                                    placeholder="Digite 3+ letras para buscar..."
                                     value={customerSearch}
                                     onChange={(e) => setCustomerSearch(e.target.value)}
                                     className="h-10"
@@ -401,16 +476,44 @@ export function OrderFormDialog({
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                {filteredCustomers.length > 0 ? (
-                                                    filteredCustomers.map(c => (
-                                                        <SelectItem key={c.id} value={c.id}>
-                                                            {c.name} ({c.phone})
-                                                        </SelectItem>
-                                                    ))
-                                                ) : (
+                                                {isLoadingCustomers && (
                                                     <div className="p-4 text-sm text-muted-foreground text-center italic">
+                                                        Buscando clientes...
+                                                    </div>
+                                                )}
+
+                                                {!isLoadingCustomers && debouncedCustomerSearch.length < 3 && (
+                                                    <div className="p-4 text-sm text-muted-foreground text-center italic">
+                                                        Digite pelo menos 3 letras para buscar
+                                                    </div>
+                                                )}
+
+                                                {!isLoadingCustomers && debouncedCustomerSearch.length >= 3 && filteredCustomers.length > 0 && filteredCustomers.map(c => (
+                                                    <SelectItem key={c.id} value={c.id}>
+                                                        {c.name} {c.phone ? `(${c.phone})` : ''}
+                                                    </SelectItem>
+                                                ))}
+
+                                                {!isLoadingCustomers && debouncedCustomerSearch.length >= 3 && filteredCustomers.length === 0 && (
+                                                    <div className="p-3 text-sm text-muted-foreground text-center italic">
                                                         Nenhum cliente encontrado.
                                                     </div>
+                                                )}
+                                                
+                                                {!isLoadingCustomers && debouncedCustomerSearch.trim().length >= 3 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        className="w-full justify-start font-bold text-primary hover:text-primary hover:bg-primary/10 gap-2 p-2 h-auto"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleQuickCreateCustomer();
+                                                        }}
+                                                        disabled={isCreatingCustomer}
+                                                    >
+                                                        <PlusCircle className="h-4 w-4" />
+                                                        {isCreatingCustomer ? "Criando..." : `Criar novo cliente "${debouncedCustomerSearch}"`}
+                                                    </Button>
                                                 )}
                                             </SelectContent>
                                         </Select>
@@ -443,6 +546,9 @@ export function OrderFormDialog({
                                     remove={remove}
                                     priceTableItems={priceTableItems}
                                     setValue={setValue}
+                                    onTriggerFetchPriceItems={handleFetchPriceItems}
+                                    isPriceItemsCached={priceTableCached}
+                                    isLoadingPriceItems={isLoadingPriceItems}
                                 />
                             ))}
                         </div>
