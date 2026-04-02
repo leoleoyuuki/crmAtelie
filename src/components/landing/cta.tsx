@@ -50,7 +50,7 @@ export function Cta() {
           </Button>
           
           <p className="mt-8 text-sm text-muted-foreground font-bold uppercase tracking-wider opacity-60">
-            Sem cartão de crédito • Cancelamento fácil • Suporte VIP
+            Cartão ou Pix (via revendedor) • Cancelamento fácil • Suporte VIP
           </p>
         </motion.div>
       </div>

@@ -265,7 +265,7 @@ const feedbackMessages = [
 /* ====================
    PLAN SELECTION (REDESIGNED)
    ==================== */
-function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
+function PlanSelectionTab({ profile, onWhatsAppClick }: { profile: UserProfile | null, onWhatsAppClick: (e: React.MouseEvent) => void }) {
   const { user } = useUser();
   const [billingCycle, setBillingCycle] = useState<'mensal' | 'anual'>('mensal');
   const [isLoading, setIsLoading] = useState(false);
@@ -364,7 +364,7 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
                         <Check className="h-3 w-3" /> Acesso a todos os recursos
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Check className="h-3 w-3" /> Sem cartão de crédito
+                        <Check className="h-3 w-3" /> Cartão ou Pix (via revendedor)
                     </div>
                 </div>
             </CardContent>
@@ -456,7 +456,6 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
           >
             {/* Shimmer Effect */}
             <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
-            
             {isLoading ? (
               <Loader2 className="animate-spin" />
             ) : (
@@ -466,6 +465,17 @@ function PlanSelectionTab({ profile }: { profile: UserProfile | null }) {
               </>
             )}
           </Button>
+          
+          <div className="flex justify-center">
+            <button 
+              onClick={onWhatsAppClick}
+              className="text-sm font-bold text-primary hover:underline flex items-center gap-1.5 opacity-80 hover:opacity-100 transition-all border-none bg-transparent cursor-pointer"
+            >
+              <Sparkles className="h-4 w-4" />
+              Não tem cartão? Assine via Pix com um revendedor
+            </button>
+          </div>
+
           <style jsx>{`
             @keyframes shimmer {
               100% { transform: translateX(100%); }
@@ -574,7 +584,7 @@ export default function AtivacaoPage() {
                 ) : (
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsContent value="plan" className="mt-0 outline-none">
-                            <PlanSelectionTab profile={profile} />
+                            <PlanSelectionTab profile={profile} onWhatsAppClick={handleWhatsAppClick} />
                         </TabsContent>
                         
                         <TabsContent value="code" className="mt-0 outline-none">

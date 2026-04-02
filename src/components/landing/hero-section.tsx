@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
 
 const trustPoints = [
-  'Sem cartão de crédito',
+  'Cartão ou Pix (via revendedor)',
   '7 dias grátis',
   'Cancele quando quiser',
 ];
