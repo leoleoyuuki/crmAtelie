@@ -9,6 +9,7 @@ import LandingPage from '@/app/landing/page';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase/auth/use-user';
 import { PasswordProvider } from '@/contexts/password-context';
+import PhoneRequiredScreen from '@/components/phone-required-screen';
 import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import type { UserProfile } from '@/lib/types';
@@ -148,6 +149,10 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   if (profile?.status !== 'active') {
     return <AtivacaoPage />;
+  }
+
+  if (!profile?.phone) {
+    return <PhoneRequiredScreen profile={profile} />;
   }
 
   return (

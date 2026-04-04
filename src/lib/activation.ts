@@ -1,6 +1,7 @@
 'use client';
 
-import { doc, getDoc, writeBatch, Firestore, User, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, Firestore, updateDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
+import { User } from 'firebase/auth';
 import { add } from 'date-fns';
 import { db } from '@/firebase/config';
 import { notifyTrialStartedAction, notifyPurchaseAction } from '@/app/actions/notifications';
@@ -116,6 +117,10 @@ export async function startFreeTrial(user: User): Promise<void> {
                 throw new Error("Você já utilizou seu período de teste.");
             }
             if (userData.status === 'active') {
+                const expiresAt = userData.expiresAt instanceof Timestamp ? userData.expiresAt.toDate() : userData.expiresAt;
+                if (expiresAt && expiresAt > add(new Date(), { days: 7 })) {
+                    throw new Error("Sua conta já possui uma assinatura ativa superior ao período de teste.");
+                }
                 throw new Error("Sua conta já está ativa com um plano.");
             }
         }

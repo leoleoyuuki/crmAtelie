@@ -169,3 +169,51 @@ export async function notifyPurchaseAction(data: PurchaseNotificationData) {
     console.error('[Discord Purchase Error]:', error);
   }
 }
+
+const DISCORD_PHONE_COLLECTED_WEBHOOK = 'https://discord.com/api/webhooks/1489996575693344818/njR4bCbwekr015wZxXLLznWqCoD1QTX4ekiAE1QmJW9GGx4VQXsstB0a5K-T-Vq1In3F';
+
+/**
+ * Envia uma notificação formatada para o Discord quando o telefone de um usuário é coletado.
+ */
+export async function notifyPhoneCollectedAction(data: { name: string, email: string, phone: string }) {
+  const embed = {
+    title: '📱 Telefone Coletado!',
+    description: 'Um artesão acabou de informar o número de WhatsApp.',
+    color: 0x3B82F6, // Blue
+    fields: [
+      {
+        name: '👤 Nome',
+        value: data.name,
+        inline: true,
+      },
+      {
+        name: '📧 E-mail',
+        value: data.email,
+        inline: true,
+      },
+      {
+        name: '📱 WhatsApp',
+        value: data.phone,
+        inline: true,
+      },
+    ],
+    footer: {
+      text: 'AtelierFlow CRM • Follow-up Leads',
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    const response = await fetch(DISCORD_PHONE_COLLECTED_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ embeds: [embed] }),
+    });
+
+    if (!response.ok) {
+        console.error('[Discord Phone Collected Error]: HTTP status', response.status);
+    }
+  } catch (error) {
+    console.error('[Discord Phone Collected Error]:', error);
+  }
+}

@@ -20,6 +20,7 @@ import { trackFbqEvent } from '@/lib/fpixel';
 import type { UserProfile } from '@/lib/types';
 import { Label } from '@/components/ui/label';
 import { updateUserProfilePhone } from '@/lib/data';
+import { notifyPhoneCollectedAction } from '@/app/actions/notifications';
 
 
 type Plan = 'mensal' | 'anual' | 'especial';
@@ -27,7 +28,7 @@ type Plan = 'mensal' | 'anual' | 'especial';
 initMercadoPago(process.env.NEXT_PUBLIC_MP_PUBLIC_KEY || '', { locale: 'pt-BR' });
 
 
-function PhoneCollectionStep({ user }: { user: any }) {
+function PhoneCollectionStep({ user, profile }: { user: any, profile: UserProfile | null }) {
     const [phone, setPhone] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
@@ -43,6 +44,25 @@ function PhoneCollectionStep({ user }: { user: any }) {
         setIsLoading(true);
         try {
             await updateUserProfilePhone(user.uid, phone);
+            
+            // Notificar Discord
+            await notifyPhoneCollectedAction({
+                name: profile?.displayName || user.displayName || 'Usuário',
+                email: profile?.email || user.email || 'N/A',
+                phone: phone
+            });
+
+            // Check if user already has a paid subscription (expiresAt > 7 days)
+            const expiresAt = profile?.expiresAt;
+            const sevenDaysFromNow = new Date();
+            sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+            if ((profile?.trialStarted || profile?.status === 'active') && expiresAt && expiresAt > sevenDaysFromNow) {
+                toast({ title: 'Perfil Atualizado', description: 'Seu WhatsApp foi atualizado. Você já possui uma assinatura ativa.' });
+                router.push('/');
+                return;
+            }
+
             await startFreeTrial(user);
             
             toast({ title: 'Sucesso!', description: 'Seu período de 7 dias grátis começou. Bem-vindo(a)!' });
@@ -280,6 +300,16 @@ function PlanSelectionTab({ profile, onWhatsAppClick }: { profile: UserProfile |
     }
     setIsTrialLoading(true);
     try {
+        const expiresAt = profile?.expiresAt;
+        const sevenDaysFromNow = new Date();
+        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+        if ((profile?.trialStarted || profile?.status === 'active') && expiresAt && expiresAt > sevenDaysFromNow) {
+            toast({ title: 'Assinatura Ativa', description: 'Você já possui uma assinatura ativa superior ao período de teste.' });
+            router.push('/');
+            return;
+        }
+
         await startFreeTrial(user);
         toast({ title: 'Período de teste ativado!', description: 'Aproveite o acesso completo por 7 dias. Bem-vindo(a)!' });
         router.push('/');
@@ -579,7 +609,7 @@ export default function AtivacaoPage() {
             <div className="w-full max-w-6xl space-y-6">
                 {!profile?.phone ? (
                     <div className="max-w-md mx-auto w-full">
-                        <PhoneCollectionStep user={user} />
+                        <PhoneCollectionStep user={user} profile={profile} />
                     </div>
                 ) : (
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
