@@ -71,6 +71,18 @@ export async function getCustomerById(customerId: string): Promise<Customer | nu
 
 export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 'userId'>): Promise<Customer> {
   if (!auth.currentUser) throw new Error("Usuário não autenticado.");
+  
+  const userDocRef = doc(db, 'users', auth.currentUser.uid);
+  const userDocSnap = await getDoc(userDocRef);
+  const userData = userDocSnap.data();
+  if (userData?.trialExpiresAt) {
+      const customersQuery = query(customersCollection, where("userId", "==", auth.currentUser.uid));
+      const customerSnap = await getDocs(customersQuery);
+      if (customerSnap.docs.length >= 5) {
+          throw new Error("TRIAL_LIMIT_CUSTOMERS");
+      }
+  }
+
   const newCustomerData = {
       ...customer,
       userId: auth.currentUser.uid,
@@ -195,6 +207,17 @@ export function getMonths() {
 export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>) {
     const user = auth.currentUser;
     if (!user) throw new Error("Usuário não autenticado.");
+
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    const userData = userDocSnap.data();
+    if (userData?.trialExpiresAt) {
+        const ordersQuery = query(ordersCollection, where("userId", "==", user.uid));
+        const ordersSnap = await getDocs(ordersQuery);
+        if (ordersSnap.docs.length >= 15) {
+            throw new Error("TRIAL_LIMIT_ORDERS");
+        }
+    }
 
     const now = new Date();
     const monthKey = format(now, 'yyyy-MM');

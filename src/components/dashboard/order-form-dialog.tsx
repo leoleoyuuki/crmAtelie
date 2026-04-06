@@ -37,6 +37,7 @@ import { addOrder, updateOrder, getCustomers, getPriceTableItems, addCustomer } 
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle, UserPlus, Trash2, Search } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
+import { TrialLimitScreen } from "./trial-limit-screen";
 import { Separator } from "../ui/separator";
 import { DatePickerWithDialog } from "../ui/date-picker";
 
@@ -252,6 +253,7 @@ export function OrderFormDialog({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+  const [limitHit, setLimitHit] = React.useState<"orders" | "customers" | null>(null);
 
   const isEditing = !!order;
   const { toast } = useToast();
@@ -362,6 +364,7 @@ export function OrderFormDialog({
       } else {
           form.reset(defaultValues);
       }
+      setLimitHit(null);
     }
   }, [order, form, isOpen]);
 
@@ -393,8 +396,16 @@ export function OrderFormDialog({
       }
       setIsOpen(false);
       form.reset(defaultValues);
-    } catch (error) {
-      toast({ variant: "destructive", title: "Erro", description: "Não foi possível salvar o pedido." });
+    } catch (error: any) {
+        if (error?.message === "TRIAL_LIMIT_ORDERS") {
+            setLimitHit("orders");
+        } else {
+            toast({ 
+                variant: "destructive", 
+                title: "Erro", 
+                description: "Não foi possível salvar o pedido." 
+            });
+        }
     } finally {
         setIsSubmitting(false);
     }
@@ -426,8 +437,16 @@ export function OrderFormDialog({
         toast({ title: "Cliente criado!", description: `${newCustomer.name} foi selecionada.` });
         setCustomerSearch(""); // Clear search after creation
         setIsCustomerSelectOpen(false); // Close select
-    } catch (error) {
-        toast({ variant: "destructive", title: "Erro ao criar cliente", description: "Tente novamente." });
+    } catch (error: any) {
+        if (error?.message === "TRIAL_LIMIT_CUSTOMERS") {
+            setLimitHit("customers");
+        } else {
+            toast({ 
+                variant: "destructive", 
+                title: "Erro ao criar cliente", 
+                description: "Tente novamente." 
+            });
+        }
     } finally {
         setIsCreatingCustomer(false);
     }
@@ -439,15 +458,19 @@ export function OrderFormDialog({
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
     >
-        <DialogHeader className="p-6 pb-2">
-            <DialogTitle className="font-headline text-2xl">{isEditing ? "Editar Pedido" : "Novo Pedido"}</DialogTitle>
-            <DialogDescription>
-                Registre os serviços e defina o prazo de entrega.
-            </DialogDescription>
-        </DialogHeader>
-        
-        <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+        {limitHit ? (
+            <TrialLimitScreen type={limitHit} onClose={() => setIsOpen(false)} />
+        ) : (
+            <>
+                <DialogHeader className="p-6 pb-2">
+                    <DialogTitle className="font-headline text-2xl">{isEditing ? "Editar Pedido" : "Novo Pedido"}</DialogTitle>
+                    <DialogDescription>
+                        Registre os serviços e defina o prazo de entrega.
+                    </DialogDescription>
+                </DialogHeader>
+                
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
                 <div className="flex-1 overflow-y-auto px-6 space-y-6 pt-2">
                     <div className="space-y-3">
                         <FormLabel>Cliente</FormLabel>
@@ -608,8 +631,10 @@ export function OrderFormDialog({
                         </Button>
                     </div>
                 </DialogFooter>
-            </form>
-        </Form>
+                    </form>
+                </Form>
+            </>
+        )}
     </DialogContent>
   );
 

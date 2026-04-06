@@ -31,6 +31,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { addCustomer, updateCustomer } from "@/lib/data";
 import { Customer } from "@/lib/types";
+import { TrialLimitScreen } from "./trial-limit-screen";
 
 const customerFormSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
@@ -61,6 +62,7 @@ export function CustomerFormDialog({
 }: CustomerFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const [noPhone, setNoPhone] = React.useState(false);
+  const [limitHit, setLimitHit] = React.useState(false);
   const { toast } = useToast();
   const isEditing = !!customer;
 
@@ -91,6 +93,7 @@ export function CustomerFormDialog({
             form.reset(defaultValues);
             setNoPhone(false);
         }
+        setLimitHit(false);
     }
   }, [customer, form, isEditing, isOpen]);
 
@@ -114,12 +117,16 @@ export function CustomerFormDialog({
       }
       setIsOpen(false);
       form.reset(defaultValues);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível salvar os dados.",
-      });
+    } catch (error: any) {
+      if (error?.message === "TRIAL_LIMIT_CUSTOMERS") {
+          setLimitHit(true);
+      } else {
+          toast({
+            variant: "destructive",
+            title: "Erro",
+            description: "Não foi possível salvar os dados.",
+          });
+      }
     }
   };
 
@@ -129,15 +136,19 @@ export function CustomerFormDialog({
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
     >
-      <DialogHeader className="p-6 pb-2">
-        <DialogTitle className="font-headline text-2xl">{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
-        <DialogDescription>
-          {isEditing ? 'Atualize as informações de contato.' : 'Cadastre um novo cliente para seu ateliê.'}
-        </DialogDescription>
-      </DialogHeader>
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+      {limitHit ? (
+          <TrialLimitScreen type="customers" onClose={() => setIsOpen(false)} />
+      ) : (
+        <>
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="font-headline text-2xl">{isEditing ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
+            <DialogDescription>
+              {isEditing ? 'Atualize as informações de contato.' : 'Cadastre um novo cliente para seu ateliê.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             <FormField
               control={form.control}
@@ -205,8 +216,10 @@ export function CustomerFormDialog({
                 {isEditing ? 'Salvar Alterações' : 'Salvar Cliente'}
             </Button>
           </DialogFooter>
-        </form>
-      </Form>
+            </form>
+          </Form>
+        </>
+      )}
     </DialogContent>
   );
 

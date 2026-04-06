@@ -202,6 +202,12 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     const { data: summary } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
     const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] = React.useState(false);
 
+    useEffect(() => {
+        const handleOpenDrawer = () => setIsSubscriptionDrawerOpen(true);
+        window.addEventListener('open-subscription-drawer', handleOpenDrawer);
+        return () => window.removeEventListener('open-subscription-drawer', handleOpenDrawer);
+    }, []);
+
     const progress = useMemo(() => {
         if (!summary) return 0;
         const currentMonthKey = format(new Date(), 'yyyy-MM');
