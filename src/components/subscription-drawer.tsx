@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRight, Check, Loader2 } from "lucide-react";
+import { Sparkles, ArrowRight, Check, Loader2, Copy, CheckCheck, Gift, ExternalLink, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays, isValid } from "date-fns";
 import type { UserProfile } from "@/lib/types";
@@ -89,17 +89,61 @@ const features = [
   "Suporte Diferenciado via WhatsApp"
 ];
 
-export function SubscriptionDrawer({ profile }: { profile: UserProfile | null }) {
+function CouponCard({ code, label, description }: { code: string; label: string; description: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+  return (
+    <div className="group relative bg-gradient-to-br from-muted/60 to-muted/30 border border-primary/15 rounded-2xl p-5 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+      <div className="flex items-center gap-2 mb-2">
+        <Gift className="h-4 w-4 text-primary" />
+        <span className="text-xs font-black uppercase tracking-widest text-primary">{label}</span>
+      </div>
+      <p className="text-sm text-muted-foreground font-medium mb-4">{description}</p>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 bg-background border-2 border-dashed border-primary/30 rounded-xl px-4 py-3 text-center">
+          <span className="text-xl font-black tracking-[0.2em] text-foreground select-all">{code}</span>
+        </div>
+        <Button
+          size="sm"
+          variant={copied ? "default" : "outline"}
+          className={cn(
+            "h-12 w-12 rounded-xl shrink-0 transition-all duration-300 border-2",
+            copied
+              ? "bg-emerald-500 hover:bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+              : "border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+          )}
+          onClick={handleCopy}
+        >
+          {copied ? <CheckCheck className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
+        </Button>
+      </div>
+      {copied && (
+        <p className="text-xs text-emerald-600 font-bold mt-2 text-center animate-in fade-in slide-in-from-bottom-1">✓ Código copiado!</p>
+      )}
+    </div>
+  );
+}
+
+export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: UserProfile | null, open?: boolean, onOpenChange?: (open: boolean) => void }) {
   const { user } = useUser();
   const [billingCycle, setBillingCycle] = useState<'mensal' | 'anual'>('mensal');
   const [isLoading, setIsLoading] = useState(false);
+  const [showCouponScreen, setShowCouponScreen] = useState(false);
   const { toast } = useToast();
 
-  if (!profile?.trialStarted || profile?.stripeCustomerId || !profile?.trialExpiresAt || !isValid(profile.trialExpiresAt) || new Date() > profile.trialExpiresAt) {
+  const isTrial = profile?.trialExpiresAt && isValid(profile.trialExpiresAt) && new Date() <= profile.trialExpiresAt;
+  const isActive = profile?.status === 'active';
+
+  // Only show if trial or active
+  if (!isTrial && !isActive) {
       return null;
   }
 
-  const daysLeft = Math.max(0, differenceInDays(profile.trialExpiresAt, new Date()));
+  const daysLeft = isTrial ? Math.max(0, differenceInDays(profile!.trialExpiresAt!, new Date())) : null;
 
   const createPreference = async (plan: Plan) => {
     trackFbqEvent('InitiateCheckout', {
@@ -135,15 +179,32 @@ export function SubscriptionDrawer({ profile }: { profile: UserProfile | null })
     }
   };
 
+  const handlePortalSession = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+        const response = await fetch('/api/stripe/create-portal-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.uid, userEmail: user.email }),
+        });
+        const data = await response.json();
+        if (response.ok && data.url) {
+            window.location.href = data.url;
+        } else {
+            throw new Error(data.error || 'Erro ao abrir painel.');
+        }
+    } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Erro', description: error.message || 'Erro ao acessar o portal.' });
+        setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="fixed bottom-32 right-6 md:bottom-8 md:right-auto md:left-[calc(var(--sidebar-width,16rem)+2rem)] z-50 transition-all duration-300">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button className="h-14 w-14 rounded-full shadow-[0_10px_40px_-10px_rgba(255,100,100,0.8)] bg-primary hover:bg-primary/90 hover:scale-105 transition-all text-primary-foreground group relative overflow-hidden p-0 border-0">
-              <Sparkles className="h-6 w-6 relative z-10" />
-              <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
-          </Button>
-        </SheetTrigger>
+      <Sheet open={open} onOpenChange={(v) => {
+          if (!v) setShowCouponScreen(false);
+          onOpenChange?.(v);
+        }}>
         <SheetContent side="bottom" className="p-0 border-t border-primary/20 rounded-t-3xl sm:rounded-none sm:rounded-t-[40px] w-full max-w-none sm:mx-0 sm:right-auto sm:left-0 sm:translate-x-0 h-auto max-h-[95vh] overflow-y-auto bg-background/95 backdrop-blur-xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.1)]">
           <div className="relative overflow-hidden w-full">
             <div className="absolute top-[-50%] right-[-10%] w-[50%] h-[150%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
@@ -186,7 +247,11 @@ export function SubscriptionDrawer({ profile }: { profile: UserProfile | null })
                       AtelierFlow <span className="text-primary">Plus</span>
                     </SheetTitle>
                     <SheetDescription className="text-base font-medium text-foreground/70 max-w-md mx-auto lg:mx-0">
-                      Seu período de teste expira em <span className="text-primary font-black bg-primary/10 px-2 py-0.5 rounded-lg ml-1 mr-1">{daysLeft} {daysLeft === 1 ? 'dia' : 'dias'}</span>. <br className="hidden lg:block"/>Assine agora para não perder nenhum dado ou acesso!
+                      {isTrial && daysLeft !== null ? (
+                        <>Seu período de teste expira em <span className="text-primary font-black bg-primary/10 px-2 py-0.5 rounded-lg ml-1 mr-1">{daysLeft} {daysLeft === 1 ? 'dia' : 'dias'}</span>. <br className="hidden lg:block"/>Assine agora para não perder nenhum dado ou acesso!</>
+                      ) : (
+                        <>Conheça as vantagens de assinar o plano Anual e economize no AtelierFlow.</>
+                      )}
                     </SheetDescription>
                   </SheetHeader>
 
@@ -238,24 +303,97 @@ export function SubscriptionDrawer({ profile }: { profile: UserProfile | null })
                     ))}
                   </div>
 
-                  <Button 
-                    size="lg"
-                    className="w-full lg:max-w-md h-16 text-lg rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden bg-primary hover:bg-primary/95 mt-4"
-                    onClick={() => createPreference(billingCycle)}
-                    disabled={isLoading}
-                  >
-                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
-                    <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
-                    
-                    {isLoading ? (
-                      <Loader2 className="animate-spin h-6 w-6" />
-                    ) : (
-                      <span className="flex items-center drop-shadow-sm">
-                        ASSINAR ATELIERFLOW PRO
-                        <ArrowRight className="ml-2.5 h-6 w-6 transition-transform group-hover:translate-x-1.5" />
-                      </span>
-                    )}
-                  </Button>
+                  {/* Coupon Screen - shown before portal redirect */}
+                  {showCouponScreen && profile?.stripeCustomerId && (
+                    <div className="animate-in fade-in slide-in-from-bottom-3 duration-500 space-y-5 mt-2">
+                      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl p-5 border border-primary/10">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="bg-primary/10 p-2 rounded-xl">
+                            <Gift className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-foreground text-base">Cupons de Desconto Exclusivos</h4>
+                            <p className="text-xs text-muted-foreground font-medium">Copie e cole ao atualizar seu plano na Stripe</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <CouponCard
+                          code="ATELIER35"
+                          label="Plano Mensal"
+                          description="Ganhe R$35 de desconto nos 3 primeiros meses do plano mensal."
+                        />
+                        <CouponCard
+                          code="ANUAL20"
+                          label="Plano Anual"
+                          description="Desconto de 20% no plano anual. A melhor economia!"
+                        />
+                      </div>
+
+                      <div className="bg-muted/40 rounded-xl p-4 border border-black/5">
+                        <p className="text-xs text-muted-foreground font-semibold leading-relaxed">
+                          <span className="text-primary font-black">Como usar:</span> Copie o cupom desejado acima, clique em <span className="font-black text-foreground">"Ir para o Portal"</span> abaixo, e ao atualizar seu plano, cole o código no campo de promoção.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="flex-1 h-14 rounded-2xl font-bold border-2"
+                          onClick={() => setShowCouponScreen(false)}
+                        >
+                          <ArrowLeft className="mr-2 h-5 w-5" />
+                          Voltar
+                        </Button>
+                        <Button 
+                          size="lg"
+                          className="flex-1 h-14 rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden bg-primary hover:bg-primary/95"
+                          onClick={handlePortalSession}
+                          disabled={isLoading}
+                        >
+                          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
+                          {isLoading ? (
+                            <Loader2 className="animate-spin h-5 w-5" />
+                          ) : (
+                            <span className="flex items-center drop-shadow-sm">
+                              IR PARA O PORTAL
+                              <ExternalLink className="ml-2 h-5 w-5" />
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Main CTA Button - hidden when coupon screen is shown */}
+                  {!showCouponScreen && (
+                    <Button 
+                      size="lg"
+                      className="w-full lg:max-w-md h-16 text-lg rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden bg-primary hover:bg-primary/95 mt-4"
+                      onClick={() => {
+                          if (profile?.stripeCustomerId) {
+                              setShowCouponScreen(true);
+                          } else {
+                              createPreference(billingCycle);
+                          }
+                      }}
+                      disabled={isLoading}
+                    >
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
+                      <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+                      
+                      {isLoading ? (
+                        <Loader2 className="animate-spin h-6 w-6" />
+                      ) : (
+                        <span className="flex items-center drop-shadow-sm">
+                          {profile?.stripeCustomerId ? "GERENCIAR OU ATUALIZAR PLANO" : "ASSINAR ATELIERFLOW PRO"}
+                          <ArrowRight className="ml-2.5 h-6 w-6 transition-transform group-hover:translate-x-1.5" />
+                        </span>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -267,6 +405,5 @@ export function SubscriptionDrawer({ profile }: { profile: UserProfile | null })
           </div>
         </SheetContent>
       </Sheet>
-    </div>
   );
 }

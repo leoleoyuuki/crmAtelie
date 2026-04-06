@@ -199,8 +199,8 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     const { toast } = useToast();
     const { isPrivacyMode, isPasswordSet, togglePrivacyMode } = useContext(PasswordContext);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
-    const [isPortalLoading, setIsPortalLoading] = useState(false);
     const { data: summary } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
+    const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] = React.useState(false);
 
     const progress = useMemo(() => {
         if (!summary) return 0;
@@ -259,37 +259,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
         return new Date() <= profile.trialExpiresAt;
     }, [profile]);
 
-    const handleManageSubscription = async () => {
-        if (!user || isPortalLoading) return;
-        
-        setIsPortalLoading(true);
-        try {
-            const response = await fetch('/api/stripe/create-portal-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.uid }),
-            });
 
-            const data = await response.json();
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                toast({ 
-                    variant: "destructive", 
-                    title: "Erro ao abrir portal", 
-                    description: data.error || "Não foi possível carregar o portal da Stripe." 
-                });
-            }
-        } catch (error) {
-            toast({ 
-                variant: "destructive", 
-                title: "Erro de conexão", 
-                description: "Tente novamente em instantes." 
-            });
-        } finally {
-            setIsPortalLoading(false);
-        }
-    };
 
     return (
         <header className="flex h-16 items-center gap-4 bg-background px-4 lg:px-8 z-30">
@@ -337,24 +307,25 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                             Válido até <span className="font-bold text-foreground">{formattedExpiryDate}</span>
                                         </p>
                                         
-                                        {isTrialAccount && !profile?.stripeCustomerId && (
-                                            <Link href="/ativacao" className="block mt-2">
-                                                <Button size="sm" className="w-full text-[10px] font-bold h-9 rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground">
-                                                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                                                    Assinar Sistema
-                                                </Button>
-                                            </Link>
+                                        {(!profile?.stripeCustomerId || isTrialAccount) && (
+                                            <Button 
+                                                size="sm" 
+                                                className="w-full text-[10px] block mt-2 font-bold h-9 rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground"
+                                                onClick={() => setIsSubscriptionDrawerOpen(true)}
+                                            >
+                                                <Sparkles className="mr-1.5 h-3.5 w-3.5 inline" />
+                                                Assinar Sistema / Ver Planos
+                                            </Button>
                                         )}
                                     </div>
                                 )}
 
-                                {profile?.stripeCustomerId && (
+                                {profile?.status === 'active' && profile?.stripeCustomerId && (
                                     <Button 
-                                        className="w-full text-[10px] font-bold h-9 rounded-xl shadow-lg shadow-primary/10"
-                                        onClick={handleManageSubscription}
-                                        disabled={isPortalLoading}
+                                        className="w-full text-[10px] font-bold h-9 rounded-xl shadow-lg shadow-primary/10 mt-2"
+                                        onClick={() => setIsSubscriptionDrawerOpen(true)}
                                     >
-                                        {isPortalLoading ? "Carregando..." : "Gerenciar Assinatura"}
+                                        Gerenciar Assinatura / Trocar Plano
                                     </Button>
                                 )}
                             </div>
@@ -362,9 +333,48 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                     </Popover>
                 )}
 
+                {/* Controlled Subscription Drawer */}
+                <SubscriptionDrawer 
+                    profile={profile} 
+                    open={isSubscriptionDrawerOpen} 
+                    onOpenChange={setIsSubscriptionDrawerOpen} 
+                />
+
             </div>
 
             <div className="flex-1" />
+
+            {/* Persuasive Upgrade Text Link */}
+            {isTrialAccount && daysLeft !== null && (
+                <button
+                    onClick={() => setIsSubscriptionDrawerOpen(true)}
+                    className="flex items-center gap-2 group cursor-pointer transition-all duration-300 hover:scale-[1.03] mr-1 md:mr-2"
+                >
+                    <span className="relative flex h-2 w-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                    </span>
+                    <div className="flex flex-col items-start leading-[1] -mt-0.5">
+                        <span className="text-[10px] md:text-xs font-black bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent group-hover:from-primary group-hover:to-red-400 transition-all whitespace-nowrap">
+                            Assine agora
+                        </span>
+                        <span className="text-[8px] md:text-[10px] font-bold text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap">
+                            {daysLeft === 0 ? 'último dia!' : `${daysLeft} ${daysLeft === 1 ? 'dia restante' : 'dias restantes'}`}
+                        </span>
+                    </div>
+                </button>
+            )}
+            {!isTrialAccount && profile?.status === 'active' && profile?.stripeCustomerId && (
+                <button
+                    onClick={() => setIsSubscriptionDrawerOpen(true)}
+                    className="flex items-center gap-1.5 group cursor-pointer transition-all duration-300 hover:scale-[1.03] mr-1 md:mr-2"
+                >
+                    <Sparkles className="h-3 w-3 text-primary group-hover:animate-pulse" />
+                    <span className="text-[10px] md:text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors whitespace-nowrap">
+                        Trocar plano
+                    </span>
+                </button>
+            )}
 
             <div className="flex items-center gap-1.5 md:gap-3">
                 <MonthProgress summary={summary} />
@@ -782,9 +792,6 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                 {children}
             </div>
             <BottomNavigation />
-            
-            {/* Botão Flutuante Assinar */}
-            <SubscriptionDrawer profile={profile} />
         </main>
         
         <OnboardingModal open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen} />
