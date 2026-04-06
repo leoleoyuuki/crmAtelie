@@ -144,6 +144,7 @@ export function PurchaseFormDialog({
 
       await addPurchase(dataToSave);
       toast({
+        variant: "success",
         title: "Compra Registrada",
         description: `A compra de ${finalMaterialName} foi adicionada.`,
       });

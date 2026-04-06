@@ -91,6 +91,7 @@ export function MaterialFormDialog({
     try {
       await updateMaterial(material.id, data);
       toast({
+        variant: "success",
         title: "Material Atualizado",
         description: `O material ${data.name} foi atualizado.`,
       });

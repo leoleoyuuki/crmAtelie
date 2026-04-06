@@ -107,7 +107,7 @@ export function ConcludeOrderDialog({
       await concludeOrderWithStockUpdate(order.id, materialsWithNames);
       onOrderConcluded({ status: 'Concluído', materialsUsed: materialsWithNames });
 
-      toast({ title: "Pedido Concluído!", description: "Estoque atualizado com sucesso." });
+      toast({ variant: "success", title: "Pedido Concluído!", description: "Estoque atualizado com sucesso." });
       setIsOpen(false);
     } catch (error: any) {
       toast({

@@ -94,6 +94,7 @@ export function PriceFormDialog({
         const updatedItem = await updatePriceTableItem(item.id, data);
         onItemUpdated(updatedItem);
         toast({
+          variant: "success",
           title: "Serviço Atualizado",
           description: `O serviço ${updatedItem.serviceName} foi atualizado.`,
         });
@@ -101,6 +102,7 @@ export function PriceFormDialog({
         const newItem = await addPriceTableItem(data as Omit<PriceTableItem, 'id' | 'userId'>);
         onItemCreated(newItem);
         toast({
+          variant: "success",
           title: "Serviço Criado",
           description: `O serviço ${newItem.serviceName} foi adicionado à tabela.`,
         });

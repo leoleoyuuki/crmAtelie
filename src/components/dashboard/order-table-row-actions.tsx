@@ -73,6 +73,7 @@ export function OrderTableRowActions({ order, onUpdate, onDelete }: OrderTableRo
       await deleteOrder(order.id);
       onDelete();
       toast({
+        variant: "success",
         title: "Pedido Excluído",
         description: `O pedido #${order.id.substring(0, 5)} foi excluído com sucesso.`,
       });

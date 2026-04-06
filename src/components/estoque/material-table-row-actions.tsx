@@ -39,6 +39,7 @@ export function MaterialTableRowActions({ material }: MaterialTableRowActionsPro
     try {
       await deleteMaterial(material.id);
       toast({
+        variant: "success",
         title: "Material Excluído",
         description: `O material ${material.name} foi removido do estoque.`,
       });

@@ -395,11 +395,11 @@ export function OrderFormDialog({
       if (isEditing && order) {
         await updateOrder(order.id, orderData);
         onOrderUpdated?.();
-        toast({ title: "Pedido Atualizado" });
+        toast({ variant: "success", title: "Pedido Atualizado" });
       } else {
         await addOrder(orderData as Omit<Order, 'id' | 'createdAt' | 'userId'>);
         onOrderCreated?.();
-        toast({ title: "Pedido Criado com Sucesso" });
+        toast({ variant: "success", title: "Pedido Criado com Sucesso" });
       }
       setIsOpen(false);
       form.reset(defaultValues);
@@ -441,7 +441,7 @@ export function OrderFormDialog({
         });
         setCustomers(prev => [newCustomer, ...prev]);
         form.setValue('customerId', newCustomer.id, { shouldValidate: true, shouldDirty: true });
-        toast({ title: "Cliente criado!", description: `${newCustomer.name} foi selecionada.` });
+        toast({ variant: "success", title: "Cliente criado!", description: `${newCustomer.name} foi selecionada.` });
         setCustomerSearch(""); // Clear search after creation
         setIsCustomerSelectOpen(false); // Close select
     } catch (error: any) {

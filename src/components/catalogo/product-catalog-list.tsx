@@ -34,7 +34,7 @@ export function ProductCatalogList({ onAddProduct }: { onAddProduct?: () => void
     const handleDelete = async (id: string) => {
         try {
             await deleteDoc(doc(db, 'catalogProducts', id));
-            toast({ title: 'Produto excluído com sucesso.' });
+            toast({ variant: 'success', title: 'Produto excluído com sucesso.' });
         } catch(e) {
             toast({ variant: 'destructive', title: 'Erro ao excluir o produto.' });
         }

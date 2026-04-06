@@ -41,6 +41,7 @@ export function CustomerTableRowActions({ customer, onCustomerDeleted }: Custome
     try {
       await deleteCustomer(customer.id);
       toast({
+        variant: "success",
         title: "Cliente Excluído",
         description: `O cliente ${customer.name} foi excluído com sucesso.`,
       });

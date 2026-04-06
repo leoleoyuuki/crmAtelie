@@ -161,6 +161,7 @@ export function SaleFormDialog({
       await addSale(dataToSave);
       
       toast({
+        variant: "success",
         title: "Venda Registrada",
         description: `A venda de ${finalProductName} foi salva com sucesso.`,
       });

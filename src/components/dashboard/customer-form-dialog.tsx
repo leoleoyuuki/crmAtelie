@@ -109,11 +109,11 @@ export function CustomerFormDialog({
       if (isEditing && customer) {
         const updatedCustomer = await updateCustomer(customer.id, data);
         onCustomerUpdated(updatedCustomer);
-        toast({ title: "Cadastro Atualizado" });
+        toast({ variant: "success", title: "Cadastro Atualizado" });
       } else {
         const newCustomer = await addCustomer(data);
         onCustomerCreated(newCustomer);
-        toast({ title: "Cliente Cadastrado!" });
+        toast({ variant: "success", title: "Cliente Cadastrado!" });
       }
       setIsOpen(false);
       form.reset(defaultValues);
