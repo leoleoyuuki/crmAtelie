@@ -40,10 +40,10 @@ export function MaterialTableToolbar<TData>({ table }: MaterialTableToolbarProps
             Estoque Baixo
         </button>
         <button className="px-4 py-1.5 rounded-full text-xs font-bold bg-background text-muted-foreground hover:bg-muted border border-border transition-all">
-            Tecidos e Fios
+            Insumos
         </button>
         <button className="px-4 py-1.5 rounded-full text-xs font-bold bg-background text-muted-foreground hover:bg-muted border border-border transition-all">
-            Aviamentos
+            Matéria-prima
         </button>
       </div>
     </div>

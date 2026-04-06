@@ -170,7 +170,7 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue, onTr
                             <FormItem>
                                 <FormLabel>Tipo de Serviço</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Ex: Ajuste, Customização..." {...field} />
+                                    <Input placeholder="Ex: Produção, Criação..." {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -211,7 +211,7 @@ function OrderItemForm({ index, control, remove, priceTableItems, setValue, onTr
                     <FormItem>
                         <FormLabel>Descrição/Detalhes</FormLabel>
                         <FormControl>
-                            <Input placeholder="Cor, tecido, ajustes específicos..." {...field} value={field.value ?? ''} />
+                            <Input placeholder="Cor, material, detalhes específicos..." {...field} value={field.value ?? ''} />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
@@ -249,6 +249,7 @@ export function OrderFormDialog({
   const [customerSearch, setCustomerSearch] = useState("");
   const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
   const [isCustomerSelectOpen, setIsCustomerSelectOpen] = useState(false);
+  const [shouldOpenSelect, setShouldOpenSelect] = useState(false);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -309,10 +310,10 @@ export function OrderFormDialog({
       };
       fetchCustomers();
     }
-    if (debouncedCustomerSearch.length >= 3) {
+    if (debouncedCustomerSearch.length >= 3 && shouldOpenSelect) {
       setIsCustomerSelectOpen(true);
     }
-  }, [debouncedCustomerSearch, customersCached]);
+  }, [debouncedCustomerSearch, customersCached, shouldOpenSelect]);
 
   // Accent-insensitive normalization helper
   const normalize = (str: string) =>
@@ -348,8 +349,12 @@ export function OrderFormDialog({
   useEffect(() => {
     if (isOpen) {
       setIsSubmitting(false);
-      setCustomerSearch("");
+      setShouldOpenSelect(false);
+      
       if (order) {
+          setCustomerSearch(order.customerName || "");
+          setCustomers([{ id: order.customerId, name: order.customerName } as Customer]);
+          
           form.reset({
             ...order,
             items: order.items 
@@ -362,6 +367,8 @@ export function OrderFormDialog({
                 : defaultValues.items,
           });
       } else {
+          setCustomerSearch("");
+          setCustomers([]);
           form.reset(defaultValues);
       }
       setLimitHit(null);
@@ -479,7 +486,10 @@ export function OrderFormDialog({
                                 <Input
                                     placeholder="Digite 3+ letras para buscar..."
                                     value={customerSearch}
-                                    onChange={(e) => setCustomerSearch(e.target.value)}
+                                    onChange={(e) => {
+                                        setCustomerSearch(e.target.value);
+                                        setShouldOpenSelect(true);
+                                    }}
                                     className="h-10"
                                 />
                                 <FormField

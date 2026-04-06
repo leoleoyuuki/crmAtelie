@@ -52,13 +52,13 @@ export function PriceTableToolbar<TData>({ table, onItemCreated }: PriceTableToo
             Todos os Serviços
         </button>
         <button className="px-4 py-1.5 rounded-full text-xs font-bold bg-background text-muted-foreground hover:bg-muted border border-border transition-all">
-            Costura Geral
+            Serviços Padrão
         </button>
         <button className="px-4 py-1.5 rounded-full text-xs font-bold bg-background text-muted-foreground hover:bg-muted border border-border transition-all">
-            Ajustes e Reformas
+            Reparos e Ajustes
         </button>
         <button className="px-4 py-1.5 rounded-full text-xs font-bold bg-background text-muted-foreground hover:bg-muted border border-border transition-all">
-            Customização
+            Projetos Especiais
         </button>
       </div>
     </div>

@@ -121,7 +121,7 @@ export function MaterialFormDialog({
               <FormItem>
                 <FormLabel>Nome do Material</FormLabel>
                 <FormControl>
-                  <Input placeholder="ex: Linha de Costura Branca" {...field} />
+                  <Input placeholder="ex: Cola branca ou Papelão" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

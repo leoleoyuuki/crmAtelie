@@ -51,10 +51,10 @@ export function PurchaseTableToolbar<TData>({ table, onPurchaseCreated }: Purcha
             Este Mês
         </button>
         <button className="px-4 py-1.5 rounded-full text-xs font-bold bg-background text-muted-foreground hover:bg-muted border border-border transition-all">
-            Tecidos
+            Matéria-prima
         </button>
         <button className="px-4 py-1.5 rounded-full text-xs font-bold bg-background text-muted-foreground hover:bg-muted border border-border transition-all">
-            Maquinário
+            Equipamentos
         </button>
       </div>
     </div>
