@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, DollarSign, Package, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useContext } from "react";
+import { PasswordContext } from "@/contexts/password-context";
 
 type StatsCardsProps = {
     totalOrders: number;
@@ -10,6 +12,7 @@ type StatsCardsProps = {
 }
 
 export function RevenueTotalCard({ totalRevenue, isPrivacyMode = false, className }: { totalRevenue: number; isPrivacyMode?: boolean; className?: string }) {
+    const { togglePrivacyMode } = useContext(PasswordContext);
     const formattedRevenue = isPrivacyMode
         ? 'R$ ●●●,●●'
         : new Intl.NumberFormat("pt-BR", {
@@ -18,14 +21,20 @@ export function RevenueTotalCard({ totalRevenue, isPrivacyMode = false, classNam
           }).format(totalRevenue);
 
     return (
-        <Card className={className}>
+        <Card 
+            className={cn(
+                className, 
+                isPrivacyMode && "cursor-pointer transition-all hover:border-primary/50 active:scale-[0.98]"
+            )}
+            onClick={isPrivacyMode ? togglePrivacyMode : undefined}
+        >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-                {isPrivacyMode ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <DollarSign className="h-4 w-4 text-muted-foreground" />}
+                {isPrivacyMode ? <EyeOff className="h-4 w-4 text-primary" /> : <DollarSign className="h-4 w-4 text-muted-foreground" />}
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">{formattedRevenue}</div>
-                <p className="text-xs text-muted-foreground">{isPrivacyMode ? "Modo de privacidade ativado" : "de todos os pedidos concluídos"}</p>
+                <p className="text-xs text-muted-foreground">{isPrivacyMode ? "Clique para visualizar" : "de todos os pedidos concluídos"}</p>
             </CardContent>
         </Card>
     );

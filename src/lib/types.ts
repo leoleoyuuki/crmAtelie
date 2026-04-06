@@ -58,6 +58,7 @@ export interface UserProfile {
   status: UserStatus;
   expiresAt?: Date;
   trialStarted?: boolean;
+  trialExpiresAt?: Date;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   subscriptionProvider?: 'mercadopago' | 'stripe';

@@ -253,10 +253,10 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     }, [profile?.expiresAt]);
 
     const isTrialAccount = useMemo(() => {
-        if (!profile?.trialStarted || profile?.stripeCustomerId || !profile?.expiresAt || !isValid(profile.expiresAt)) {
+        if (!profile?.trialStarted || profile?.stripeCustomerId || !profile?.trialExpiresAt || !isValid(profile.trialExpiresAt)) {
             return false;
         }
-        return differenceInDays(profile.expiresAt, new Date()) <= 15;
+        return new Date() <= profile.trialExpiresAt;
     }, [profile]);
 
     const handleManageSubscription = async () => {
@@ -337,7 +337,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                                             Válido até <span className="font-bold text-foreground">{formattedExpiryDate}</span>
                                         </p>
                                         
-                                        {profile?.trialStarted && !profile?.stripeCustomerId && (
+                                        {isTrialAccount && !profile?.stripeCustomerId && (
                                             <Link href="/ativacao" className="block mt-2">
                                                 <Button size="sm" className="w-full text-[10px] font-bold h-9 rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground">
                                                     <Sparkles className="mr-1.5 h-3.5 w-3.5" />

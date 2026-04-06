@@ -3,6 +3,8 @@
 
 import { Area, ComposedChart, Line, CartesianGrid, XAxis, YAxis } from "recharts"
 import { EyeOff, TrendingUp } from "lucide-react"
+import { useContext } from "react"
+import { PasswordContext } from "@/contexts/password-context"
 import {
   Card,
   CardContent,
@@ -37,6 +39,7 @@ const chartConfig = {
 }
 
 export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
+  const { togglePrivacyMode } = useContext(PasswordContext)
   const latestProfit = data.length > 0 ? data[data.length - 1].profit : 0;
   const isPositive = latestProfit >= 0;
 
@@ -48,7 +51,7 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
             <TrendingUp className={cn("h-4 w-4 mt-0.5", isPositive ? "text-primary" : "text-destructive")} />
             <p className="text-sm text-muted-foreground leading-snug">
                 Seu balanço este mês está <span className="font-bold text-foreground">{isPositive ? 'positivo' : 'negativo'}</span> em 
-                <span className={cn("font-bold mx-1", isPositive ? "text-primary" : "text-destructive")}>
+                <span className={cn("font-bold mx-1 cursor-pointer hover:underline", isPositive ? "text-primary" : "text-destructive")} onClick={isPrivacyMode ? togglePrivacyMode : undefined}>
                     {isPrivacyMode ? 'R$ ●●●,●●' : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Math.abs(latestProfit))}
                 </span>.
             </p>
@@ -69,9 +72,13 @@ export function ProfitChart({ data, isPrivacyMode = false }: ProfitChartProps) {
       </CardHeader>
       <CardContent className="px-0">
         {isPrivacyMode ? (
-            <div className="h-[250px] w-full flex flex-col items-center justify-center bg-muted/20 rounded-[2rem] border-2 border-dashed">
-                <EyeOff className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm font-bold text-muted-foreground">Gráfico oculto</p>
+            <div 
+                className="h-[250px] w-full flex flex-col items-center justify-center bg-muted/20 rounded-[2rem] border-2 border-dashed cursor-pointer hover:bg-muted/30 transition-colors group active:scale-[0.99]"
+                onClick={togglePrivacyMode}
+            >
+                <EyeOff className="h-8 w-8 text-muted-foreground mb-2 group-hover:text-primary transition-colors" />
+                <p className="text-sm font-bold text-muted-foreground group-hover:text-foreground transition-colors">Gráfico oculto</p>
+                <p className="text-xs text-muted-foreground">Clique para desbloquear e visualizar</p>
             </div>
         ) : (
         <ChartContainer config={chartConfig} className="h-[250px] w-full">

@@ -36,11 +36,18 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
           if (userProfile.expiresAt && (userProfile.expiresAt as any).toDate) {
              userProfile.expiresAt = (userProfile.expiresAt as any).toDate();
           }
+          if (userProfile.trialExpiresAt && (userProfile.trialExpiresAt as any).toDate) {
+             userProfile.trialExpiresAt = (userProfile.trialExpiresAt as any).toDate();
+          }
 
           if (userProfile.status === 'active' && userProfile.expiresAt) {
             if (new Date() > userProfile.expiresAt) {
               // Notificar sobre o encerramento do trial antes de desativar
-              if (userProfile.trialStarted) {
+              const isTrialExpired = userProfile.trialExpiresAt 
+                ? userProfile.trialExpiresAt.getTime() >= userProfile.expiresAt.getTime()
+                : userProfile.trialStarted;
+
+              if (isTrialExpired) {
                 notifyTrialExpiredAction({
                   name: userProfile.displayName,
                   email: userProfile.email,

@@ -130,6 +130,7 @@ export async function startFreeTrial(user: User): Promise<void> {
         await updateDoc(userRef, {
             status: 'active',
             expiresAt: Timestamp.fromDate(expiresAt),
+            trialExpiresAt: Timestamp.fromDate(expiresAt),
             trialStarted: true,
         });
 

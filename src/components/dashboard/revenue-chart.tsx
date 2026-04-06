@@ -3,6 +3,8 @@
 
 import { TrendingUp, EyeOff } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { useContext } from "react"
+import { PasswordContext } from "@/contexts/password-context"
 
 import {
   Card,
@@ -31,13 +33,18 @@ const chartConfig = {
 }
 
 export function RevenueChart({ data, isPrivacyMode = false }: RevenueChartProps) {
+  const { togglePrivacyMode } = useContext(PasswordContext)
+
   return (
     <div className="w-full">
         {isPrivacyMode ? (
-            <div className="h-[300px] w-full flex flex-col items-center justify-center bg-muted/20 rounded-2xl border-2 border-dashed">
-                <EyeOff className="h-8 w-8 text-muted-foreground mb-2" />
-                <p className="text-sm font-bold text-muted-foreground">Dados financeiros ocultos</p>
-                <p className="text-xs text-muted-foreground">Desative o modo de privacidade para visualizar</p>
+            <div 
+                className="h-[300px] w-full flex flex-col items-center justify-center bg-muted/20 rounded-2xl border-2 border-dashed cursor-pointer hover:bg-muted/30 transition-colors group active:scale-[0.99]"
+                onClick={togglePrivacyMode}
+            >
+                <EyeOff className="h-8 w-8 text-muted-foreground mb-2 group-hover:text-primary transition-colors" />
+                <p className="text-sm font-bold text-muted-foreground group-hover:text-foreground transition-colors">Dados financeiros ocultos</p>
+                <p className="text-xs text-muted-foreground">Clique para desbloquear e visualizar</p>
             </div>
         ) : (
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
