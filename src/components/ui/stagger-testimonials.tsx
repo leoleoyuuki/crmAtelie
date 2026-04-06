@@ -11,7 +11,6 @@ const testimonialsRow1 = [
     content: "A diferença não está no preço. Pra mim pelo menos é muito mais rápido montar orçamentos e entender o lucro real de cada peça. A interface é linda, intuitiva e o fluxo de impressões térmicas me economizou muito tempo.",
     author: "Natália",
     role: "Costura Criativa",
-    handle: "@nataliacostura",
     source: "instagram"
   },
   {
@@ -19,7 +18,6 @@ const testimonialsRow1 = [
     content: "Parei de usar planilhas que travavam! O AtelierFlow faz os cálculos automáticos de margem de lucro, e os clientes amam a organização e os PDFs com a minha marca.",
     author: "Alcimara",
     role: "Artesanato & Cia",
-    handle: "@alcimara.artes",
     source: "whatsapp"
   },
   {
@@ -27,7 +25,6 @@ const testimonialsRow1 = [
     content: "Um detalhe bobo: o dashboard do celular é IDÊNTICO a um aplicativo, super fluído. Posso olhar o histórico de qualquer cliente do meu bolso, em segundos.",
     author: "Doce Papel",
     role: "Papelaria",
-    handle: "@docepapel.atelie",
     source: "threads"
   },
   {
@@ -35,7 +32,6 @@ const testimonialsRow1 = [
     content: "Sempre que pergunto 'qual vai ser a próxima novidade?', vocês lançam algo novo e me surpreendem!! Muito rápido, recomendo 1000 vezes.",
     author: "Carla Laços",
     role: "Acessórios Infantis",
-    handle: "@carlaribeirow",
     source: "instagram"
   },
   {
@@ -43,7 +39,6 @@ const testimonialsRow1 = [
     content: "O AtelierFlow transformou minha gestão financeira. Agora sei exatamente quanto lucro em cada peça que faço por encomenda.",
     author: "Marly Artes",
     role: "Crochê",
-    handle: "@marlycroche",
     source: "whatsapp"
   }
 ];
@@ -54,7 +49,6 @@ const testimonialsRow2 = [
     content: "Eu fiquei besta com a qualidade, já tô migrando todas as minhas encomendas ativas pra cá o mais rápido possível!!",
     author: "Rafaela Tricô",
     role: "Tricot Moderno",
-    handle: "@rafa.tricot",
     source: "instagram"
   },
   {
@@ -62,7 +56,6 @@ const testimonialsRow2 = [
     content: "Ok, o AtelierFlow é realmente MUITO bom. Acabei de realizar a migração e, finalmente, tenho tudo centralizado. Sem mais bloquinhos de papel perdidos pela mesa.",
     author: "Ju Marrone",
     role: "Costura de Roupas",
-    handle: "@ju.costuras",
     source: "threads"
   },
   {
@@ -70,7 +63,6 @@ const testimonialsRow2 = [
     content: "Gente, parabéns! O software tá super ajustado para artesanato. Estou explorando todas as funcionalidades e é incrível e intuitivo.",
     author: "Bordados da Ana",
     role: "Bordado Livre",
-    handle: "@anabordados",
     source: "whatsapp"
   },
   {
@@ -78,7 +70,6 @@ const testimonialsRow2 = [
     content: "Cara, testei MUITOS aplicativos antes... e nenhum foca de verdade no modelo de 'pedidos complexos'. Aqui eu gerencio prazos, recebimentos parcelados, perfeitamente.",
     author: "Leo Custom",
     role: "Pintura em Porcelana",
-    handle: "@leocustom_art",
     source: "instagram"
   },
   {
@@ -86,7 +77,6 @@ const testimonialsRow2 = [
     content: "Eu acordo pensando: como a gente ficava sem isso antes? A experiência do cliente na hora de ver o orçamento e as datas nunca foi tão profissional.",
     author: "Mimos da Gabi",
     role: "Lembrancinhas",
-    handle: "@gabi.mimos",
     source: "threads"
   }
 ];
@@ -100,13 +90,12 @@ const TestimonialCard = ({ data }: { data: typeof testimonialsRow1[0] }) => {
             {data.author[0]}
           </div>
           <div>
-            <h4 className="font-bold text-sm text-foreground flex items-center gap-1.5 leading-tight">
+            <h4 className="font-bold text-sm text-foreground leading-tight">
               {data.author}
-              <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-black hidden sm:inline-block">
-                {data.role}
-              </span>
             </h4>
-            <p className="text-xs text-muted-foreground font-medium">{data.handle}</p>
+            <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-black mt-1 inline-block">
+              {data.role}
+            </span>
           </div>
         </div>
         <div className="text-muted-foreground/40 mt-1">
