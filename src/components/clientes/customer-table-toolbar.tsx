@@ -3,8 +3,17 @@
 import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import { CustomerFormDialog } from "../dashboard/customer-form-dialog"
-import { UserPlus, Search, Download, MessageSquare } from "lucide-react"
+import { UserPlus, Search, Download, FileText, Table as TableIcon } from "lucide-react"
 import { Button } from "../ui/button"
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { exportToCSV, exportToPDF } from "@/lib/export-utils"
+import { Customer } from "@/lib/types"
+import { format } from "date-fns"
 
 interface CustomerTableToolbarProps<TData> {
   table: Table<TData>
@@ -12,6 +21,37 @@ interface CustomerTableToolbarProps<TData> {
 }
 
 export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: CustomerTableToolbarProps<TData>) {
+  const handleExportCSV = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const exportData = rows.map(row => {
+      const c = row.original as Customer;
+      const date = c.createdAt instanceof Date ? c.createdAt : (c.createdAt as any)?.toDate?.() || new Date(c.createdAt);
+      return {
+        'Nome': c.name,
+        'WhatsApp': c.phone,
+        'E-mail': c.email || '',
+        'Data de Cadastro': format(date, 'dd/MM/yyyy')
+      };
+    });
+    exportToCSV(exportData, 'clientes');
+  };
+
+  const handleExportPDF = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const headers = ['Nome', 'WhatsApp', 'E-mail', 'Desde'];
+    const body = rows.map(row => {
+        const c = row.original as Customer;
+        const date = c.createdAt instanceof Date ? c.createdAt : (c.createdAt as any)?.toDate?.() || new Date(c.createdAt);
+        return [
+            c.name,
+            c.phone,
+            c.email || '---',
+            format(date, 'dd/MM/yyyy')
+        ];
+    });
+    exportToPDF(headers, body, 'clientes', 'Lista de Clientes');
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Search and Main Actions */}
@@ -28,10 +68,24 @@ export function CustomerTableToolbar<TData>({ table, onCustomerCreated }: Custom
             />
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-            <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
-                <Download className="h-4 w-4 mr-2" />
-                CSV
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
+                        <Download className="h-4 w-4 mr-2" />
+                        Relatório
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[180px] rounded-xl p-2">
+                    <DropdownMenuItem onClick={handleExportCSV} className="rounded-lg font-medium cursor-pointer">
+                        <TableIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportPDF} className="rounded-lg font-medium cursor-pointer">
+                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar PDF
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <CustomerFormDialog
                 onCustomerCreated={onCustomerCreated}
                 onCustomerUpdated={onCustomerCreated}

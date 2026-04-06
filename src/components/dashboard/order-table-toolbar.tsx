@@ -14,8 +14,17 @@ import {
 } from "@/components/ui/select"
 import { getMonths } from "@/lib/data"
 import { Button } from "../ui/button"
-import { PlusCircle, Search, Download, Filter } from "lucide-react"
+import { PlusCircle, Search, Download, Filter, FileText, Table as TableIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { exportToCSV, exportToPDF } from "@/lib/export-utils"
+import { Order } from "@/lib/types"
+import { format } from "date-fns"
 
 interface OrderTableToolbarProps<TData> {
   table: Table<TData>
@@ -35,6 +44,39 @@ export function OrderTableToolbar<TData>({
 }: OrderTableToolbarProps<TData>) {
   const currentStatusFilter = table.getColumn("status")?.getFilterValue() as string;
 
+  const handleExportCSV = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const exportData = rows.map(row => {
+      const o = row.original as Order;
+      const date = o.createdAt instanceof Date ? o.createdAt : (o.createdAt as any)?.toDate?.() || new Date(o.createdAt);
+      return {
+        'Cliente': o.customerName,
+        'Serviços': (o.items || []).map(i => i.serviceType).join(', '),
+        'Valor Total (R$)': o.totalValue,
+        'Status': o.status,
+        'Prazo': o.dueDate ? format(o.dueDate, 'dd/MM/yyyy') : '',
+        'Criado em': format(date, 'dd/MM/yyyy HH:mm')
+      };
+    });
+    exportToCSV(exportData, 'pedidos');
+  };
+
+  const handleExportPDF = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const headers = ['Cliente', 'Serviços', 'Valor', 'Status', 'Prazo'];
+    const body = rows.map(row => {
+        const o = row.original as Order;
+        return [
+            o.customerName,
+            (o.items || []).map(i => i.serviceType).join(', '),
+            `R$ ${o.totalValue.toFixed(2)}`,
+            o.status,
+            o.dueDate ? format(o.dueDate, 'dd/MM/yy') : '---'
+        ];
+    });
+    exportToPDF(headers, body, 'pedidos', 'Relatório de Pedidos');
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Search and Main Actions */}
@@ -51,10 +93,24 @@ export function OrderTableToolbar<TData>({
             />
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-            <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
+                        <Download className="h-4 w-4 mr-2" />
+                        Exportar
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[180px] rounded-xl p-2">
+                    <DropdownMenuItem onClick={handleExportCSV} className="rounded-lg font-medium cursor-pointer">
+                        <TableIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportPDF} className="rounded-lg font-medium cursor-pointer">
+                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar PDF
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <OrderFormDialog
                 onOrderCreated={onOrderCreated}
                 trigger={

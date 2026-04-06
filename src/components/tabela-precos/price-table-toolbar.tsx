@@ -4,8 +4,15 @@ import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
 import { PriceTableItem } from "@/lib/types"
 import { PriceFormDialog } from "./price-form-dialog"
-import { PlusCircle, Search, Download } from "lucide-react"
+import { PlusCircle, Search, Download, FileText, Table as TableIcon } from "lucide-react"
 import { Button } from "../ui/button"
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { exportToCSV, exportToPDF } from "@/lib/export-utils"
 
 interface PriceTableToolbarProps<TData> {
   table: Table<TData>
@@ -13,6 +20,33 @@ interface PriceTableToolbarProps<TData> {
 }
 
 export function PriceTableToolbar<TData>({ table, onItemCreated }: PriceTableToolbarProps<TData>) {
+  const handleExportCSV = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const exportData = rows.map(row => {
+      const p = row.original as PriceTableItem;
+      return {
+        'Serviço': p.serviceName,
+        'Descrição': p.description || '',
+        'Preço (R$)': p.price
+      };
+    });
+    exportToCSV(exportData, 'tabela_precos');
+  };
+
+  const handleExportPDF = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const headers = ['Serviço', 'Descrição', 'Preço'];
+    const body = rows.map(row => {
+        const p = row.original as PriceTableItem;
+        return [
+            p.serviceName,
+            p.description || '',
+            `R$ ${p.price.toFixed(2)}`
+        ];
+    });
+    exportToPDF(headers, body, 'tabela_precos', 'Tabela de Preços e Serviços');
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Search and Main Actions */}
@@ -29,10 +63,24 @@ export function PriceTableToolbar<TData>({ table, onItemCreated }: PriceTableToo
             />
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-            <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
-                <Download className="h-4 w-4 mr-2" />
-                PDF
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
+                        <Download className="h-4 w-4 mr-2" />
+                        Relatório
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[180px] rounded-xl p-2">
+                    <DropdownMenuItem onClick={handleExportCSV} className="rounded-lg font-medium cursor-pointer">
+                        <TableIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportPDF} className="rounded-lg font-medium cursor-pointer">
+                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar PDF
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <PriceFormDialog
                 onItemCreated={onItemCreated}
                 onItemUpdated={() => {}} // This will be handled by the shell

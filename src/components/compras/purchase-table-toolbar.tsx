@@ -2,9 +2,19 @@
 
 import { Table } from "@tanstack/react-table"
 import { Input } from "@/components/ui/input"
-import { ShoppingCart, Search, Download } from "lucide-react"
+import { ShoppingCart, Search, Download, FileText, Table as TableIcon } from "lucide-react"
 import { Button } from "../ui/button"
 import { PurchaseFormDialog } from "./purchase-form-dialog"
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { exportToCSV, exportToPDF } from "@/lib/export-utils"
+import { Purchase } from "@/lib/types"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 interface PurchaseTableToolbarProps<TData> {
   table: Table<TData>
@@ -12,6 +22,41 @@ interface PurchaseTableToolbarProps<TData> {
 }
 
 export function PurchaseTableToolbar<TData>({ table, onPurchaseCreated }: PurchaseTableToolbarProps<TData>) {
+  const handleExportCSV = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const exportData = rows.map(row => {
+      const p = row.original as Purchase;
+      const date = p.createdAt instanceof Date ? p.createdAt : (p.createdAt as any)?.toDate?.() || new Date(p.createdAt);
+      return {
+        'Material': p.materialName,
+        'Quantidade': p.quantity,
+        'Unidade': p.unit,
+        'Custo Total (R$)': p.cost,
+        'Categoria': p.category,
+        'Data': format(date, 'dd/MM/yyyy HH:mm', { locale: ptBR })
+      };
+    });
+    exportToCSV(exportData, 'registro_compras');
+  };
+
+  const handleExportPDF = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const headers = ['Material', 'Qtd', 'Unidade', 'Custo Total', 'Categoria', 'Data'];
+    const body = rows.map(row => {
+        const p = row.original as Purchase;
+        const date = p.createdAt instanceof Date ? p.createdAt : (p.createdAt as any)?.toDate?.() || new Date(p.createdAt);
+        return [
+            p.materialName,
+            p.quantity.toString(),
+            p.unit,
+            `R$ ${p.cost.toFixed(2)}`,
+            p.category,
+            format(date, 'dd/MM/yyyy', { locale: ptBR })
+        ];
+    });
+    exportToPDF(headers, body, 'registro_compras', 'Relatório de Compras');
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col md:flex-row items-center gap-4">
@@ -27,10 +72,24 @@ export function PurchaseTableToolbar<TData>({ table, onPurchaseCreated }: Purcha
             />
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-            <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
-                <Download className="h-4 w-4 mr-2" />
-                CSV
-            </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="h-12 rounded-xl flex-1 md:flex-none font-bold">
+                        <Download className="h-4 w-4 mr-2" />
+                        Relatório
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[180px] rounded-xl p-2">
+                    <DropdownMenuItem onClick={handleExportCSV} className="rounded-lg font-medium cursor-pointer">
+                        <TableIcon className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportPDF} className="rounded-lg font-medium cursor-pointer">
+                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" />
+                        Exportar PDF
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <PurchaseFormDialog
                 onPurchaseCreated={onPurchaseCreated}
                 trigger={
