@@ -8,7 +8,7 @@
   "theme_color": "#EFEDE6",
   "scope": "/",
   "scope_extensions": [
-    { "origin": "checkout.stripe.com" }
+    { "type": "origin", "origin": "https://checkout.stripe.com" }
   ],
   "icons": [
     {
