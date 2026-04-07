@@ -7,6 +7,9 @@
   "background_color": "#F7F5EF",
   "theme_color": "#EFEDE6",
   "scope": "/",
+  "scope_extensions": [
+    { "origin": "https://checkout.stripe.com" }
+  ],
   "icons": [
     {
       "src": "/images/apple-touch-icon.png",
