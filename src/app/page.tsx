@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from 'next/link';
+import Image from 'next/image';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -52,8 +53,9 @@ const promoSlides = [
     subtitle: 'Pedidos, clientes e finanças em um só lugar.',
     cta: 'Explorar',
     ctaHref: '/pedidos',
-    gradient: 'from-primary/90 via-primary/70 to-primary/40',
-    accent: 'hsl(var(--primary))',
+    gradient: 'from-[#A67C52] via-[#8B5E3C] to-[#6F4A2E]',
+    accent: '#A67C52',
+    image: '/images/promo/atelier2.png',
   },
   {
     tag: 'Financeiro',
@@ -61,8 +63,9 @@ const promoSlides = [
     subtitle: 'Acompanhe receitas, custos e margem em tempo real.',
     cta: 'Ver gráficos',
     ctaHref: '/',
-    gradient: 'from-violet-600/90 via-violet-500/70 to-violet-400/40',
-    accent: '#7c3aed',
+    gradient: 'from-[#D9C5B2] via-[#BDA68E] to-[#A1866B]',
+    accent: '#BDA68E',
+    image: '/images/promo/finance2.png',
   },
   {
     tag: 'Tarefas',
@@ -70,8 +73,9 @@ const promoSlides = [
     subtitle: 'Nunca perca um prazo com nossa gestão de pedidos.',
     cta: 'Abrir Tarefas',
     ctaHref: '/tarefas',
-    gradient: 'from-rose-500/90 via-rose-400/70 to-orange-300/40',
-    accent: '#e11d48',
+    gradient: 'from-[#7D8471] via-[#5D6355] to-[#43493E]',
+    accent: '#5D6355',
+    image: '/images/promo/tasks2.png',
   },
 ];
 
@@ -105,47 +109,73 @@ function PromoCarousel() {
       <div className="absolute -bottom-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-xl" />
       <div className="absolute top-4 right-8 h-20 w-20 rounded-full bg-white/10 blur-lg" />
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-6 text-white">
-        <div className="flex items-start justify-between">
-          <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
-            {slide.tag}
-          </span>
-          <div className="flex gap-1.5">
-            <button onClick={prev} className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
-              <ChevronLeft className="h-3 w-3" />
-            </button>
-            <button onClick={next} className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors">
-              <ChevronRight className="h-3 w-3" />
-            </button>
+      {/* Content Overlay */}
+      <div className="relative z-10 h-full">
+        {/* Left Hand: Texts & CTA */}
+        <div className="relative z-20 flex flex-col justify-between h-full p-6 text-white max-w-[70%] sm:max-w-[60%] select-none">
+          <div className="flex items-start justify-between">
+            <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
+              {slide.tag}
+            </span>
+            <div className="flex gap-1.5 lg:hidden">
+              <button onClick={prev} className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <ChevronLeft className="h-3 w-3" />
+              </button>
+              <button onClick={next} className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 mt-2">
+            <h3 className="text-xl sm:text-2xl font-headline font-black leading-tight drop-shadow-md">{slide.title}</h3>
+            <p className="text-[13px] sm:text-sm text-white/90 leading-snug drop-shadow-md max-w-[240px]">{slide.subtitle}</p>
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <Link href={slide.ctaHref}>
+              <button className="flex items-center gap-1.5 bg-white text-primary text-[11px] font-black px-4 py-2 rounded-full hover:scale-105 transition-all shadow-md group">
+                {slide.cta}
+                <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </Link>
+            {/* Dots */}
+            <div className="flex gap-1.5 ml-4">
+              {promoSlides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  className={cn(
+                    'h-1.5 rounded-full transition-all duration-300',
+                    i === current ? 'w-6 bg-white' : 'w-1.5 bg-white/40'
+                  )}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-2 mt-4">
-          <h3 className="text-xl font-headline font-black leading-tight">{slide.title}</h3>
-          <p className="text-sm text-white/80 leading-relaxed">{slide.subtitle}</p>
+        {/* 3D Illustration - Absolute & Purely Visual */}
+        <div className="absolute top-1/2 -translate-y-1/2 -right-4 sm:-right-8 w-[160px] sm:w-[240px] lg:w-[320px] aspect-square flex items-center justify-center pointer-events-none overflow-visible">
+          <div className="absolute inset-0 bg-white/5 rounded-full blur-3xl scale-75 animate-pulse" />
+          <Image 
+            src={slide.image} 
+            alt={slide.title}
+            width={400}
+            height={400}
+            className="w-full h-auto object-contain drop-shadow-2xl select-none filter brightness-110 contrast-105"
+            priority
+          />
         </div>
 
-        <div className="flex items-center justify-between mt-5">
-          <Link href={slide.ctaHref}>
-            <button className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-full transition-all group">
-              {slide.cta}
-              <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </Link>
-          {/* Dots */}
-          <div className="flex gap-1.5">
-            {promoSlides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={cn(
-                  'h-1.5 rounded-full transition-all duration-300',
-                  i === current ? 'w-6 bg-white' : 'w-1.5 bg-white/40'
-                )}
-              />
-            ))}
-          </div>
+        {/* Controls - Visible on Tablet/Desktop as overlay */}
+        <div className="absolute top-6 right-6 hidden lg:flex gap-1.5 z-30">
+          <button onClick={prev} className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-colors">
+            <ChevronLeft className="h-3 w-3" />
+          </button>
+          <button onClick={next} className="h-6 w-6 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-colors">
+            <ChevronRight className="h-3 w-3" />
+          </button>
         </div>
       </div>
     </div>
