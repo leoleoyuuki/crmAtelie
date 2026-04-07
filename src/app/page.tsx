@@ -332,14 +332,10 @@ function StatsStrip({
       label: 'Pedidos', value: String(totalOrders), icon: Package, 
       iconBg: 'bg-blue-500/10', iconColor: 'text-blue-600', valueColor: ''
     },
-    { 
-      label: 'Em Aberto', value: String(pendingOrders), icon: ClipboardList, 
-      iconBg: 'bg-orange-500/10', iconColor: 'text-orange-600', valueColor: ''
-    },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       {stats.map((s, i) => (
         <div
           key={i}
@@ -460,7 +456,7 @@ export default function DashboardPage() {
           <div className="hidden md:block">
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button on className="rounded-xl font-bold shadow-lg shadow-primary/20 h-9">
+                <Button className="rounded-xl font-bold shadow-lg shadow-primary/20 h-9">
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Adicionar
                 </Button>
@@ -491,33 +487,37 @@ export default function DashboardPage() {
       {/* ── WELCOME GUIDE (only for new users) ─────────────── */}
       <WelcomeGuide />
 
-      {/* ── 3-COLUMN TOP SECTION ────────────────────────────── */}
+      {/* ── TOP SECTION: CAROUSEL, PENDING & ACTIVITY ──────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* Col 1 – Promo Carousel */}
-        <div className="lg:col-span-4">
-          <PromoCarousel />
+        <div className="lg:col-span-8 flex flex-col gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+            {/* Col 1 – Promo Carousel */}
+            <div className="h-full">
+              <PromoCarousel />
+            </div>
+
+            {/* Col 2 – Pending Orders */}
+            <div className="h-full min-h-[260px]">
+              <PendingOrdersCard />
+            </div>
+          </div>
+
+          {/* ── HORIZONTAL STATS STRIP ──────────────────────────── */}
+          <StatsStrip
+            totalRevenue={stats.totalRevenue}
+            totalProfit={stats.totalProfit}
+            totalOrders={stats.totalOrders}
+            pendingOrders={stats.pendingOrders}
+            isPrivacyMode={isPrivacyMode}
+            periodLabel={periodLabel}
+          />
         </div>
 
-        {/* Col 2 – Pending Orders */}
-        <div className="lg:col-span-4 min-h-[260px]">
-          <PendingOrdersCard />
-        </div>
-
-        {/* Col 3 – Activity */}
-        <div className="lg:col-span-4 min-h-[260px]">
+        {/* Col 3 – Activity (Full Height) */}
+        <div className="lg:col-span-4 h-full">
           <ActivityCard summary={summary} />
         </div>
       </div>
-
-      {/* ── HORIZONTAL STATS STRIP ──────────────────────────── */}
-      <StatsStrip
-        totalRevenue={stats.totalRevenue}
-        totalProfit={stats.totalProfit}
-        totalOrders={stats.totalOrders}
-        pendingOrders={stats.pendingOrders}
-        isPrivacyMode={isPrivacyMode}
-        periodLabel={periodLabel}
-      />
 
       {/* ── FINANCIAL CHART ─────────────────────────────────── */}
       <div className="rounded-3xl border bg-card shadow-sm overflow-hidden">
