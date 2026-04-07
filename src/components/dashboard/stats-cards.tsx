@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, DollarSign, Package, EyeOff } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useContext } from "react";
 import { PasswordContext } from "@/contexts/password-context";
 
@@ -15,10 +15,7 @@ export function RevenueTotalCard({ totalRevenue, isPrivacyMode = false, classNam
     const { togglePrivacyMode } = useContext(PasswordContext);
     const formattedRevenue = isPrivacyMode
         ? 'R$ ●●●,●●'
-        : new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(totalRevenue);
+        : formatCurrency(totalRevenue);
 
     return (
         <Card 

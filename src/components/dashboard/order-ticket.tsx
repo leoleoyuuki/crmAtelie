@@ -4,6 +4,7 @@ import React from 'react';
 import { Order, Customer } from '@/lib/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface OrderTicketProps {
   order: Order;
@@ -16,7 +17,7 @@ const LOGO_DATA_URI = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy5
 export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
   ({ order, customer }, ref) => {
     const formattedDate = (date: Date) => format(date, "dd/MM/yy HH:mm", { locale: ptBR });
-    const formattedCurrency = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+    const formattedCurrency = (value: number) => formatCurrency(value);
     
     return (
       <div ref={ref} className="bg-white text-black font-mono w-[220px] p-2 text-[10pt] leading-tight mx-auto">

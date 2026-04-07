@@ -40,7 +40,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────
    PROMO CAROUSEL CARD
@@ -61,7 +61,7 @@ const promoSlides = [
     tag: 'Financeiro',
     title: 'Veja Seu Lucro Real',
     subtitle: 'Acompanhe receitas, custos e margem em tempo real.',
-    cta: 'Ver gráficos',
+    cta: 'Ver',
     ctaHref: '/',
     gradient: 'from-[#D9C5B2] via-[#BDA68E] to-[#A1866B]',
     accent: '#BDA68E',
@@ -71,7 +71,7 @@ const promoSlides = [
     tag: 'Tarefas',
     title: 'Pedidos Prontos a Tempo',
     subtitle: 'Nunca perca um prazo com nossa gestão de pedidos.',
-    cta: 'Abrir Tarefas',
+    cta: 'Tarefas',
     ctaHref: '/tarefas',
     gradient: 'from-[#7D8471] via-[#5D6355] to-[#43493E]',
     accent: '#5D6355',
@@ -115,7 +115,7 @@ function PromoCarousel() {
       {/* Content Overlay */}
       <div className="relative z-10 h-full">
         {/* Left Hand: Texts & CTA */}
-        <div className="relative z-20 flex flex-col justify-between h-full p-6 text-white max-w-[70%] sm:max-w-[60%] select-none">
+        <div className="relative z-20 flex flex-col justify-between h-full p-6 text-white max-w-[100%] sm:max-w-[60%] select-none">
           <div className="flex items-start justify-between">
             <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
               {slide.tag}
@@ -356,7 +356,7 @@ function StatsStrip({
 
   const fmt = (v: number) => isPrivacyMode
     ? '●●●'
-    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(v);
+    : formatCurrency(v);
 
   const stats = [
     { 
@@ -419,11 +419,11 @@ function StatsHero({ totalRevenue, totalProfit, totalOrders, pendingOrders, isPr
 
   const fmt = (v: number) => isPrivacyMode 
     ? '●●●' 
-    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
+    : formatCurrency(v);
 
   const fmtSmall = (v: number) => isPrivacyMode 
     ? '●●●' 
-    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
+    : formatCurrency(v);
 
   const isTotal = periodLabel === 'Total Acumulado';
 

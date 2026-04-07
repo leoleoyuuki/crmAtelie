@@ -32,6 +32,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { PurchaseCardMobile } from "./purchase-card-mobile";
 import { Skeleton } from "../ui/skeleton";
 import { ChevronDown, ChevronUp, Loader2, ShoppingBag } from "lucide-react";
+import { cn, formatCurrency } from "@/lib/utils";
 
 interface PurchaseTableShellProps {
   data: Purchase[];
@@ -104,10 +105,7 @@ export function PurchaseTableShell({
         header: () => <div className="text-right uppercase text-[10px] font-black tracking-widest">Custo Total</div>,
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("cost"));
-          const formatted = new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(amount);
+          const formatted = formatCurrency(amount);
           return <div className="text-right font-black text-sm text-foreground">{formatted}</div>;
         },
       },

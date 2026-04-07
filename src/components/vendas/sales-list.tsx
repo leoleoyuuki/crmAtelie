@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface SalesListProps {
   data: Sale[];
@@ -57,7 +58,8 @@ export function SalesList({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border bg-card overflow-hidden">
+      {/* ── DESKTOP TABLE VIEW ───────────────────────────────── */}
+      <div className="hidden md:block rounded-xl border bg-card overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
@@ -82,13 +84,13 @@ export function SalesList({
                       {sale.customerName ? sale.customerName : <span className="opacity-50 italic">Avulso</span>}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.cost)}
+                      {formatCurrency(sale.cost)}
                   </TableCell>
                   <TableCell className="text-right font-medium text-foreground">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.price)}
+                      {formatCurrency(sale.price)}
                   </TableCell>
                   <TableCell className="text-right font-bold text-green-600 dark:text-green-500">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.profit)}
+                      {formatCurrency(sale.profit)}
                   </TableCell>
                 </TableRow>
               )
@@ -96,6 +98,55 @@ export function SalesList({
           </TableBody>
         </Table>
       </div>
+
+      {/* ── MOBILE CARD VIEW ─────────────────────────────────── */}
+      <div className="md:hidden space-y-4">
+        {data.map((sale) => {
+          const dateObj = parseDate(sale.date);
+          return (
+            <div key={sale.id} className="p-5 rounded-3xl border bg-card shadow-sm hover:border-primary/30 transition-colors">
+              <div className="flex justify-between items-start mb-4">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xl font-black text-foreground leading-tight">{sale.productName}</h4>
+                  <div className="flex items-center gap-2 mt-1.5 auto-wrap">
+                    <span className="text-[11px] text-muted-foreground font-black uppercase tracking-widest bg-muted/50 px-2 py-0.5 rounded">
+                      {format(dateObj, "dd/MM/yyyy", { locale: ptBR })}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground font-bold truncate">
+                      {sale.customerName || 'Venda Avulsa'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-3 pt-4 border-t border-muted/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Preço de Venda</span>
+                  <p className="text-xl font-black text-foreground tracking-tighter">
+                    {formatCurrency(sale.price)}
+                  </p>
+                </div>
+                
+                <div className="flex items-center justify-between bg-green-500/5 -mx-5 px-5 py-3 border-y border-green-500/10">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Lucro Real</span>
+                  </div>
+                  <span className="text-xl font-black text-green-600 dark:text-green-500 tracking-tighter">
+                     {formatCurrency(sale.profit)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-40">
+                  <span>Custo de Produção</span>
+                  <span>{formatCurrency(sale.cost)}</span>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
 
       {(hasPrevPage || hasNextPage) && (
         <div className="flex items-center justify-end space-x-2 py-4">

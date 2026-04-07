@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingDown, AreaChart, EyeOff } from "lucide-react";
 import { useContext } from "react";
 import { PasswordContext } from "@/contexts/password-context";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type ProfitStatsCardsProps = {
     totalProfit: number;
@@ -13,7 +13,7 @@ type ProfitStatsCardsProps = {
 
 export function ProfitTotalCard({ totalProfit, isPrivacyMode = false, className }: { totalProfit: number; isPrivacyMode?: boolean; className?: string }) {
     const { togglePrivacyMode } = useContext(PasswordContext);
-    const formattedProfit = isPrivacyMode ? 'R$ ●●●,●●' : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalProfit);
+    const formattedProfit = isPrivacyMode ? 'R$ ●●●,●●' : formatCurrency(totalProfit);
     return (
         <Card 
             className={cn(className, isPrivacyMode && "cursor-pointer transition-all hover:border-primary/50 active:scale-[0.98]")}
@@ -33,7 +33,7 @@ export function ProfitTotalCard({ totalProfit, isPrivacyMode = false, className 
 
 export function GrossRevenueCard({ totalRevenue, isPrivacyMode = false, className }: { totalRevenue: number; isPrivacyMode?: boolean; className?: string }) {
     const { togglePrivacyMode } = useContext(PasswordContext);
-    const formattedRevenue = isPrivacyMode ? 'R$ ●●●,●●' : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalRevenue);
+    const formattedRevenue = isPrivacyMode ? 'R$ ●●●,●●' : formatCurrency(totalRevenue);
     return (
         <Card 
             className={cn(className, isPrivacyMode && "cursor-pointer transition-all hover:border-primary/50 active:scale-[0.98]")}
@@ -53,7 +53,7 @@ export function GrossRevenueCard({ totalRevenue, isPrivacyMode = false, classNam
 
 export function CostsTotalCard({ totalCosts, isPrivacyMode = false, className }: { totalCosts: number; isPrivacyMode?: boolean; className?: string }) {
     const { togglePrivacyMode } = useContext(PasswordContext);
-    const formattedCosts = isPrivacyMode ? 'R$ ●●●,●●' : new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalCosts);
+    const formattedCosts = isPrivacyMode ? 'R$ ●●●,●●' : formatCurrency(totalCosts);
     return (
         <Card 
             className={cn(className, isPrivacyMode && "cursor-pointer transition-all hover:border-primary/50 active:scale-[0.98]")}

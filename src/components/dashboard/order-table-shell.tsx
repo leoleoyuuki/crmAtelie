@@ -31,7 +31,7 @@ import { OrderTableToolbar } from "./order-table-toolbar";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { ArrowUpDown, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OrderCardMobile } from "./order-card-mobile";
 import { Skeleton } from "../ui/skeleton";
@@ -59,8 +59,8 @@ const monthFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
 }
 
 const serviceTypeFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
-    const items = row.original.items || [];
-    return items.some(item => item.serviceType === value);
+    const items = (row.original.items as any[]) || [];
+    return items.some((item: any) => item.serviceType === value);
 }
 
 const completionStatusFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -173,10 +173,7 @@ function OrderTableShellContent({
               return <div className="text-right font-black text-muted-foreground/50">R$ ●●●,●●</div>;
           }
           const amount = parseFloat(row.getValue("totalValue"));
-          const formatted = new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(amount);
+          const formatted = formatCurrency(amount);
           return <div className="text-right font-black text-sm text-foreground">{formatted}</div>;
         },
       },

@@ -42,7 +42,16 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { cn, formatCurrency } from "@/lib/utils";
 
 const saleFormSchema = z.object({
   productSource: z.enum(["manual", "catalog"]),
@@ -98,6 +107,14 @@ export function SaleFormDialog({
     date: new Date(),
   };
 
+  const [productSearch, setProductSearch] = useState("");
+  const [debouncedProductSearch, setDebouncedProductSearch] = useState("");
+  const [isProductPopoverOpen, setIsProductPopoverOpen] = useState(false);
+
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [debouncedCustomerSearch, setDebouncedCustomerSearch] = useState("");
+  const [isCustomerPopoverOpen, setIsCustomerPopoverOpen] = useState(false);
+
   const form = useForm<SaleFormValues>({
     resolver: zodResolver(saleFormSchema),
     defaultValues,
@@ -121,6 +138,45 @@ export function SaleFormDialog({
   const profit = (Number(price) || 0) - (Number(cost) || 0);
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedProductSearch(productSearch);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [productSearch]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedCustomerSearch(customerSearch);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [customerSearch]);
+
+  // Accent-insensitive normalization
+  const normalize = (str: string) =>
+    str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  const filteredProducts = debouncedProductSearch.length >= 3
+    ? catalogProducts?.filter(p => normalize(p.name).includes(normalize(debouncedProductSearch))) ?? []
+    : [];
+
+  const filteredCustomers = debouncedCustomerSearch.length >= 3
+    ? customers?.filter(c => normalize(c.name).includes(normalize(debouncedCustomerSearch))) ?? []
+    : [];
+
+  // Auto-open select when results are found
+  useEffect(() => {
+    if (debouncedProductSearch.length >= 3 && filteredProducts && filteredProducts.length > 0) {
+      setIsProductPopoverOpen(true);
+    }
+  }, [debouncedProductSearch, filteredProducts.length]);
+
+  useEffect(() => {
+    if (debouncedCustomerSearch.length >= 3 && filteredCustomers && filteredCustomers.length > 0) {
+      setIsCustomerPopoverOpen(true);
+    }
+  }, [debouncedCustomerSearch, filteredCustomers.length]);
+
+  useEffect(() => {
     if (isOpen) {
       form.reset(defaultValues);
     }
@@ -130,9 +186,28 @@ export function SaleFormDialog({
     form.setValue("catalogProductId", productId);
     const product = catalogProducts?.find(p => p.id === productId);
     if (product) {
-      form.setValue("cost", product.totalCost);
-      form.setValue("price", product.finalPrice);
+      // Arredonda para 2 casas decimais para evitar problemas de precisão no input
+      const roundedCost = Math.round(product.totalCost * 100) / 100;
+      const roundedPrice = Math.round(product.finalPrice * 100) / 100;
+      
+      form.setValue("cost", roundedCost);
+      form.setValue("price", roundedPrice);
+      setProductSearch(product.name);
+      setIsProductPopoverOpen(false);
     }
+  };
+  const handleCustomerChange = (customerId: string) => {
+    if (customerId === "none") {
+      form.setValue("customerId", "none");
+      setCustomerSearch("");
+    } else {
+      form.setValue("customerId", customerId);
+      const customer = customers?.find(c => c.id === customerId);
+      if (customer) {
+        setCustomerSearch(customer.name);
+      }
+    }
+    setIsCustomerPopoverOpen(false);
   };
 
   const onSubmit = async (data: SaleFormValues) => {
@@ -145,15 +220,17 @@ export function SaleFormDialog({
         }
       }
 
-      const calculatedProfit = data.price - data.cost;
+      const roundedCost = Math.round(data.cost * 100) / 100;
+      const roundedPrice = Math.round(data.price * 100) / 100;
+      const calculatedProfit = Math.round((roundedPrice - roundedCost) * 100) / 100;
 
       const dataToSave: Omit<Sale, 'id' | 'userId' | 'createdAt'> = {
         productName: finalProductName,
         catalogProductId: data.productSource === 'catalog' ? data.catalogProductId : undefined,
         customerId: data.customerId && data.customerId !== "none" ? data.customerId : undefined,
         customerName: data.customerId && data.customerId !== "none" ? customers?.find(c => c.id === data.customerId)?.name : undefined,
-        cost: data.cost,
-        price: data.price,
+        cost: roundedCost,
+        price: roundedPrice,
         profit: calculatedProfit,
         date: data.date,
       };
@@ -229,23 +306,56 @@ export function SaleFormDialog({
                 control={form.control}
                 name="catalogProductId"
                 render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col gap-1.5">
                         <FormLabel>Produto do Catálogo</FormLabel>
-                        <Select onValueChange={handleCatalogProductChange} defaultValue={field.value}>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="relative">
+                              <Input
+                                  placeholder="Buscar (3+ letras)..."
+                                  value={productSearch}
+                                  onChange={(e) => {
+                                      setProductSearch(e.target.value);
+                                  }}
+                                  className="w-full pr-8"
+                              />
+                              <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 opacity-40" />
+                          </div>
+                          
+                          <Select 
+                            open={isProductPopoverOpen} 
+                            onOpenChange={setIsProductPopoverOpen}
+                            value={field.value}
+                            onValueChange={handleCatalogProductChange}
+                          >
                             <FormControl>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione um produto..." />
-                            </SelectTrigger>
+                              <SelectTrigger className={cn("w-full", !field.value && "text-muted-foreground")}>
+                                <SelectValue placeholder="Resultados..." />
+                              </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                            {catalogProducts?.map(prod => (
-                                <SelectItem key={prod.id} value={prod.id}>{prod.name}</SelectItem>
-                            ))}
-                            {(!catalogProducts || catalogProducts.length === 0) && (
-                                <div className="p-2 text-sm text-muted-foreground text-center">Nenhum produto cadastrado.</div>
-                            )}
+                            <SelectContent className="max-h-[300px]">
+                              {filteredProducts && filteredProducts.length > 0 ? (
+                                filteredProducts.map((product) => (
+                                  <SelectItem 
+                                    key={product.id} 
+                                    value={product.id}
+                                    className="py-2"
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="font-medium text-sm">{product.name}</span>
+                                      <span className="text-[10px] opacity-60">
+                                        {formatCurrency(product.finalPrice)} | Ref: {product.reference}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <div className="p-4 text-xs text-center text-muted-foreground italic">
+                                  {productSearch.length < 3 ? "Digite 3+ letras..." : "Nenhum resultado."}
+                                </div>
+                              )}
                             </SelectContent>
-                        </Select>
+                          </Select>
+                        </div>
                         <FormMessage />
                     </FormItem>
                 )}
@@ -270,21 +380,52 @@ export function SaleFormDialog({
             control={form.control}
             name="customerId"
             render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex flex-col gap-1.5">
                     <FormLabel>Cliente (Opcional)</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecione um cliente..." />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        <SelectItem value="none">Nenhum / Venda Avulsa</SelectItem>
-                        {customers?.map(cust => (
-                            <SelectItem key={cust.id} value={cust.id}>{cust.name}</SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-2 gap-2">
+                        <div className="relative">
+                            <Input
+                                placeholder="Buscar (3+ letras)..."
+                                value={customerSearch}
+                                onChange={(e) => {
+                                    setCustomerSearch(e.target.value);
+                                }}
+                                className="w-full pr-8"
+                            />
+                            <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 opacity-40" />
+                        </div>
+
+                        <Select 
+                          open={isCustomerPopoverOpen} 
+                          onOpenChange={setIsCustomerPopoverOpen}
+                          value={field.value}
+                          onValueChange={handleCustomerChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger className={cn("w-full", !field.value && "text-muted-foreground")}>
+                              <SelectValue placeholder="Resultados..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[300px]">
+                            <SelectItem value="none" className="font-medium">
+                              Nenhum / Venda Avulsa
+                            </SelectItem>
+                            {filteredCustomers && filteredCustomers.length > 0 ? (
+                              filteredCustomers.map((customer) => (
+                                <SelectItem key={customer.id} value={customer.id}>
+                                  {customer.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              debouncedCustomerSearch.length >= 3 && (
+                                <div className="p-4 text-xs text-center text-muted-foreground italic">
+                                  Nenhum cliente encontrado.
+                                </div>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                    </div>
                     <FormMessage />
                 </FormItem>
             )}
@@ -366,7 +507,7 @@ export function SaleFormDialog({
                 <p className="text-sm font-medium leading-none">Lucro Bruto Calculado</p>
                 <div className="h-10 px-3 py-2 border rounded-md bg-muted/30 flex items-center">
                     <span className={cn("font-bold text-sm", profit >= 0 ? "text-green-600 dark:text-green-400" : "text-destructive")}>
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(profit)}
+                        {formatCurrency(profit)}
                     </span>
                 </div>
             </div>
