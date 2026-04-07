@@ -105,9 +105,12 @@ function PromoCarousel() {
       <div
         className={cn('absolute inset-0 bg-gradient-to-br transition-all duration-700', slide.gradient)}
       />
-      {/* Decorative circles */}
+      {/* Decorative circles and blur effects */}
       <div className="absolute -bottom-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-xl" />
       <div className="absolute top-4 right-8 h-20 w-20 rounded-full bg-white/10 blur-lg" />
+      {/* Central-ish blur spots behind text */}
+      <div className="absolute top-[40%] left-[20%] h-48 w-48 rounded-full bg-white/10 blur-[80px] pointer-events-none" />
+      <div className="absolute top-[60%] left-[45%] h-32 w-32 rounded-full bg-white/5 blur-[50px] pointer-events-none" />
 
       {/* Content Overlay */}
       <div className="relative z-10 h-full">
