@@ -14,9 +14,9 @@ import { ProfitChart } from '@/components/dashboard/profit-chart';
 import { WelcomeGuide } from '@/components/dashboard/welcome-guide';
 import { Button } from '@/components/ui/button';
 import { 
-  PlusCircle, UserPlus, Sparkles, ArrowRight, Clock, AlertCircle, Filter, 
-  Tags, DollarSign, TrendingUp, Package, ClipboardList, ChevronLeft, ChevronRight,
-  EyeOff, Eye
+  PlusCircle, UserPlus, ArrowRight, Clock, AlertCircle, Filter, 
+  Tags, DollarSign, ChevronLeft, ChevronRight,
+  EyeOff, Eye, CheckCircle2, Scissors, Activity
 } from 'lucide-react';
 import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
 import { CustomerFormDialog } from '@/components/dashboard/customer-form-dialog';
@@ -189,6 +189,22 @@ function PromoCarousel() {
 /* ─────────────────────────────────────────────────────────────
    PENDING ORDERS CARD (middle column)
 ───────────────────────────────────────────────────────────── */
+const statusConfig: Record<string, { label: string; dot: string; text: string; bg: string }> = {
+  'Novo':               { label: 'Novo',              dot: 'bg-blue-400',   text: 'text-blue-700',   bg: 'bg-blue-50' },
+  'Em Processo':        { label: 'Em Processo',       dot: 'bg-amber-400',  text: 'text-amber-700',  bg: 'bg-amber-50' },
+  'Aguardando Retirada':{ label: 'Pronto p/ Retirar', dot: 'bg-orange-400', text: 'text-orange-700', bg: 'bg-orange-50' },
+  'Concluído':          { label: 'Concluído',         dot: 'bg-green-400',  text: 'text-green-700',  bg: 'bg-green-50' },
+};
+
+function isDueSoon(date: Date): boolean {
+  const diff = date.getTime() - Date.now();
+  return diff >= 0 && diff < 3 * 24 * 60 * 60 * 1000; // within 3 days
+}
+
+function isOverdue(date: Date): boolean {
+  return date.getTime() < Date.now();
+}
+
 function PendingOrdersCard() {
   const { db, auth } = useFirebase();
   const [orders, setOrders] = useState<Order[] | null>(null);
@@ -196,78 +212,93 @@ function PendingOrdersCard() {
 
   useEffect(() => {
     if (!auth.currentUser) return;
-    
     setLoading(true);
     const q = query(
       collection(db, 'orders'),
       where('userId', '==', auth.currentUser.uid),
       where('status', 'in', ['Novo', 'Em Processo', 'Aguardando Retirada']),
-      orderBy('createdAt', 'desc'),
+      orderBy('dueDate', 'asc'),
       limitFn(4)
     );
-    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const result: Order[] = [];
       snapshot.forEach(doc => {
         const data = doc.data();
         if (data.dueDate instanceof Timestamp) data.dueDate = data.dueDate.toDate();
         if (data.createdAt instanceof Timestamp) data.createdAt = data.createdAt.toDate();
-        if (data.updatedAt instanceof Timestamp) data.updatedAt = data.updatedAt.toDate();
         result.push({ ...data, id: doc.id } as Order);
       });
       setOrders(result);
       setLoading(false);
     });
-    
     return () => unsubscribe();
   }, [db, auth.currentUser]);
 
   const pending = orders || [];
-  
+
   return (
-    <div className="h-full flex flex-col rounded-2xl border border-muted/60 bg-[#FBFAEE] shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b bg-transparent">
-        <h3 className="text-[13px] font-bold uppercase tracking-widest text-[#706B57]">Pedidos Pendentes</h3>
-        <Link href="/pedidos" className="text-xs font-semibold text-[#A67C52] hover:underline flex items-center gap-1">
+    <div className="h-full flex flex-col rounded-2xl border border-muted/40 bg-white shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+        <div className="flex items-center gap-2">
+          <Scissors className="h-3.5 w-3.5 text-[#A67C52]" />
+          <h3 className="text-[12px] font-black uppercase tracking-widest text-[#706B57]">Pedidos Pendentes</h3>
+        </div>
+        <Link href="/pedidos" className="text-[11px] font-bold text-[#A67C52]/80 hover:text-[#A67C52] flex items-center gap-1 transition-colors">
           Ver todos <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
 
-      <div className="flex-1 overflow-y-auto divide-y bg-white">
+      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-1.5">
         {loading ? (
-          <div className="p-4 space-y-3">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+          <div className="space-y-2 pt-1">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[62px] w-full rounded-xl" />)}
           </div>
         ) : pending.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-10 text-center px-4 gap-2">
-            <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-1">
-              <AlertCircle className="h-5 w-5 text-muted-foreground" />
+            <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center mb-1">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
             </div>
             <p className="text-sm font-bold text-muted-foreground">Nenhum pendente</p>
             <p className="text-xs text-muted-foreground">Tudo em dia! 🎉</p>
           </div>
         ) : (
-          pending.map(order => (
-            <div key={order.id} className="px-5 py-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-extrabold text-slate-800 truncate leading-none">{order.customerName}</p>
-                <p className="text-xs text-muted-foreground truncate mt-1">
-                  {order.items?.[0]?.serviceType} - {format(order.dueDate, "dd/MM", { locale: ptBR })}
-                </p>
-              </div>
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "text-[10px] h-6 px-3 ml-2 shrink-0 font-bold rounded-full border",
-                  order.status === 'Novo' && "border-blue-200 bg-blue-50/50 text-blue-700",
-                  order.status === 'Em Processo' && "border-yellow-200 bg-yellow-50 text-yellow-700",
-                  order.status === 'Aguardando Retirada' && "border-orange-200 bg-orange-50 text-orange-700",
-                )}
+          pending.map(order => {
+            const cfg = statusConfig[order.status] || statusConfig['Novo'];
+            const overdue = isOverdue(order.dueDate);
+            const soon = !overdue && isDueSoon(order.dueDate);
+            return (
+              <div
+                key={order.id}
+                className="group flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-muted/30 transition-colors cursor-default"
               >
-                {order.status}
-              </Badge>
-            </div>
-          ))
+                {/* Status dot */}
+                <div className={cn('h-2 w-2 rounded-full shrink-0 mt-0.5', cfg.dot)} />
+
+                {/* Info */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-black text-foreground truncate leading-tight">{order.customerName}</p>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                    {order.items?.[0]?.serviceType}
+                    {order.items?.length > 1 && <span className="text-muted-foreground/60"> +{order.items.length - 1}</span>}
+                  </p>
+                </div>
+
+                {/* Right: value + due date */}
+                <div className="shrink-0 text-right flex flex-col items-end gap-0.5">
+                  <span className="text-[12px] font-black text-foreground">
+                    {order.totalValue?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0 })}
+                  </span>
+                  <span className={cn(
+                    "text-[10px] font-bold leading-none",
+                    overdue ? 'text-red-500' : soon ? 'text-amber-500' : 'text-muted-foreground/70'
+                  )}>
+                    {overdue ? '⚠ ' : ''}{format(order.dueDate, "dd/MM", { locale: ptBR })}
+                  </span>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
@@ -278,58 +309,112 @@ function PendingOrdersCard() {
    ACTIVITY CARD (right column)
 ───────────────────────────────────────────────────────────── */
 function ActivityCard({ summary }: { summary: UserSummary | null }) {
+  const { db, auth } = useFirebase();
   const completed = (summary?.totalOrders || 0) - (summary?.pendingOrders || 0);
   const pending = summary?.pendingOrders || 0;
   const effPct = summary?.totalOrders
     ? Math.round((completed / summary.totalOrders) * 100)
     : 0;
 
+  const [recentActivity, setRecentActivity] = useState<Order[]>([]);
+
+  useEffect(() => {
+    if (!auth.currentUser) return;
+    const q = query(
+      collection(db, 'orders'),
+      where('userId', '==', auth.currentUser.uid),
+      orderBy('createdAt', 'desc'),
+      limitFn(4)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const result: Order[] = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.createdAt instanceof Timestamp) data.createdAt = data.createdAt.toDate();
+        if (data.dueDate instanceof Timestamp) data.dueDate = data.dueDate.toDate();
+        result.push({ ...data, id: doc.id } as Order);
+      });
+      setRecentActivity(result);
+    });
+    return () => unsub();
+  }, [db, auth.currentUser]);
+
   return (
     <div className="h-full flex flex-col rounded-2xl border bg-card shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b bg-muted/20">
-        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Atividade</h3>
-        <Badge variant="outline" className="text-[9px] h-5 px-2">Geral</Badge>
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-4 pb-3">
+        <div className="flex items-center gap-2">
+          <Activity className="h-3.5 w-3.5 text-[#A67C52]" />
+          <h3 className="text-[12px] font-black uppercase tracking-widest text-[#706B57]">Atividade</h3>
+        </div>
+        <Link href="/tarefas" className="text-[11px] font-bold text-[#A67C52]/80 hover:text-[#A67C52] flex items-center gap-1 transition-colors">
+          Ver tarefas <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
 
-      <div className="flex-1 flex flex-col justify-between p-5 gap-4">
-        {/* Quick link */}
-        <Link href="/tarefas" className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors group">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-primary/20 p-1.5 rounded-lg shrink-0">
-              <AlertCircle className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <span className="text-xs font-bold">Tarefas Críticas</span>
+      <div className="flex-1 flex flex-col p-4 gap-3 overflow-hidden">
+        {/* Mini stats row */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-col items-center py-2.5 rounded-xl bg-muted/20 border border-muted/40">
+            <p className="text-[18px] font-black leading-none">{completed}</p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mt-0.5">Concluídos</p>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-black text-primary">{pending}</span>
-            <ArrowRight className="h-2.5 w-3 text-primary group-hover:translate-x-1 transition-transform" />
+          <div className="flex flex-col items-center py-2.5 rounded-xl bg-primary/5 border border-primary/15">
+            <p className="text-[18px] font-black leading-none text-primary">{pending}</p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mt-0.5">Em Aberto</p>
           </div>
-        </Link>
-
-        {/* Mini stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 rounded-xl border bg-muted/20 text-center">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Concluídos</p>
-            <p className="text-2xl font-black leading-tight">{completed}</p>
-          </div>
-          <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 text-center">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Em Aberto</p>
-            <p className="text-2xl font-black text-primary leading-tight">{pending}</p>
+          <div className="flex flex-col items-center py-2.5 rounded-xl bg-muted/20 border border-muted/40">
+            <p className="text-[18px] font-black leading-none">{summary?.totalOrders || 0}</p>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide mt-0.5">Total</p>
           </div>
         </div>
 
         {/* Efficiency bar */}
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <Clock className="h-3 w-3 text-muted-foreground" />
-            <span className="text-[10px] font-medium text-muted-foreground">Eficiência de Entrega</span>
-            <span className="text-[10px] font-black text-primary ml-auto">{effPct}%</span>
+        <div className="flex items-center gap-2">
+          <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
+          <div className="flex-1">
+            <div className="flex justify-between mb-1">
+              <span className="text-[10px] font-medium text-muted-foreground">Eficiência de Entrega</span>
+              <span className="text-[10px] font-black text-primary">{effPct}%</span>
+            </div>
+            <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{
+                  width: `${effPct}%`,
+                  background: effPct >= 70 ? '#16a34a' : effPct >= 40 ? '#d97706' : '#dc2626'
+                }}
+              />
+            </div>
           </div>
-          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary rounded-full transition-all duration-1000" 
-              style={{ width: `${effPct}%` }}
-            />
+        </div>
+
+        {/* Recent activity feed */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/70 mb-2">Pedidos Recentes</p>
+          <div className="space-y-1 overflow-y-auto flex-1">
+            {recentActivity.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">Sem atividade ainda</p>
+            ) : recentActivity.map(order => {
+              const cfg = statusConfig[order.status] || statusConfig['Novo'];
+              return (
+                <div key={order.id} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-muted/20 transition-colors">
+                  <div className={cn('h-1.5 w-1.5 rounded-full shrink-0', cfg.dot)} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-bold truncate leading-tight">{order.customerName}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{order.items?.[0]?.serviceType}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-md', cfg.bg, cfg.text)}>
+                      {cfg.label}
+                    </span>
+                    <p className="text-[9px] text-muted-foreground/60 mt-0.5">
+                      {format(order.createdAt, "dd/MM", { locale: ptBR })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
