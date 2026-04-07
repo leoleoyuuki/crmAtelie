@@ -359,51 +359,35 @@ function StatsStrip({
     : formatCurrency(v);
 
   const stats = [
-    { 
-      label: 'Lucro Real', value: fmt(totalProfit), icon: TrendingUp, 
-      iconBg: 'bg-primary/10', iconColor: 'text-primary', valueColor: 'text-primary',
-      highlight: true
-    },
-    { 
-      label: 'Faturamento', value: fmt(totalRevenue), icon: DollarSign, 
-      iconBg: 'bg-green-500/10', iconColor: 'text-green-600', valueColor: ''
-    },
-    { 
-      label: 'Pedidos', value: String(totalOrders), icon: Package, 
-      iconBg: 'bg-blue-500/10', iconColor: 'text-blue-600', valueColor: ''
-    },
+    { label: 'Lucro Real', value: fmt(totalProfit), isPrimary: true },
+    { label: 'Faturamento', value: fmt(totalRevenue) },
+    { label: 'Pedidos', value: String(totalOrders) },
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-left">
+    <div className="bg-card border rounded-2xl shadow-sm px-8 py-4 flex items-center justify-between min-h-[72px]">
       {stats.map((s, i) => (
-        <div
-          key={i}
-          className={cn(
-            'flex items-center gap-4 p-4 rounded-2xl border bg-card shadow-sm hover:border-primary/30 transition-colors',
-            s.highlight && 'border-primary/20 bg-primary/5'
+        <div key={i} className="flex-1 flex flex-col items-center justify-center relative h-full">
+          {/* Vertical Divider */}
+          {i > 0 && (
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-10 w-[1px] bg-muted/60" />
           )}
-        >
-          <div className={cn('p-2.5 rounded-xl shrink-0', s.iconBg)}>
-            <s.icon className={cn('h-4 w-4', s.iconColor)} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground truncate">{s.label}</p>
-            <div className="flex items-center gap-1.5">
-              <p className={cn('text-xl font-black tracking-tight leading-tight', s.valueColor)}>
-                {s.value}
-              </p>
-              {i === 0 && (
-                <button 
-                  onClick={togglePrivacyMode}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {isPrivacyMode 
-                    ? <EyeOff className="h-3 w-3" /> 
-                    : <Eye className="h-3 w-3 opacity-40 hover:opacity-100" />}
-                </button>
-              )}
-            </div>
+          
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">
+            {s.label}
+          </p>
+          <div className="flex items-center gap-1.5 leading-none">
+            <p className={cn("text-xl font-black tracking-tight", s.isPrimary ? "text-primary" : "text-foreground")}>
+              {s.value}
+            </p>
+            {s.isPrimary && (
+              <button 
+                onClick={togglePrivacyMode}
+                className="text-muted-foreground/30 hover:text-primary transition-colors"
+              >
+                {isPrivacyMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              </button>
+            )}
           </div>
         </div>
       ))}
