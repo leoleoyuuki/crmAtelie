@@ -190,10 +190,10 @@ function PromoCarousel() {
    PENDING ORDERS CARD (middle column)
 ───────────────────────────────────────────────────────────── */
 const statusConfig: Record<string, { label: string; dot: string; text: string; bg: string }> = {
-  'Novo':               { label: 'Novo',              dot: 'bg-blue-400',   text: 'text-blue-700',   bg: 'bg-blue-50' },
-  'Em Processo':        { label: 'Em Processo',       dot: 'bg-amber-400',  text: 'text-amber-700',  bg: 'bg-amber-50' },
-  'Aguardando Retirada':{ label: 'Pronto p/ Retirar', dot: 'bg-orange-400', text: 'text-orange-700', bg: 'bg-orange-50' },
-  'Concluído':          { label: 'Concluído',         dot: 'bg-green-400',  text: 'text-green-700',  bg: 'bg-green-50' },
+  'Novo':               { label: 'Novo',              dot: 'bg-stone-400',        text: 'text-stone-700',       bg: 'bg-stone-100' },
+  'Em Processo':        { label: 'Em Processo',       dot: 'bg-[#C26B42]',        text: 'text-[#9B4F2A]',       bg: 'bg-[#FDE8DC]' },
+  'Aguardando Retirada':{ label: 'Pronto p/ Retirar', dot: 'bg-[#A67C52]',        text: 'text-[#7A5238]',       bg: 'bg-[#F5ECE0]' },
+  'Concluído':          { label: 'Concluído',         dot: 'bg-[#7D8471]',        text: 'text-[#5D6355]',       bg: 'bg-[#EEF0E8]' },
 };
 
 function isDueSoon(date: Date): boolean {
@@ -256,8 +256,8 @@ function PendingOrdersCard() {
           </div>
         ) : pending.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-10 text-center px-4 gap-2">
-            <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center mb-1">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-1">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
             </div>
             <p className="text-sm font-bold text-muted-foreground">Nenhum pendente</p>
             <p className="text-xs text-muted-foreground">Tudo em dia! 🎉</p>
@@ -291,7 +291,7 @@ function PendingOrdersCard() {
                   </span>
                   <span className={cn(
                     "text-[10px] font-bold leading-none",
-                    overdue ? 'text-red-500' : soon ? 'text-amber-500' : 'text-muted-foreground/70'
+                    overdue ? 'text-[#9B4F2A]' : soon ? 'text-[#C26B42]' : 'text-muted-foreground/70'
                   )}>
                     {overdue ? '⚠ ' : ''}{format(order.dueDate, "dd/MM", { locale: ptBR })}
                   </span>
@@ -382,7 +382,7 @@ function ActivityCard({ summary }: { summary: UserSummary | null }) {
                 className="h-full rounded-full transition-all duration-1000"
                 style={{
                   width: `${effPct}%`,
-                  background: effPct >= 70 ? '#16a34a' : effPct >= 40 ? '#d97706' : '#dc2626'
+                  background: effPct >= 70 ? '#7D8471' : effPct >= 40 ? '#C26B42' : '#9B4F2A'
                 }}
               />
             </div>
