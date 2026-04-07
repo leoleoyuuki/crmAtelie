@@ -130,7 +130,8 @@ function PromoCarousel() {
             </div>
           </div>
 
-          <div className="space-y-1.5 mt-2">
+          <div className="space-y-1.5 mt-2 relative">
+            <div className="absolute -inset-x-8 -inset-y-4 bg-white/5 blur-2xl rounded-full -z-10 pointer-events-none" />
             <h3 className="text-xl sm:text-2xl font-headline font-black leading-tight drop-shadow-md">{slide.title}</h3>
             <p className="text-[13px] sm:text-sm text-white/90 leading-snug drop-shadow-md max-w-[240px]">{slide.subtitle}</p>
           </div>
@@ -339,12 +340,18 @@ function ActivityCard({ summary }: { summary: UserSummary | null }) {
 /* ─────────────────────────────────────────────────────────────
    HORIZONTAL STATS STRIP
 ───────────────────────────────────────────────────────────── */
+type StatsStripProps = {
+  totalRevenue: number;
+  totalProfit: number;
+  totalOrders: number;
+  pendingOrders: number;
+  isPrivacyMode: boolean;
+  periodLabel: string;
+};
+
 function StatsStrip({ 
   totalRevenue, totalProfit, totalOrders, pendingOrders, isPrivacyMode, periodLabel 
-}: { 
-  totalRevenue: number; totalProfit: number; totalOrders: number; pendingOrders: number;
-  isPrivacyMode: boolean; periodLabel: string;
-}) {
+}: StatsStripProps) {
   const { togglePrivacyMode } = useContext(PasswordContext);
 
   const fmt = (v: number) => isPrivacyMode
@@ -368,7 +375,7 @@ function StatsStrip({
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-left">
       {stats.map((s, i) => (
         <div
           key={i}
@@ -400,6 +407,74 @@ function StatsStrip({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE STATS HERO (Image Request)
+───────────────────────────────────────────────────────────── */
+function StatsHero({ totalRevenue, totalProfit, totalOrders, pendingOrders, isPrivacyMode, periodLabel }: StatsStripProps) {
+  const { togglePrivacyMode } = useContext(PasswordContext);
+
+  const fmt = (v: number) => isPrivacyMode 
+    ? '●●●' 
+    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
+
+  const fmtSmall = (v: number) => isPrivacyMode 
+    ? '●●●' 
+    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
+
+  const isTotal = periodLabel === 'Total Acumulado';
+
+  return (
+    <div className="rounded-3xl shadow-xl shadow-primary/5 overflow-hidden bg-white border border-muted/20 mb-6">
+      {/* Orange Grid Header */}
+      <div className="relative bg-[#C26B42] p-6 text-white overflow-hidden min-h-[160px] flex flex-col justify-between">
+        {/* Subtle Grid Pattern Overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.12] pointer-events-none" 
+          style={{ 
+            backgroundImage: `linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)`,
+            backgroundSize: '20px 20px'
+          }} 
+        />
+        
+        <div className="relative z-10 flex items-center justify-between">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/90">
+            {isTotal ? 'Balanço Total' : 'Balanço do Mês'}
+          </p>
+          <button 
+            onClick={togglePrivacyMode}
+            className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all active:scale-95"
+          >
+            {isPrivacyMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+
+        <div className="relative z-10 mt-4">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-4xl font-black tracking-tighter drop-shadow-sm leading-none">{fmt(totalProfit)}</h2>
+          </div>
+          <p className="text-[10px] font-bold text-white/50 mt-2 uppercase tracking-widest">{periodLabel}</p>
+        </div>
+      </div>
+
+      {/* Stats Bottom Bar */}
+      <div className="grid grid-cols-3 divide-x divide-muted/20 py-5 bg-white">
+        <div className="flex flex-col items-center text-center px-1">
+          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-1.5">Faturamento</p>
+          <p className="text-sm font-black text-[#C26B42] tracking-tight">{fmtSmall(totalRevenue)}</p>
+        </div>
+        <div className="flex flex-col items-center text-center px-1">
+          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-1.5">Pedidos</p>
+          <p className="text-sm font-black text-foreground tracking-tight">{totalOrders}</p>
+        </div>
+        <div className="flex flex-col items-center text-center px-1">
+          <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-1.5">Pendências</p>
+          <p className="text-sm font-black text-[#C26B42] tracking-tight">{pendingOrders}</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -517,6 +592,18 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ── MOBILE STATS HERO (Image Request) ──────────────── */}
+      <div className="lg:hidden">
+        <StatsHero
+          totalRevenue={stats.totalRevenue}
+          totalProfit={stats.totalProfit}
+          totalOrders={stats.totalOrders}
+          pendingOrders={stats.pendingOrders}
+          isPrivacyMode={isPrivacyMode}
+          periodLabel={periodLabel}
+        />
+      </div>
+
       {/* ── WELCOME GUIDE (only for new users) ─────────────── */}
       <WelcomeGuide />
 
@@ -536,14 +623,16 @@ export default function DashboardPage() {
           </div>
 
           {/* ── HORIZONTAL STATS STRIP ──────────────────────────── */}
-          <StatsStrip
-            totalRevenue={stats.totalRevenue}
-            totalProfit={stats.totalProfit}
-            totalOrders={stats.totalOrders}
-            pendingOrders={stats.pendingOrders}
-            isPrivacyMode={isPrivacyMode}
-            periodLabel={periodLabel}
-          />
+          <div className="hidden lg:block">
+            <StatsStrip
+              totalRevenue={stats.totalRevenue}
+              totalProfit={stats.totalProfit}
+              totalOrders={stats.totalOrders}
+              pendingOrders={stats.pendingOrders}
+              isPrivacyMode={isPrivacyMode}
+              periodLabel={periodLabel}
+            />
+          </div>
         </div>
 
         {/* Col 3 – Activity (Full Height) */}
