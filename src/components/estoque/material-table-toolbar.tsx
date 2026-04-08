@@ -26,7 +26,6 @@ export function MaterialTableToolbar<TData>({ table }: MaterialTableToolbarProps
         'Material': m.name,
         'Estoque': m.stock,
         'Unidade': m.unit,
-        'Custo Unitário (R$)': m.costPerUnit,
         'Popularidade': m.usedInOrders || 0
       };
     });
@@ -35,14 +34,13 @@ export function MaterialTableToolbar<TData>({ table }: MaterialTableToolbarProps
 
   const handleExportPDF = () => {
     const rows = table.getFilteredRowModel().rows;
-    const headers = ['Material', 'Estoque', 'Unidade', 'Custo Unit.', 'Popularidade'];
+    const headers = ['Material', 'Estoque', 'Unidade', 'Popularidade'];
     const body = rows.map(row => {
         const m = row.original as Material;
         return [
             m.name,
             m.stock.toString(),
             m.unit,
-            `R$ ${m.costPerUnit.toFixed(2)}`,
             `${m.usedInOrders || 0} usos`
         ];
     });

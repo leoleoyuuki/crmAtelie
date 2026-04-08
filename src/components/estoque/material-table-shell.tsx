@@ -91,18 +91,6 @@ export function MaterialTableShell({
             )
         }
       },
-      {
-        accessorKey: 'costPerUnit',
-        header: () => <div className="text-right uppercase text-[10px] font-black tracking-widest">Custo p/ Unidade</div>,
-        cell: ({ row }) => {
-          const amount = parseFloat(String(row.getValue("costPerUnit") || 0));
-          const formatted = new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(amount);
-          return <div className="text-right font-bold text-sm text-foreground">{formatted}</div>;
-        },
-      },
        {
         accessorKey: "usedInOrders",
         header: () => <div className="text-center uppercase text-[10px] font-black tracking-widest">Popularidade</div>,

@@ -93,15 +93,20 @@ export function FixedCostFormDialog({
   };
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-[425px]">
-      <DialogHeader>
-        <DialogTitle className="font-headline">Registrar Nova Conta</DialogTitle>
+    <DialogContent 
+        className="flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] p-0 overflow-hidden sm:max-w-[425px] lg:max-w-[50%] lg:w-[50%] lg:h-full lg:max-h-none lg:right-0 lg:left-auto lg:top-0 lg:translate-x-0 lg:translate-y-0 lg:rounded-none lg:rounded-l-3xl lg:border-y-0 lg:border-r-0 shadow-2xl lg:duration-500 lg:data-[state=open]:animate-in lg:data-[state=closed]:animate-out lg:data-[state=closed]:slide-out-to-right lg:data-[state=open]:slide-in-from-right lg:data-[state=open]:zoom-in-100 lg:data-[state=closed]:zoom-out-100"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+    >
+      <DialogHeader className="p-6 pb-2">
+        <DialogTitle className="font-headline text-2xl">Registrar Nova Conta</DialogTitle>
         <DialogDescription>
           Adicione despesas como aluguel, contas de luz, água, internet, etc.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           <FormField
             control={form.control}
             name="description"
@@ -144,13 +149,15 @@ export function FixedCostFormDialog({
               )}
             />
           </div>
-          <DialogFooter>
+          </div>
+          
+          <DialogFooter className="p-6 border-t bg-muted/20">
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" className="h-12 px-6">
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Salvar Conta</Button>
+            <Button type="submit" className="h-12 px-8 font-bold shadow-md">Salvar Conta</Button>
           </DialogFooter>
         </form>
       </Form>

@@ -90,7 +90,7 @@ export interface Material {
     name: string;
     unit: string;
     stock: number;
-    costPerUnit: number;
+    costPerUnit?: number;
     createdAt: Date;
     userId: string;
     usedInOrders?: number;
@@ -102,7 +102,7 @@ export interface Purchase {
     quantity: number;
     cost: number;
     unit: string;
-    category: string;
+    category?: string;
     createdAt: Date;
     userId: string;
 }

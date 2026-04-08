@@ -34,7 +34,6 @@ const materialFormSchema = z.object({
   name: z.string().min(2, "O nome do material deve ter pelo menos 2 caracteres."),
   unit: z.string().min(1, "A unidade é obrigatória (ex: m, cm, un)."),
   stock: z.coerce.number().min(0, "O estoque deve ser positivo."),
-  costPerUnit: z.coerce.number().min(0, "O custo deve ser um valor positivo."),
 });
 
 type MaterialFormValues = z.infer<typeof materialFormSchema>;
@@ -63,7 +62,6 @@ export function MaterialFormDialog({
     name: "",
     unit: "",
     stock: 0,
-    costPerUnit: 0,
   };
 
   const form = useForm<MaterialFormValues>({
@@ -78,7 +76,6 @@ export function MaterialFormDialog({
           name: material.name,
           unit: material.unit,
           stock: material.stock,
-          costPerUnit: material.costPerUnit,
         });
       } else {
         form.reset(defaultValues);
@@ -106,15 +103,20 @@ export function MaterialFormDialog({
   };
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-[480px]">
-      <DialogHeader>
-        <DialogTitle className="font-headline">Editar Material</DialogTitle>
+    <DialogContent 
+        className="flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] p-0 overflow-hidden sm:max-w-[480px] lg:max-w-[50%] lg:w-[50%] lg:h-full lg:max-h-none lg:right-0 lg:left-auto lg:top-0 lg:translate-x-0 lg:translate-y-0 lg:rounded-none lg:rounded-l-3xl lg:border-y-0 lg:border-r-0 shadow-2xl lg:duration-500 lg:data-[state=open]:animate-in lg:data-[state=closed]:animate-out lg:data-[state=closed]:slide-out-to-right lg:data-[state=open]:slide-in-from-right lg:data-[state=open]:zoom-in-100 lg:data-[state=closed]:zoom-out-100"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+    >
+      <DialogHeader className="p-6 pb-2">
+        <DialogTitle className="font-headline text-2xl">Editar Material</DialogTitle>
         <DialogDescription>
           Atualize os detalhes deste item do seu estoque. A quantidade é alterada ao registrar compras ou concluir pedidos.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           <FormField
             control={form.control}
             name="name"
@@ -158,27 +160,16 @@ export function MaterialFormDialog({
             />
           </div>
 
-          <FormField
-            control={form.control}
-            name="costPerUnit"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Custo por Unidade (R$)</FormLabel>
-                <FormControl>
-                    <Input type="number" step="0.01" placeholder="1.50" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
-          <DialogFooter>
+          </div>
+          
+          <DialogFooter className="p-6 border-t bg-muted/20">
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="outline" className="h-12 px-6">
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Salvar Alterações</Button>
+            <Button type="submit" className="h-12 px-8 font-bold shadow-md">Salvar Alterações</Button>
           </DialogFooter>
         </form>
       </Form>

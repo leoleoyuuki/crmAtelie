@@ -232,9 +232,10 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
     try {
         await runTransaction(db, async (transaction) => {
             const orderRef = doc(collection(db, 'orders'));
-            transaction.set(orderRef, newOrderData);
-
             const summaryRef = doc(db, 'summaries', user.uid);
+            
+            const summarySnap = await transaction.get(summaryRef);
+            
             const summaryUpdates: any = {
                 totalOrders: increment(1),
                 pendingOrders: increment(1),
@@ -247,8 +248,6 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
                 summaryUpdates[`serviceDistribution.${type}`] = increment(1);
             });
 
-            const summarySnap = await transaction.get(summaryRef);
-            
             if (summarySnap.exists()) {
                 transaction.update(summaryRef, summaryUpdates);
             } else {
@@ -273,6 +272,8 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
                 
                 transaction.set(summaryRef, initialSummary);
             }
+
+            transaction.set(orderRef, newOrderData);
         });
     } catch (error) {
         console.error("Add order transaction failed: ", error);
@@ -296,6 +297,8 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
             }
 
             const currentOrder = fromFirebase(orderDoc.data(), orderDoc.id) as Order;
+            const summarySnap = await transaction.get(summaryRef);
+            
             const currentStatus = currentOrder.status;
             const newStatus = updatedData.status;
             const creationMonthKey = format(currentOrder.createdAt, 'yyyy-MM');
@@ -365,12 +368,10 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
             }
 
             if (Object.keys(summaryUpdates).length > 0) {
-                const summarySnap = await transaction.get(summaryRef);
                 if (summarySnap.exists()) {
                     transaction.update(summaryRef, summaryUpdates);
                 } else {
-                    // Fallback to merge set if it somehow doesn't exist, 
-                    // though updateOrder implies an order already exists, so summary should too.
+                    // Fallback to merge set if it somehow doesn't exist
                     transaction.set(summaryRef, summaryUpdates, { merge: true });
                 }
             }
@@ -561,41 +562,59 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
     if (!rawMaterialName) throw new Error("O nome do material não pode ser vazio.");
     
     const standardizedMaterialName = rawMaterialName.charAt(0).toUpperCase() + rawMaterialName.slice(1).toLowerCase();
-    const standardizedPurchaseData = { ...purchaseData, materialName: standardizedMaterialName };
+    
+    // Create payload without category if it's empty
+    const purchasePayload = { 
+        ...purchaseData, 
+        materialName: standardizedMaterialName,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+    };
+    
+    // Ensure category is either a string or deleted from payload if undefined
+    if (!purchasePayload.category) {
+        delete purchasePayload.category;
+    }
 
     await runTransaction(db, async (transaction) => {
         const purchaseMonthKey = format(new Date(), 'yyyy-MM');
-        const costIncrement = standardizedPurchaseData.cost;
-
-        const newPurchaseData = {
-            ...standardizedPurchaseData,
-            userId: user.uid,
-            createdAt: serverTimestamp(),
-        };
-        const purchaseRef = doc(collection(db, 'purchases'));
-        transaction.set(purchaseRef, newPurchaseData);
-
+        const costIncrement = purchaseData.cost;
         const summaryRef = doc(db, 'summaries', user.uid);
-        transaction.set(summaryRef, {
-            [`monthlyCosts.${purchaseMonthKey}`]: increment(costIncrement)
-        }, { merge: true });
-
+        
+        // 1. Get Summary (Read)
+        const summarySnap = await transaction.get(summaryRef);
+        
+        // 2. Query Material separately (outside transaction context via regular getDocs is fine as long as we move writes after)
+        // Actually, we should ideally use predictable IDs for materials to use transaction.get()
+        // But for now, we'll keep the getDocs but move ALL transaction writes to the end.
         const materialQuery = query(
             collection(db, 'materials'),
             where('name', '==', standardizedMaterialName),
             where('userId', '==', user.uid)
         );
-        
         const materialSnapshot = await getDocs(materialQuery);
+
+        // 3. Process the results and queue writes
+        const purchaseRef = doc(collection(db, 'purchases'));
+        transaction.set(purchaseRef, purchasePayload);
+
+        if (summarySnap.exists()) {
+            transaction.update(summaryRef, {
+                [`monthlyCosts.${purchaseMonthKey}`]: increment(costIncrement)
+            });
+        } else {
+            transaction.set(summaryRef, {
+                userId: user.uid,
+                monthlyCosts: { [purchaseMonthKey]: costIncrement }
+            }, { merge: true });
+        }
 
         if (materialSnapshot.empty) {
             const newMaterialRef = doc(collection(db, 'materials'));
-            const costPerUnit = standardizedPurchaseData.quantity > 0 ? standardizedPurchaseData.cost / standardizedPurchaseData.quantity : 0;
             transaction.set(newMaterialRef, {
                 name: standardizedMaterialName,
-                unit: standardizedPurchaseData.unit,
-                stock: standardizedPurchaseData.quantity,
-                costPerUnit: costPerUnit,
+                unit: purchaseData.unit,
+                stock: purchaseData.quantity,
                 createdAt: serverTimestamp(),
                 userId: user.uid,
                 usedInOrders: 0,
@@ -603,7 +622,7 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'userId' |
         } else {
             const materialDocRef = materialSnapshot.docs[0].ref;
             transaction.update(materialDocRef, {
-                stock: increment(standardizedPurchaseData.quantity),
+                stock: increment(purchaseData.quantity),
             });
         }
     }).catch(error => {
@@ -631,7 +650,7 @@ export async function deletePurchase(purchaseId: string): Promise<{ success: boo
         const costDecrement = purchaseData.cost;
 
         transaction.set(summaryRef, {
-            [`monthlyCosts.${purchaseMonthKey}`]: increment(-costDecrement)
+            monthlyCosts: { [purchaseMonthKey]: increment(-costDecrement) }
         }, { merge: true });
 
         transaction.delete(purchaseRef);
@@ -664,7 +683,7 @@ export async function addFixedCost(costData: Omit<FixedCost, 'id' | 'userId'>) {
 
         const summaryRef = doc(db, 'summaries', user.uid);
         transaction.set(summaryRef, {
-            [`monthlyCosts.${costMonthKey}`]: increment(costIncrement)
+            monthlyCosts: { [costMonthKey]: increment(costIncrement) }
         }, { merge: true });
     }).catch(error => {
         console.error("Add fixed cost transaction failed: ", error);
@@ -690,7 +709,7 @@ export async function deleteFixedCost(costId: string): Promise<{ success: boolea
         const costDecrement = costData.cost;
 
         transaction.set(summaryRef, {
-            [`monthlyCosts.${costMonthKey}`]: increment(-costDecrement)
+            monthlyCosts: { [costMonthKey]: increment(-costDecrement) }
         }, { merge: true });
 
         transaction.delete(costRef);
@@ -703,29 +722,7 @@ export async function deleteFixedCost(costId: string): Promise<{ success: boolea
 }
 
 
-// Cost Analytics
-export function getMonthlyCostByCategory(purchases: Purchase[], month: number, year: number) {
-    const monthlyPurchases = purchases.filter(p => {
-        const createdAt = p.createdAt;
-        return createdAt && isValid(createdAt) && getMonth(createdAt) === month && getYear(createdAt) === year;
-    });
-
-    const costs = monthlyPurchases.reduce((acc, purchase) => {
-        if (purchase.category) {
-            if (!acc[purchase.category]) {
-                acc[purchase.category] = 0;
-            }
-            acc[purchase.category] += purchase.cost;
-        }
-        return acc;
-    }, {} as Record<string, number>);
-
-    return Object.entries(costs).map(([name, cost]) => ({
-        name,
-        cost
-    }));
-}
-
+// Inventory Analytics
 export function getInventoryValue(materials: Material[]) {
   if (!materials) return 0;
   return materials.reduce((acc, material) => acc + (material.stock * (material.costPerUnit || 0)), 0);
