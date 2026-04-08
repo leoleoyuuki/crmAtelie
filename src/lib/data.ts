@@ -235,7 +235,6 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
             transaction.set(orderRef, newOrderData);
 
             const summaryRef = doc(db, 'summaries', user.uid);
-            
             const summaryUpdates: any = {
                 totalOrders: increment(1),
                 pendingOrders: increment(1),
@@ -248,7 +247,32 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
                 summaryUpdates[`serviceDistribution.${type}`] = increment(1);
             });
 
-            transaction.set(summaryRef, summaryUpdates, { merge: true });
+            const summarySnap = await transaction.get(summaryRef);
+            
+            if (summarySnap.exists()) {
+                transaction.update(summaryRef, summaryUpdates);
+            } else {
+                // If summary doesn't exist, create it with properly nested objects
+                const initialSummary: any = {
+                    userId: user.uid,
+                    totalRevenue: 0,
+                    totalOrders: 1,
+                    pendingOrders: 1,
+                    monthlyRevenue: {},
+                    monthlyCosts: {},
+                    monthlyOrders: { [monthKey]: 1 },
+                    monthlyPending: { [monthKey]: 1 },
+                    serviceDistribution: {},
+                    monthlyGoal: 5000,
+                };
+                
+                order.items.forEach(item => {
+                    const type = item.serviceType || 'Outros';
+                    initialSummary.serviceDistribution[type] = (initialSummary.serviceDistribution[type] || 0) + 1;
+                });
+                
+                transaction.set(summaryRef, initialSummary);
+            }
         });
     } catch (error) {
         console.error("Add order transaction failed: ", error);
@@ -341,7 +365,14 @@ export async function updateOrder(orderId: string, updatedData: Partial<Omit<Ord
             }
 
             if (Object.keys(summaryUpdates).length > 0) {
-                transaction.set(summaryRef, summaryUpdates, { merge: true });
+                const summarySnap = await transaction.get(summaryRef);
+                if (summarySnap.exists()) {
+                    transaction.update(summaryRef, summaryUpdates);
+                } else {
+                    // Fallback to merge set if it somehow doesn't exist, 
+                    // though updateOrder implies an order already exists, so summary should too.
+                    transaction.set(summaryRef, summaryUpdates, { merge: true });
+                }
             }
         });
 
@@ -393,7 +424,7 @@ export async function deleteOrder(orderId: string) {
                 });
             }
 
-            transaction.set(summaryRef, summaryUpdate, { merge: true });
+            transaction.update(summaryRef, summaryUpdate);
 
             if (orderData.materialsUsed && orderData.materialsUsed.length > 0) {
                  for (const used of orderData.materialsUsed) {
@@ -795,12 +826,12 @@ export async function concludeOrderWithStockUpdate(orderId: string, usedMaterial
             
             const revenueIncrement = orderData.totalValue;
 
-            transaction.set(summaryRef, {
+            transaction.update(summaryRef, {
                 totalRevenue: increment(revenueIncrement),
                 pendingOrders: increment(-1),
                 [`monthlyPending.${creationMonthKey}`]: increment(-1),
                 [`monthlyRevenue.${creationMonthKey}`]: increment(revenueIncrement)
-            }, { merge: true });
+            });
 
 
             transaction.update(orderRef, {
@@ -826,10 +857,12 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
 
     const ordersQuery = query(collection(db, 'orders'), where('userId', '==', userId));
     const purchasesQuery = query(collection(db, 'purchases'), where('userId', '==', userId));
+    const salesQuery = query(collection(db, 'sales'), where('userId', '==', userId));
     
-    const [ordersSnapshot, purchasesSnapshot] = await Promise.all([
+    const [ordersSnapshot, purchasesSnapshot, salesSnapshot] = await Promise.all([
         getDocs(ordersQuery),
-        getDocs(purchasesQuery)
+        getDocs(purchasesQuery),
+        getDocs(salesQuery)
     ]);
     
     let totalRevenue = 0;
@@ -868,6 +901,13 @@ export async function getOrCreateUserSummary(userId: string): Promise<UserSummar
         const purchase = fromFirebase(purchaseDoc.data(), 'temp-id') as Purchase;
         const monthKey = format(purchase.createdAt, 'yyyy-MM');
         monthlyCosts[monthKey] = (monthlyCosts[monthKey] || 0) + purchase.cost;
+    });
+
+    salesSnapshot.forEach(saleDoc => {
+        const sale = fromFirebase(saleDoc.data(), saleDoc.id) as Sale;
+        const monthKey = format(sale.date, 'yyyy-MM');
+        totalRevenue += sale.price;
+        monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + sale.price;
     });
 
 

@@ -461,7 +461,7 @@ export function OrderFormDialog({
 
    const dialogContent = (
     <DialogContent 
-        className="sm:max-w-3xl flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] p-0 overflow-hidden"
+        className="flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] p-0 overflow-hidden sm:max-w-3xl lg:max-w-[50%] lg:w-[50%] lg:h-full lg:max-h-none lg:right-0 lg:left-auto lg:top-0 lg:translate-x-0 lg:translate-y-0 lg:rounded-none lg:rounded-l-3xl lg:border-y-0 lg:border-r-0 shadow-2xl lg:duration-500 lg:data-[state=open]:animate-in lg:data-[state=closed]:animate-out lg:data-[state=closed]:slide-out-to-right lg:data-[state=open]:slide-in-from-right lg:data-[state=open]:zoom-in-100 lg:data-[state=closed]:zoom-out-100"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
     >
@@ -566,9 +566,6 @@ export function OrderFormDialog({
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Itens do Pedido</h3>
-                            <Button type="button" variant="outline" size="sm" onClick={() => append({ serviceType: '', value: 0, quantity: 1, description: '', assignedTo: '' })}>
-                                <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Item
-                            </Button>
                         </div>
                         <div className="space-y-4">
                             {fields.map((field, index) => (
@@ -585,6 +582,15 @@ export function OrderFormDialog({
                                 />
                             ))}
                         </div>
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            className="w-full h-12 border-dashed border-2 hover:bg-primary/5 hover:text-primary hover:border-primary/50 transition-all gap-2" 
+                            onClick={() => append({ serviceType: '', value: 0, quantity: 1, description: '', assignedTo: '' })}
+                        >
+                            <PlusCircle className="h-5 w-5" />
+                            <span className="font-semibold">Adicionar mais um item</span>
+                        </Button>
                     </div>
 
                     <Separator />
