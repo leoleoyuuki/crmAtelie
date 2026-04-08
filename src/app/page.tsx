@@ -15,12 +15,13 @@ import { Button } from '@/components/ui/button';
 import { 
   PlusCircle, UserPlus, ArrowRight, Clock, AlertCircle, Filter, 
   Tags, DollarSign, ChevronLeft, ChevronRight,
-  EyeOff, Eye, CheckCircle2, Scissors, Activity
+  EyeOff, Eye, CheckCircle2, Scissors, Activity, Wallet
 } from 'lucide-react';
 import { OrderFormDialog } from '@/components/dashboard/order-form-dialog';
 import { CustomerFormDialog } from '@/components/dashboard/customer-form-dialog';
 import { SaleFormDialog } from '@/components/vendas/sale-form-dialog';
 import { PurchaseFormDialog } from '@/components/compras/purchase-form-dialog';
+import { FixedCostFormDialog } from '@/components/compras/fixed-cost-form-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -566,6 +567,7 @@ export default function DashboardPage() {
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
   const [isSaleFormOpen, setIsSaleFormOpen] = useState(false);
   const [isPurchaseFormOpen, setIsPurchaseFormOpen] = useState(false);
+  const [isFixedCostFormOpen, setIsFixedCostFormOpen] = useState(false);
 
   const monthsOptions = useMemo(() => getMonths(), []);
 
@@ -654,6 +656,10 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2"><DollarSign className="h-3.5 w-3.5 text-secondary" /><span className="font-bold text-sm">Registrar Compra</span></div>
                   <span className="text-xs text-muted-foreground ml-5.5">Compra de material ou insumo</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setIsFixedCostFormOpen(true)} className="rounded-xl py-2.5 px-3 cursor-pointer flex flex-col items-start gap-0">
+                  <div className="flex items-center gap-2"><Wallet className="h-3.5 w-3.5 text-rose-500" /><span className="font-bold text-sm">Adicionar Conta</span></div>
+                  <span className="text-xs text-muted-foreground ml-5.5">Conta fixa ou despesa</span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -738,6 +744,7 @@ export default function DashboardPage() {
       <CustomerFormDialog isOpen={isCustomerFormOpen} setIsOpen={setIsCustomerFormOpen} onCustomerCreated={handleDataMutation} onCustomerUpdated={handleDataMutation} />
       <SaleFormDialog isOpen={isSaleFormOpen} setIsOpen={setIsSaleFormOpen} onSaleCreated={handleDataMutation} />
       <PurchaseFormDialog isOpen={isPurchaseFormOpen} setIsOpen={setIsPurchaseFormOpen} onPurchaseCreated={handleDataMutation} />
+      <FixedCostFormDialog isOpen={isFixedCostFormOpen} setIsOpen={setIsFixedCostFormOpen} onCostCreated={handleDataMutation} />
     </div>
   );
 }
