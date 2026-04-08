@@ -100,7 +100,7 @@ function PromoCarousel() {
   const slide = promoSlides[current];
 
   return (
-    <div className="relative h-full min-h-[220px] lg:min-h-0 rounded-2xl overflow-hidden select-none">
+    <div className="relative h-full min-h-[340px] lg:min-h-0 rounded-2xl overflow-hidden select-none">
       {/* Gradient background */}
       <div
         className={cn('absolute inset-0 bg-gradient-to-br transition-all duration-700', slide.gradient)}
@@ -681,14 +681,14 @@ export default function DashboardPage() {
       {/* ── TOP SECTION: CAROUSEL, PENDING & ACTIVITY ──────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         <div className="lg:col-span-8 flex flex-col gap-5">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch flex-1">
             {/* Col 1 – Promo Carousel */}
             <div className="h-full">
               <PromoCarousel />
             </div>
 
             {/* Col 2 – Pending Orders */}
-            <div className="h-full min-h-[260px]">
+            <div className="h-full min-h-[340px]">
               <PendingOrdersCard />
             </div>
           </div>
