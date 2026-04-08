@@ -55,7 +55,7 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] p-0 overflow-hidden border-none bg-background shadow-2xl">
+      <DialogContent className="sm:max-w-[550px] max-w-[95vw] p-0 overflow-y-auto max-h-[90vh] border-none bg-background shadow-2xl rounded-3xl">
         <div className="bg-primary p-8 text-primary-foreground relative">
             <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12">
                 <Logo className="h-32 w-32 fill-current" />

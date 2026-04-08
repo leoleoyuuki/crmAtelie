@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PasswordContext } from '@/contexts/password-context';
 import { useUser } from '@/firebase/auth/use-user';
 import { ProfitChart } from '@/components/dashboard/profit-chart';
-import { WelcomeGuide } from '@/components/dashboard/welcome-guide';
 import { Button } from '@/components/ui/button';
 import { 
   PlusCircle, UserPlus, ArrowRight, Clock, AlertCircle, Filter, 
@@ -672,9 +671,6 @@ export default function DashboardPage() {
           periodLabel={periodLabel}
         />
       </div>
-
-      {/* ── WELCOME GUIDE (only for new users) ─────────────── */}
-      <WelcomeGuide />
 
       {/* ── TOP SECTION: CAROUSEL, PENDING & ACTIVITY ──────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
