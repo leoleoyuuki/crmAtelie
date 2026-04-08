@@ -138,11 +138,6 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
   const isTrial = profile?.trialExpiresAt && isValid(profile.trialExpiresAt) && new Date() <= profile.trialExpiresAt;
   const isActive = profile?.status === 'active';
 
-  // Only show if trial or active
-  if (!isTrial && !isActive) {
-      return null;
-  }
-
   const daysLeft = isTrial ? Math.max(0, differenceInDays(profile!.trialExpiresAt!, new Date())) : null;
 
   const createPreference = async (plan: Plan) => {

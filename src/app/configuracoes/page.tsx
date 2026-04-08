@@ -6,14 +6,21 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CreditCard, ShieldCheck, Zap } from "lucide-react";
+import { CreditCard, ShieldCheck, Zap, Sparkles } from "lucide-react";
 import type { UserProfile } from "@/lib/types";
+import { SubscriptionDrawer } from "@/components/subscription-drawer";
+import { isValid } from "date-fns";
 
 export default function SettingsPage() {
     const { user } = useUser();
     const { toast } = useToast();
     const [isPortalLoading, setIsPortalLoading] = useState(false);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const { data: profile } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
+
+    const isTrial = profile?.trialExpiresAt && isValid(profile.trialExpiresAt) && new Date() <= profile.trialExpiresAt;
+    const hasPaidSubscription = !!profile?.stripeSubscriptionId;
+    const isActivePaid = profile?.status === 'active' && hasPaidSubscription;
 
     const handleManageSubscription = async () => {
         if (!user || isPortalLoading) return;
@@ -72,22 +79,28 @@ export default function SettingsPage() {
                             <div className="space-y-1">
                                 <p className="text-sm font-bold flex items-center gap-2">
                                     Status: 
-                                    {profile?.status === 'active' ? (
+                                    {isActivePaid ? (
                                         <span className="text-green-600 flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded-full text-xs">
                                             <ShieldCheck className="h-3 w-3" /> Ativa
+                                        </span>
+                                    ) : isTrial ? (
+                                        <span className="text-primary flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full text-xs">
+                                            <Sparkles className="h-3 w-3" /> Teste Grátis
                                         </span>
                                     ) : (
                                         <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full text-xs">Inativa</span>
                                     )}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    {profile?.status === 'active' 
+                                    {isActivePaid 
                                         ? "Sua assinatura está sendo gerenciada via Stripe." 
-                                        : "Você não possui uma assinatura ativa no momento."}
+                                        : isTrial 
+                                            ? "Você está no período de teste gratuito do AtelierFlow Pro."
+                                            : "Você não possui uma assinatura ativa no momento."}
                                 </p>
                             </div>
                             
-                            {profile?.stripeCustomerId ? (
+                            {isActivePaid ? (
                                 <Button 
                                     onClick={handleManageSubscription} 
                                     disabled={isPortalLoading}
@@ -97,8 +110,12 @@ export default function SettingsPage() {
                                     {isPortalLoading ? "Carregando..." : "Gerenciar no Stripe"}
                                 </Button>
                             ) : (
-                                <Button variant="outline" asChild className="w-full md:w-auto font-bold rounded-xl">
-                                    <a href="/ativacao">Ver Planos</a>
+                                <Button 
+                                    onClick={() => setIsDrawerOpen(true)}
+                                    className="w-full md:w-auto font-bold rounded-xl"
+                                >
+                                    <Zap className="mr-2 h-4 w-4" />
+                                    {isTrial ? "Assinar Agora" : "Ver Planos"}
                                 </Button>
                             )}
                         </div>
@@ -112,6 +129,11 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
             </div>
+            <SubscriptionDrawer 
+                profile={profile} 
+                open={isDrawerOpen} 
+                onOpenChange={setIsDrawerOpen} 
+            />
         </div>
     );
 }
