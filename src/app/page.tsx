@@ -100,7 +100,7 @@ function PromoCarousel() {
   const slide = promoSlides[current];
 
   return (
-    <div className="relative h-full min-h-[340px] lg:min-h-0 rounded-2xl overflow-hidden select-none">
+    <div className="relative h-full min-h-[220px] sm:min-h-[340px] lg:min-h-0 rounded-2xl overflow-hidden select-none">
       {/* Gradient background */}
       <div
         className={cn('absolute inset-0 bg-gradient-to-br transition-all duration-700', slide.gradient)}
@@ -115,7 +115,7 @@ function PromoCarousel() {
       {/* Content Overlay */}
       <div className="relative z-10 h-full">
         {/* Left Hand: Texts & CTA */}
-        <div className="relative z-20 flex flex-col justify-between h-full p-6 text-white max-w-[100%] sm:max-w-[60%] select-none">
+        <div className="relative z-20 flex flex-col justify-between h-full p-5 sm:p-6 text-white max-w-[100%] sm:max-w-[60%] select-none">
           <div className="flex items-start justify-between">
             <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full">
               {slide.tag}

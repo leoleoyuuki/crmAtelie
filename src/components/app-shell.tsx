@@ -40,7 +40,8 @@ import {
     Calculator,
     BookCopy,
     Settings,
-    ArrowRight
+    ArrowRight,
+    Wallet
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -75,6 +76,7 @@ import { OrderFormDialog } from "./dashboard/order-form-dialog";
 import { CustomerFormDialog } from "./dashboard/customer-form-dialog";
 import { PurchaseFormDialog } from "./compras/purchase-form-dialog";
 import { SaleFormDialog } from "./vendas/sale-form-dialog";
+import { FixedCostFormDialog } from "./compras/fixed-cost-form-dialog";
 
 function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
     if (!expiresAt) return null;
@@ -483,6 +485,7 @@ function BottomNavigation() {
     const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
     const [isPurchaseFormOpen, setIsPurchaseFormOpen] = useState(false);
     const [isSaleFormOpen, setIsSaleFormOpen] = useState(false);
+    const [isFixedCostFormOpen, setIsFixedCostFormOpen] = useState(false);
     
     const leftItems = [
         { href: "/", label: "Início", icon: LayoutDashboard },
@@ -547,6 +550,10 @@ function BottomNavigation() {
                                     <Tags className="mr-3 h-4 w-4 text-green-500" />
                                     <span className="font-bold">Registrar Venda</span>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setIsFixedCostFormOpen(true)} className="rounded-xl py-3 cursor-pointer">
+                                    <Wallet className="mr-3 h-4 w-4 text-rose-500" />
+                                    <span className="font-bold">Adicionar Conta</span>
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -593,6 +600,11 @@ function BottomNavigation() {
                 isOpen={isSaleFormOpen} 
                 setIsOpen={setIsSaleFormOpen} 
                 onSaleCreated={() => {}} 
+            />
+            <FixedCostFormDialog 
+                isOpen={isFixedCostFormOpen} 
+                setIsOpen={setIsFixedCostFormOpen} 
+                onCostCreated={() => {}} 
             />
         </>
     );
@@ -666,7 +678,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
               </h1>
             </div>
           </SidebarHeader>
-          <SidebarContent className="px-2 pt-2 scrollbar-none">
+          <SidebarContent className="px-2 pt-2 modern-scrollbar">
             <SidebarGroup>
                 <SidebarGroupContent>
                     <SidebarMenu className="gap-0.5">
@@ -791,7 +803,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
         
         <main className="flex-1 flex flex-col min-w-0 transition-all duration-300">
             <div 
-                className="flex-1 overflow-y-auto"
+                className="flex-1 overflow-y-auto modern-scrollbar"
                 style={{ paddingBottom: '140px' }}
             >
                 <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
