@@ -211,7 +211,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
                          <p className="text-sm italic leading-relaxed">"{transcript}"</p>
                      ) : (
                          <p className="text-xs text-muted-foreground italic px-4">
-                            Ex: "Pedido do João, ajuste de vestido, apertar 2cm na cintura, cem reais, pra entregar amanhã"
+                            Ex: "Pedido da Maria, ajuste de vestido, apertar 2cm na cintura, vou cobrar 150 reais, pra entregar dia 5 de abril"
                          </p>
                      )}
                   </div>

@@ -9,7 +9,7 @@ const OrderExtractionSchema = z.object({
     serviceType: z.string().describe("O nome ou tipo do serviço/produto. Ex: Vestido, Saia, Caneca."),
     quantity: z.number().default(1).describe("A quantidade mencionada. Padrão é 1 se não mencionado."),
     value: z.number().default(0).describe("O valor do item em Reais (R$). Ex: 150 para cento e cinquenta reais. Se não mencionado, retorne 0."),
-    description: z.string().optional().describe("Qualquer detalhe extra sobre o produto (cores, medidas, etc)."),
+    description: z.string().optional().describe("Qualquer detalhe extra sobre o produto ou serviço (cores, medidas, etc)."),
   })).describe("Lista de itens do pedido. Pode ter mais de um."),
   dueDate: z.string().describe("A data de entrega mencionada, convertida para o formato yyyy-mm-dd. Se for 'amanhã', calcule a data baseada em hoje. Se não mencionada, deixe vazio."),
 });
@@ -43,10 +43,22 @@ export async function processVoiceOrder(transcription: string) {
           "customerName": "Maria",
           "items": [
              {
-                "serviceType": "Vestido",
+                "serviceType": "Ajuste do vestido",
                 "quantity": 1,
                 "value": 150,
-                "description": ""
+                "description": "Apertar 5cm da barriga"
+             }
+          ],
+          "dueDate": "${todayStr}"
+        },
+        {
+          "customerName": "Ana",
+          "items": [
+             {
+                "serviceType": "Bolo personalizado",
+                "quantity": 1,
+                "value": 150,
+                "description": "Tema: Chapeuzinho Vermelho"
              }
           ],
           "dueDate": "${todayStr}"
@@ -60,10 +72,10 @@ export async function processVoiceOrder(transcription: string) {
                 "serviceType": "Tipo do serviço",
                 "quantity": 1,
                 "value": 150,
-                "description": "Detalhes opcionais. NUNCA COLOQUE DATAS DE ENTREGA AQUI!"
+                "description": "Detalhes sobre o serviço ou produto. NUNCA COLOQUE DATAS DE ENTREGA NEM SE FOR POR ESCRITO (ex: para entregar dia 10) AQUI!"
              }
           ],
-          "dueDate": "YYYY-MM-DD" // Data de entrega no formato YYYY-MM-DD. Converta "amanhã", "hoje" usando as datas acima. Se vazio, use ""
+          "dueDate": "YYYY-MM-DD" // Data de entrega no formato YYYY-MM-DD. Se vazio, use "". preste atenção nas datas que o usuario fala ex(dia 15, dia 20 de abril, segunda que vem etc)
         }
       `,
     });
