@@ -133,12 +133,13 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
         type="button" 
         variant="outline" 
         size="icon" 
-        className="h-10 w-10 shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border-primary/30 relative" 
+        className="h-10 w-10 shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border-primary/30 relative select-none" 
+        style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
         onClick={() => setIsModalOpen(true)}
         title="Ditar pedido com IA"
       >
         <Mic className="h-5 w-5" />
-        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+        <span className="absolute -top-1 -right-1 flex h-3 w-3 pointer-events-none">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
           <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
         </span>
@@ -159,15 +160,16 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
           
           <div className="flex flex-col items-center justify-center p-6 space-y-6">
             {isProcessing ? (
-               <div className="flex flex-col items-center gap-4 text-primary">
+               <div className="flex flex-col items-center gap-4 text-primary select-none">
                  <Loader2 className="h-12 w-12 animate-spin" />
                  <p className="text-sm font-medium animate-pulse">Processando áudio...</p>
                </div>
             ) : (
                 <>
                   <div 
-                    className={`relative flex items-center justify-center w-28 h-28 rounded-full transition-all duration-300 cursor-pointer select-none
+                    className={`relative flex items-center justify-center w-28 h-28 rounded-full transition-all duration-300 cursor-pointer select-none touch-none
                       ${isListening ? 'bg-primary scale-110 shadow-lg shadow-primary/40' : 'bg-muted hover:bg-muted/80'}`}
+                    style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
                     onMouseDown={startListening}
                     onMouseUp={stopListening}
                     onMouseLeave={stopListening}
@@ -177,10 +179,13 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
                     {isListening && (
                       <span className="absolute inset-0 rounded-full border-8 border-primary/30 animate-ping"></span>
                     )}
-                    <Mic className={`h-12 w-12 ${isListening ? 'text-white' : 'text-muted-foreground'}`} />
+                    <Mic className={`h-12 w-12 select-none ${isListening ? 'text-white' : 'text-muted-foreground'}`} />
                   </div>
 
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground animate-pulse">
+                  <p 
+                    className="text-xs font-semibold uppercase tracking-widest text-muted-foreground animate-pulse select-none"
+                    style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                  >
                     {isListening ? "Gravando... solte para parar" : "Segure para falar"}
                   </p>
                   
