@@ -40,6 +40,7 @@ import { CustomerFormDialog } from "./customer-form-dialog";
 import { TrialLimitScreen } from "./trial-limit-screen";
 import { Separator } from "../ui/separator";
 import { DatePickerWithDialog } from "../ui/date-picker";
+import { VoiceAssistant } from "./voice-assistant";
 
 const orderItemSchema = z.object({
   serviceType: z.string().min(1, "O tipo de serviço é obrigatório."),
@@ -375,6 +376,32 @@ export function OrderFormDialog({
     }
   }, [order, form, isOpen]);
 
+  const handleVoiceResult = (data: any) => {
+    if (data.customerName) {
+       setCustomerSearch(data.customerName);
+       setShouldOpenSelect(true); // Trigger search
+    }
+
+    if (data.dueDate) {
+        // Create local Date from YYYY-MM-DD to avoid timezone issues
+        const [year, month, day] = data.dueDate.split('-');
+        if (year && month && day) {
+            form.setValue('dueDate', new Date(Number(year), Number(month) - 1, Number(day)), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        }
+    }
+
+    if (data.items && data.items.length > 0) {
+        const newItems = data.items.map((item: any) => ({
+            serviceType: item.serviceType || '',
+            description: item.description || '',
+            value: item.value || 0,
+            quantity: item.quantity || 1,
+            assignedTo: ''
+        }));
+        form.setValue('items', newItems);
+    }
+  };
+
   const onSubmit = async (data: OrderFormValues) => {
     setIsSubmitting(true);
     const selectedCustomer = customers.find(c => c.id === data.customerId);
@@ -555,7 +582,8 @@ export function OrderFormDialog({
                                     )}
                                 />
                             </div>
-                            <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setIsCustomerDialogOpen(true)}>
+                            <VoiceAssistant onResult={handleVoiceResult} />
+                            <Button type="button" variant="outline" size="icon" title="Novo Cliente Manual" className="h-10 w-10 shrink-0" onClick={() => setIsCustomerDialogOpen(true)}>
                                 <UserPlus className="h-5 w-5" />
                             </Button>
                         </div>
