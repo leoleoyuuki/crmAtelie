@@ -447,12 +447,16 @@ export function OrderFormDialog({
 
   const handleCustomerCreated = async (newCustomer: Customer) => {
     setCustomers(prev => [newCustomer, ...prev]);
+    setCustomerSearch(newCustomer.name);
+    setDebouncedCustomerSearch(newCustomer.name);
     form.setValue('customerId', newCustomer.id, { shouldValidate: true, shouldDirty: true });
-    setIsCustomerSelectOpen(true);
+    setIsCustomerSelectOpen(false);
   };
 
   const handleCustomerUpdated = (updatedCustomer: Customer) => {
     setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+    setCustomerSearch(updatedCustomer.name);
+    setDebouncedCustomerSearch(updatedCustomer.name);
     form.setValue('customerId', updatedCustomer.id);
   };
 
@@ -467,9 +471,10 @@ export function OrderFormDialog({
             email: "" 
         });
         setCustomers(prev => [newCustomer, ...prev]);
+        setCustomerSearch(newCustomer.name);
+        setDebouncedCustomerSearch(newCustomer.name);
         form.setValue('customerId', newCustomer.id, { shouldValidate: true, shouldDirty: true });
         toast({ variant: "success", title: "Cliente criado!", description: `${newCustomer.name} foi selecionada.` });
-        setCustomerSearch(""); // Clear search after creation
         setIsCustomerSelectOpen(false); // Close select
     } catch (error: any) {
         if (error?.message === "TRIAL_LIMIT_CUSTOMERS") {
@@ -525,7 +530,15 @@ export function OrderFormDialog({
                                     render={({ field }) => (
                                     <FormItem>
                                         <Select
-                                            onValueChange={field.onChange}
+                                            onValueChange={(val) => {
+                                                field.onChange(val);
+                                                const customer = customers.find(c => c.id === val);
+                                                if (customer) {
+                                                    setCustomerSearch(customer.name);
+                                                    setDebouncedCustomerSearch(customer.name);
+                                                    setShouldOpenSelect(false);
+                                                }
+                                            }}
                                             value={field.value}
                                             open={isCustomerSelectOpen}
                                             onOpenChange={setIsCustomerSelectOpen}

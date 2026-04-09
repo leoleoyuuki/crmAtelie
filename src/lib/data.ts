@@ -37,6 +37,18 @@ const fromFirebase = (docData: any, id: string) => {
     return data;
 };
 
+function isUserInTrial(userData: any): boolean {
+    if (!userData?.trialExpiresAt || !userData?.expiresAt) return false;
+    try {
+        const trialTime = userData.trialExpiresAt.toMillis();
+        const expiresTime = userData.expiresAt.toMillis();
+        // Se trialExpiresAt >= expiresAt, significa que o plano não foi estendido além do trial inicial
+        return trialTime >= expiresTime;
+    } catch (e) {
+        return false;
+    }
+}
+
 
 // Customer Functions
 const customersCollection = collection(db, 'customers');
@@ -75,7 +87,8 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
   const userDocRef = doc(db, 'users', auth.currentUser.uid);
   const userDocSnap = await getDoc(userDocRef);
   const userData = userDocSnap.data();
-  if (userData?.trialExpiresAt) {
+
+  if (isUserInTrial(userData)) {
       const customersQuery = query(customersCollection, where("userId", "==", auth.currentUser.uid));
       const customerSnap = await getDocs(customersQuery);
       if (customerSnap.docs.length >= 5) {
@@ -211,7 +224,8 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
     const userDocRef = doc(db, 'users', user.uid);
     const userDocSnap = await getDoc(userDocRef);
     const userData = userDocSnap.data();
-    if (userData?.trialExpiresAt) {
+
+    if (isUserInTrial(userData)) {
         const ordersQuery = query(ordersCollection, where("userId", "==", user.uid));
         const ordersSnap = await getDocs(ordersQuery);
         if (ordersSnap.docs.length >= 15) {
