@@ -44,11 +44,28 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
       recognitionRef.current.lang = 'pt-BR';
 
       recognitionRef.current.onresult = (event: any) => {
-        let currentTranscript = '';
+        let finalTranscript = '';
+        let interimTranscript = '';
+
         for (let i = 0; i < event.results.length; ++i) {
-          currentTranscript += event.results[i][0].transcript;
+          const result = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            // Android duplication fix: 
+            // Some Android browsers (Chrome) include previous segments in the latest result.
+            // We check if the new segment starts with what we already have to avoid duplication.
+            const currentFinalTrimmed = finalTranscript.trim().toLowerCase();
+            const newSegmentTrimmed = result.trim().toLowerCase();
+            
+            if (currentFinalTrimmed && newSegmentTrimmed.startsWith(currentFinalTrimmed)) {
+              finalTranscript = result;
+            } else {
+              finalTranscript += (finalTranscript ? ' ' : '') + result;
+            }
+          } else {
+            interimTranscript += result;
+          }
         }
-        setTranscript(currentTranscript);
+        setTranscript((finalTranscript + interimTranscript).trim());
       };
 
       recognitionRef.current.onerror = (event: any) => {
