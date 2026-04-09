@@ -30,6 +30,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isHolding, setIsHolding] = useState(false);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
 
@@ -38,32 +39,26 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
+      recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'pt-BR';
 
       recognitionRef.current.onresult = (event: any) => {
         let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        for (let i = 0; i < event.results.length; ++i) {
           currentTranscript += event.results[i][0].transcript;
         }
         setTranscript(currentTranscript);
       };
 
       recognitionRef.current.onerror = (event: any) => {
+        if (event.error === 'no-speech') return;
         console.error("Speech recognition error", event.error);
         stopListening();
-        toast({
-          variant: "destructive",
-          title: "Erro no microfone",
-          description: "Não foi possível escutar o áudio. Tente novamente.",
-        });
       };
 
-      recognitionRef.current.onend = async () => {
-        // When speech recognition ends naturally or manually
+      recognitionRef.current.onend = () => {
         setIsListening(false);
-        // But only process if we had transcript when it stopped naturally
       };
     }
     
@@ -72,7 +67,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
         recognitionRef.current.abort();
       }
     };
-  }, [toast]);
+  }, []);
 
   const startListening = () => {
     if (!recognitionRef.current) {
@@ -85,15 +80,21 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
     }
     setTranscript("");
     setIsListening(true);
+    setIsHolding(true);
     setIsModalOpen(true);
-    recognitionRef.current.start();
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      console.error("Recognition start error:", e);
+    }
   };
 
   const stopListening = () => {
-    if (recognitionRef.current) {
+    if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
     }
     setIsListening(false);
+    setIsHolding(false);
   };
   
   const handleProcessRecording = async () => {
@@ -110,15 +111,15 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
         onResult(data);
         toast({
           variant: "success",
-          title: "Pedido Extraído!",
-          description: "Os campos foram preenchidos com o áudio.",
+          title: "Pedido Extraído! ✨",
+          description: "Os campos foram preenchidos.",
         });
       }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Falha ao processar o áudio. Preencha manualmente.",
+        description: "Falha ao processar o áudio. Tente novamente.",
       });
     } finally {
       setIsProcessing(false);
@@ -133,7 +134,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
         variant="outline" 
         size="icon" 
         className="h-10 w-10 shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border-primary/30 relative" 
-        onClick={startListening}
+        onClick={() => setIsModalOpen(true)}
         title="Ditar pedido com IA"
       >
         <Mic className="h-5 w-5" />
@@ -150,9 +151,9 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
       }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Mágica de Voz ✨</DialogTitle>
+            <DialogTitle>Voz para Pedido 🎙️</DialogTitle>
             <DialogDescription>
-              Fale os detalhes do pedido e nossa IA preencherá tudo para você.
+              Segure o botão para falar detalhes do pedido (cliente, serviço, valor, etc).
             </DialogDescription>
           </DialogHeader>
           
@@ -160,34 +161,55 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
             {isProcessing ? (
                <div className="flex flex-col items-center gap-4 text-primary">
                  <Loader2 className="h-12 w-12 animate-spin" />
-                 <p className="text-sm font-medium animate-pulse">Lendo seus lábios... ops, áudio!</p>
+                 <p className="text-sm font-medium animate-pulse">Processando áudio...</p>
                </div>
             ) : (
                 <>
-                  <div className={`relative flex items-center justify-center w-24 h-24 rounded-full transition-all duration-300 ${isListening ? 'bg-primary/20 scale-110' : 'bg-muted'}`}>
+                  <div 
+                    className={`relative flex items-center justify-center w-28 h-28 rounded-full transition-all duration-300 cursor-pointer select-none
+                      ${isListening ? 'bg-primary scale-110 shadow-lg shadow-primary/40' : 'bg-muted hover:bg-muted/80'}`}
+                    onMouseDown={startListening}
+                    onMouseUp={stopListening}
+                    onMouseLeave={stopListening}
+                    onTouchStart={startListening}
+                    onTouchEnd={stopListening}
+                  >
                     {isListening && (
-                      <span className="absolute inset-0 rounded-full border-4 border-primary/30 animate-ping"></span>
+                      <span className="absolute inset-0 rounded-full border-8 border-primary/30 animate-ping"></span>
                     )}
-                    <Mic className={`h-10 w-10 ${isListening ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <Mic className={`h-12 w-12 ${isListening ? 'text-white' : 'text-muted-foreground'}`} />
                   </div>
+
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground animate-pulse">
+                    {isListening ? "Gravando... solte para parar" : "Segure para falar"}
+                  </p>
                   
-                  <div className="w-full min-h-[80px] p-4 rounded-lg bg-muted/50 border text-center flex items-center justify-center">
+                  <div className="w-full min-h-[100px] p-4 rounded-xl bg-muted/60 border border-dashed text-center flex items-center justify-center">
                      {transcript ? (
-                         <p className="text-sm italic">{transcript}</p>
+                         <p className="text-sm italic leading-relaxed">"{transcript}"</p>
                      ) : (
-                         <p className="text-sm text-muted-foreground italic">
-                            Diga: "Pedido da Maria, um vestido de cento e cinquenta reais, pra entregar dia 20..."
+                         <p className="text-xs text-muted-foreground italic px-4">
+                            Ex: "Pedido do João, ajuste de vestido, apertar 2cm na cintura, cem reais, pra entregar amanhã"
                          </p>
                      )}
                   </div>
                   
-                  <Button 
-                    className="w-full h-12 rounded-full" 
-                    onClick={handleProcessRecording}
-                    disabled={!transcript.trim()}
-                  >
-                     Processar Texto
-                  </Button>
+                  <div className="flex gap-2 w-full">
+                    <Button 
+                        variant="ghost"
+                        className="flex-1"
+                        onClick={() => { setTranscript(""); setIsModalOpen(false); }}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button 
+                        className="flex-[2] h-11 rounded-lg" 
+                        onClick={handleProcessRecording}
+                        disabled={!transcript.trim() || isListening}
+                    >
+                        Confirmar e Preencher
+                    </Button>
+                  </div>
                 </>
             )}
           </div>
