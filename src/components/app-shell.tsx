@@ -77,6 +77,7 @@ import { CustomerFormDialog } from "./dashboard/customer-form-dialog";
 import { PurchaseFormDialog } from "./compras/purchase-form-dialog";
 import { SaleFormDialog } from "./vendas/sale-form-dialog";
 import { FixedCostFormDialog } from "./compras/fixed-cost-form-dialog";
+import { VoiceAssistant } from "./dashboard/voice-assistant";
 
 function SubscriptionBadge({ expiresAt, isTrial }: { expiresAt?: Date, isTrial?: boolean }) {
     if (!expiresAt) return null;
@@ -390,6 +391,8 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                 <Separator orientation="vertical" className="h-6 hidden md:block" />
 
                 <div className="flex items-center gap-1">
+                    <VoiceAssistant />
+
                     <Button 
                         variant="ghost" 
                         size="icon" 

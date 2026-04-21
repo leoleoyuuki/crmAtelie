@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -29,6 +29,8 @@ type ComboboxProps = {
   notFoundText?: string;
   onInputChange?: (value: string) => void;
   className?: string;
+  defaultInputValue?: string;
+  isLoading?: boolean;
 };
 
 export function Combobox({
@@ -40,67 +42,83 @@ export function Combobox({
   notFoundText = "Nenhuma opção encontrada.",
   onInputChange,
   className,
+  defaultInputValue = "",
+  isLoading = false,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState("");
+  const [inputValue, setInputValue] = React.useState(defaultInputValue);
+
+  React.useEffect(() => {
+    setInputValue(defaultInputValue);
+  }, [defaultInputValue]);
 
   const handleInputChange = (search: string) => {
     setInputValue(search);
     if (onInputChange) {
-        onInputChange(search);
+      onInputChange(search);
     }
   }
 
   return (
-      <Popover open={open} onOpenChange={setOpen} modal={false}>
-        <PopoverTrigger asChild>
-            <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
-            >
-            {value
-                ? options.find((option) => option.value === value)?.label ?? value
-                : placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-        </PopoverTrigger>
-        <PopoverContent
-            className="w-[--radix-popover-trigger-width] p-0"
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
         >
-            <Command>
-            <CommandInput
-                placeholder={searchPlaceholder}
-                value={inputValue}
-                onValueChange={handleInputChange}
-            />
-            <CommandList>
-                <CommandEmpty>{notFoundText}</CommandEmpty>
-                <CommandGroup>
-                    {options.map((option) => (
-                    <CommandItem
-                        key={option.value}
-                        onSelect={() => {
-                           onChange(option.value);
-                           setOpen(false)
-                           setInputValue("")
-                           if (onInputChange) onInputChange("");
-                        }}
-                    >
-                        <Check
-                        className={cn(
-                            "mr-2 h-4 w-4",
-                            value === option.value ? "opacity-100" : "opacity-0"
-                        )}
-                        />
-                        {option.label}
-                    </CommandItem>
-                    ))}
-                </CommandGroup>
-            </CommandList>
-            </Command>
-        </PopoverContent>
+          {value
+            ? options.find((option) => option.value === value)?.label ?? value
+            : placeholder}
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0"
+      >
+        <Command filter={(value, search) => {
+          const normalize = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+          if (normalize(value).includes(normalize(search))) return 1;
+          return 0;
+        }}>
+          <CommandInput
+            placeholder={searchPlaceholder}
+            value={inputValue}
+            onValueChange={handleInputChange}
+          />
+          <CommandList>
+            {isLoading && (
+              <div className="p-4 flex items-center justify-center text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Buscando no banco...
+              </div>
+            )}
+            <CommandEmpty>{notFoundText}</CommandEmpty>
+            <CommandGroup>
+              {options.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  onSelect={() => {
+                    onChange(option.value);
+                    setOpen(false)
+                    setInputValue("")
+                    if (onInputChange) onInputChange("");
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === option.value ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {option.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
     </Popover>
   )
 }

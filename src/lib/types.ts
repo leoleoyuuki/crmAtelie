@@ -12,6 +12,7 @@ export interface Customer {
   email?: string;
   createdAt: Date;
   userId: string;
+  searchName?: string;
 }
 
 export interface OrderItem {

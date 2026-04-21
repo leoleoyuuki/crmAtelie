@@ -18,6 +18,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { normalizeForSearch } from '@/lib/search-utils';
 import { Order, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost, Sale } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -61,6 +62,24 @@ export async function getCustomers(): Promise<Customer[]> {
   return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Customer);
 }
 
+export async function searchCustomers(searchTerm: string): Promise<Customer[]> {
+  const user = auth.currentUser;
+  if (!user) return [];
+
+  const clean = normalizeForSearch(searchTerm);
+  
+  const q = query(
+    customersCollection, 
+    where("userId", "==", user.uid),
+    where("searchName", ">=", clean),
+    where("searchName", "<=", clean + '\uf8ff'),
+    limit(15)
+  );
+  
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => fromFirebase(doc.data(), doc.id) as Customer);
+}
+
 export async function getCustomerById(customerId: string): Promise<Customer | null> {
     const user = auth.currentUser;
     if (!user) return null;
@@ -99,6 +118,7 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
   const newCustomerData = {
       ...customer,
       userId: auth.currentUser.uid,
+      searchName: normalizeForSearch(customer.name),
       createdAt: serverTimestamp(),
   };
   const docRef = await addDoc(customersCollection, newCustomerData)

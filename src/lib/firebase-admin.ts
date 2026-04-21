@@ -41,3 +41,4 @@ const adminApp = initializeAdmin();
 // Exporta as instâncias do db e auth, que podem ser nulas se a inicialização falhar
 export const adminDb = adminApp ? admin.firestore() : null;
 export const adminAuth = adminApp ? admin.auth() : null;
+export const db = adminDb;
