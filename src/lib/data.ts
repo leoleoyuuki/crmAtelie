@@ -16,6 +16,7 @@ import {
   runTransaction,
   increment,
   setDoc,
+  limit,
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { normalizeForSearch } from '@/lib/search-utils';

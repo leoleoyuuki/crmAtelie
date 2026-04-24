@@ -31,6 +31,7 @@ type ComboboxProps = {
   className?: string;
   defaultInputValue?: string;
   isLoading?: boolean;
+  shouldFilter?: boolean;
 };
 
 export function Combobox({
@@ -44,6 +45,7 @@ export function Combobox({
   className,
   defaultInputValue = "",
   isLoading = false,
+  shouldFilter = true,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(defaultInputValue);
@@ -60,13 +62,15 @@ export function Combobox({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}
           className={cn("w-full justify-between", !value && "text-muted-foreground", className)}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           {value
             ? options.find((option) => option.value === value)?.label ?? value
@@ -75,13 +79,16 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] p-0"
+        className="w-[--radix-popover-trigger-width] p-0 z-[100]"
       >
-        <Command filter={(value, search) => {
-          const normalize = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-          if (normalize(value).includes(normalize(search))) return 1;
-          return 0;
-        }}>
+        <Command 
+          shouldFilter={shouldFilter}
+          filter={(value, search) => {
+            const normalize = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            if (normalize(value).includes(normalize(search))) return 1;
+            return 0;
+          }}
+        >
           <CommandInput
             placeholder={searchPlaceholder}
             value={inputValue}
@@ -99,6 +106,7 @@ export function Combobox({
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
+                  value={option.value}
                   onSelect={() => {
                     onChange(option.value);
                     setOpen(false)

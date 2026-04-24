@@ -12,8 +12,10 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Combobox } from "@/components/ui/combobox";
 import { addOrder, addSale, addCustomer, addPurchase, addFixedCost, searchCustomers } from "@/lib/data";
+import { Input } from "@/components/ui/input";
+import { Search, UserPlus, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { OrderStatus, Customer } from "@/lib/types";
 
 // Provide type definitions for SpeechRecognition if not recognized by default TS config
@@ -41,6 +43,11 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
   const [customerSearch, setCustomerSearch] = useState("");
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isManualSelection, setIsManualSelection] = useState(false);
+  const [hasPreSelected, setHasPreSelected] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
 
@@ -52,9 +59,18 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
   }, [customerSearch]);
 
   useEffect(() => {
-    if (isModalOpen && (debouncedSearch.length >= 3 || (aiResponse?.data?.customerName && !debouncedSearch))) {
+    // Only perform background search if the modal is open AND:
+    // 1. User is typing (3+ chars) OR
+    // 2. We have an AI name AND no manual selection has been made yet
+    const shouldSearch = isModalOpen && (
+      debouncedSearch.length >= 3 || 
+      (aiResponse?.data?.customerName && !debouncedSearch && !isManualSelection)
+    );
+
+    if (shouldSearch) {
       const term = debouncedSearch || aiResponse?.data?.customerName || "";
-      if (term.length >= 3) {
+      const isInitialAIName = !debouncedSearch && aiResponse?.data?.customerName;
+      if (term.length >= (isInitialAIName ? 2 : 3)) {
         setIsLoadingCustomers(true);
         searchCustomers(term)
           .then(setCustomers)
@@ -65,12 +81,16 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
       setCustomers([]);
       setCustomerSearch("");
       setDebouncedSearch("");
+      setIsManualSelection(false);
+      setHasPreSelected(false);
+      setSelectedCustomer(null);
     }
-  }, [isModalOpen, debouncedSearch, aiResponse]);
+  }, [isModalOpen, debouncedSearch, aiResponse, isManualSelection]);
 
   useEffect(() => {
     // Pre-select logic if AI identifies a customer name by matching it roughly
-    if (aiResponse && (aiResponse.operation === 'ORDER' || aiResponse.operation === 'SALE')) {
+    // ONLY if the user hasn't manually selected one yet and we haven't pre-selected for this response.
+    if (!isManualSelection && !hasPreSelected && aiResponse && (aiResponse.operation === 'ORDER' || aiResponse.operation === 'SALE')) {
       const spokenName = aiResponse.data.customerName;
       if (spokenName && customers.length > 0) {
         const match = customers.find(c =>
@@ -79,14 +99,16 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
         );
         if (match) {
           setSelectedCustomerId(match.id);
+          setSelectedCustomer(match);
+          setHasPreSelected(true);
         } else {
           setSelectedCustomerId("new");
+          setSelectedCustomer(null);
+          setHasPreSelected(true);
         }
-      } else {
-        setSelectedCustomerId("new");
       }
     }
-  }, [aiResponse, customers]);
+  }, [aiResponse, customers, isManualSelection, hasPreSelected]);
 
   useEffect(() => {
     // Initialize speech recognition
@@ -137,6 +159,16 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const startListening = () => {
     if (!recognitionRef.current) {
       toast({
@@ -148,6 +180,8 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
     }
     setTranscript("");
     setAiResponse(null);
+    setIsManualSelection(false);
+    setHasPreSelected(false);
     setIsListening(true);
     setIsHolding(true);
     setIsModalOpen(true);
@@ -321,6 +355,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
           setAiResponse(null);
         } else {
           // Standalone mode: we show verification view!
+          setIsManualSelection(false);
           setAiResponse(response);
         }
       } else {
@@ -337,6 +372,106 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
     }
   };
 
+  useEffect(() => {
+    if (aiResponse) {
+      if (aiResponse.data?.customerName) {
+        setCustomerSearch(""); 
+      }
+    }
+  }, [aiResponse]);
+
+  const CustomerSelector = () => {
+    const { operation, data } = aiResponse || {};
+    if (!data) return null;
+    
+    const displayValue = isManualSelection 
+      ? (selectedCustomerId === 'new' ? (customerSearch || "Novo Cliente") : (selectedCustomer?.name || "Carregando..."))
+      : (data.customerName || "Selecione...");
+
+    return (
+      <div className="relative w-full" ref={searchRef}>
+        <button
+          type="button"
+          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={() => setShowSearchDropdown(!showSearchDropdown)}
+        >
+          <span className="truncate">{displayValue}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </button>
+
+        {showSearchDropdown && (
+          <div className="absolute top-full z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center border-b px-3">
+              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+              <input
+                className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Pesquisar cliente..."
+                autoFocus
+                value={customerSearch}
+                onChange={(e) => {
+                  setCustomerSearch(e.target.value);
+                  setIsManualSelection(true);
+                }}
+              />
+            </div>
+            <div className="max-h-[200px] overflow-y-auto p-1">
+              {isLoadingCustomers ? (
+                <div className="p-4 flex items-center justify-center text-muted-foreground text-xs">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Buscando...
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-primary font-medium border-b mb-1"
+                    onClick={() => {
+                      setSelectedCustomerId("new");
+                      setSelectedCustomer(null);
+                      setIsManualSelection(true);
+                      setShowSearchDropdown(false);
+                    }}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    ✅ Novo: {customerSearch || data.customerName || "Avulso"}
+                  </button>
+                  {customers.length > 0 ? (
+                    customers.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        className="relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                        onClick={() => {
+                          setSelectedCustomerId(c.id);
+                          setSelectedCustomer(c);
+                          setIsManualSelection(true);
+                          setShowSearchDropdown(false);
+                          setCustomerSearch("");
+                        }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", selectedCustomerId === c.id ? "opacity-100" : "opacity-0")} />
+                        <div className="flex flex-col items-start">
+                          <span>{c.name}</span>
+                          {c.phone && <span className="text-[10px] opacity-70">{c.phone}</span>}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    debouncedSearch.length >= 3 && (
+                      <div className="p-4 text-center text-xs text-muted-foreground">
+                        Nenhum cliente encontrado.
+                      </div>
+                    )
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderVerificationData = () => {
     if (!aiResponse) return null;
     const { operation, data } = aiResponse;
@@ -347,19 +482,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
           <>
             <div>
               <label className="text-xs font-semibold mb-1 block text-primary">Vincular a um Cliente:</label>
-              <Combobox
-                isLoading={isLoadingCustomers}
-                options={[
-                  { value: 'new', label: `✅ Novo: ${customerSearch || data.customerName || "Avulso"}` },
-                  ...customers.map(c => ({ value: c.id, label: c.name }))
-                ]}
-                value={selectedCustomerId}
-                onChange={setSelectedCustomerId}
-                placeholder="Pesquisar cliente..."
-                searchPlaceholder="Buscar por nome..."
-                notFoundText="Nenhum cliente encontrado."
-                defaultInputValue={customerSearch || data.customerName || ""}
-              />
+              <CustomerSelector />
             </div>
             <p><strong>Devido em:</strong> {data.dueDate ? new Date(data.dueDate + 'T12:00:00').toLocaleDateString('pt-BR') : 'Não informada'}</p>
             <div>
@@ -378,19 +501,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
             <p><strong>Preço:</strong> R$ {Number(data.price || 0).toFixed(2)}</p>
             <div>
               <label className="text-xs font-semibold mt-2 mb-1 block text-primary">Vincular a um Cliente:</label>
-              <Combobox
-                isLoading={isLoadingCustomers}
-                options={[
-                  { value: 'new', label: `✅ Novo: ${customerSearch || data.customerName || 'Venda Avulsa (Nenhum)'}` },
-                  ...customers.map(c => ({ value: c.id, label: c.name }))
-                ]}
-                value={selectedCustomerId}
-                onChange={setSelectedCustomerId}
-                placeholder="Pesquisar cliente..."
-                searchPlaceholder="Buscar por nome..."
-                notFoundText="Nenhum cliente encontrado."
-                defaultInputValue={customerSearch || data.customerName || ""}
-              />
+              <CustomerSelector />
             </div>
           </>
         )}
