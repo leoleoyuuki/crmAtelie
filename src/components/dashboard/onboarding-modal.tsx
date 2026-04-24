@@ -156,11 +156,16 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-6 w-full max-w-md">
+                  <div className="flex flex-col gap-4 w-full max-w-sm">
                     {step.items?.map((item, i) => (
-                      <div key={i} className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/20 flex flex-col items-center text-center gap-3">
-                        <item.icon className="h-8 w-8 text-white" />
-                        <h4 className="text-white font-bold text-sm">{item.title}</h4>
+                      <div key={i} className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center gap-4 transition-all hover:bg-white/20">
+                        <div className="bg-white/20 p-3 rounded-xl">
+                          <item.icon className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="text-left">
+                          <h4 className="text-white font-bold text-base leading-tight">{item.title}</h4>
+                          <p className="text-white/60 text-xs leading-tight mt-1">{item.desc}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -209,15 +214,15 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
                   </div>
 
                   {step.items && (
-                    <div className="space-y-4 pt-4">
+                    <div className="space-y-3 pt-2">
                       {step.items.map((item, i) => (
-                        <div key={i} className="flex items-start gap-4 p-4 rounded-2xl border border-muted bg-muted/5 hover:bg-muted/10 transition-colors">
-                          <div className="bg-primary/10 p-2.5 rounded-xl text-primary">
-                            <item.icon className="h-5 w-5" />
+                        <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-muted bg-muted/5 hover:bg-muted/10 transition-colors">
+                          <div className="bg-primary/10 p-2 rounded-lg text-primary shrink-0">
+                            <item.icon className="h-4 w-4" />
                           </div>
-                          <div>
-                            <h4 className="font-bold text-sm">{item.title}</h4>
-                            <p className="text-xs text-muted-foreground">{item.desc}</p>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-[13px] leading-tight">{item.title}</h4>
+                            <p className="text-[11px] text-muted-foreground truncate">{item.desc}</p>
                           </div>
                         </div>
                       ))}
