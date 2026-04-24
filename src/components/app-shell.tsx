@@ -621,14 +621,13 @@ export default function AppShell({ children, profile }: { children: React.ReactN
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('atelierflow_onboarding_seen');
-    if (!hasSeenOnboarding) {
+    if (profile && !profile.hasSeenOnboarding) {
       const timer = setTimeout(() => {
         setIsOnboardingOpen(true);
-      }, 1000);
+      }, 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [profile]);
 
   const isAdmin = user?.uid === "3YuL6Ff7G9cHAV7xa81kyQF4bCw2";
 

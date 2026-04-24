@@ -65,6 +65,7 @@ export interface UserProfile {
   subscriptionProvider?: 'mercadopago' | 'stripe';
   passwordHash?: string;
   privacyMode?: boolean;
+  hasSeenOnboarding?: boolean;
 }
 
 export interface AccessToken {

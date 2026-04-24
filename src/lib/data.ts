@@ -1070,3 +1070,9 @@ export async function addSale(saleData: Omit<Sale, 'id' | 'userId' | 'createdAt'
         throw new Error("Falha ao registrar venda.");
     });
 }
+export async function markOnboardingAsSeen(userId: string) {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, {
+    hasSeenOnboarding: true
+  });
+}
