@@ -122,7 +122,7 @@ export function HeroSection() {
       </div>
 
       {/* Kinetic Marquee Band */}
-      <div className="relative z-10 border-t border-b border-primary/5 py-5 bg-card/30 backdrop-blur-sm">
+      <div className="relative z-10 border-t border-b border-primary/5 py-5 bg-white/5 dark:bg-zinc-900/50">
         <KineticMarquee items={marqueeItems} speed={50} />
       </div>
     </section>

@@ -36,7 +36,6 @@ export function FaqSection() {
           backgroundImage: 'url(/images/crumpled-paper-texture.png)',
           backgroundRepeat: 'repeat',
           backgroundSize: '400px 400px',
-          mixBlendMode: 'multiply',
         }}
         aria-hidden="true"
       />
@@ -58,9 +57,9 @@ export function FaqSection() {
           {objections.map((item, index) => (
             <div
               key={index}
-              className="group relative"
+              className="relative"
             >
-              <div className="h-full p-8 rounded-[2.5rem] bg-white/5 border border-white/10 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-primary/30">
+              <div className="h-full p-8 rounded-[2.5rem] bg-white/60 dark:bg-zinc-900/40 border border-white/10 shadow-xl">
                 <div className={cn(
                   "w-12 h-12 rounded-2xl flex items-center justify-center mb-6 bg-background/50 shadow-sm",
                   item.iconColor

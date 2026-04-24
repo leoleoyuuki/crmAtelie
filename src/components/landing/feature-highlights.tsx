@@ -41,13 +41,6 @@ const highlights = [
 export function FeatureHighlights() {
   const [activeItem, setActiveItem] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveItem((prev) => (prev + 1) % highlights.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
   const active = highlights[activeItem];
 
   return (
@@ -73,7 +66,7 @@ export function FeatureHighlights() {
           {highlights.map((item, index) => (
             <div
               key={item.id}
-              className="absolute inset-0 will-change-[opacity]"
+              className="absolute inset-0"
               style={{
                 opacity: index === activeItem ? 1 : 0,
                 transition: 'opacity 0.4s ease',
@@ -102,7 +95,6 @@ export function FeatureHighlights() {
               {highlights.map((item, index) => (
                 <div
                   key={item.id}
-                  className="will-change-[opacity]"
                   style={{
                     opacity: index === activeItem ? 1 : 0,
                     transition: 'opacity 0.4s ease',
@@ -146,27 +138,9 @@ export function FeatureHighlights() {
               ))}
             </div>
           </div>
-
-          {/* Progress bar */}
-          <div className="absolute bottom-0 left-0 right-0 z-30 h-[2px] bg-white/10">
-            <div
-              key={activeItem}
-              className="h-full bg-white/60"
-              style={{
-                animation: 'progress-bar 6s linear forwards',
-              }}
-            />
-          </div>
         </div>
 
       </div>
-
-      <style>{`
-        @keyframes progress-bar {
-          from { width: 0% }
-          to   { width: 100% }
-        }
-      `}</style>
     </div>
   );
 }

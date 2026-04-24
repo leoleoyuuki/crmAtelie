@@ -3,7 +3,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Instagram, MessageCircle, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 const testimonialsRow1 = [
   {
@@ -83,7 +82,7 @@ const testimonialsRow2 = [
 
 const TestimonialCard = ({ data }: { data: typeof testimonialsRow1[0] }) => {
   return (
-    <div className="w-[300px] sm:w-[350px] flex-shrink-0 bg-white/70 dark:bg-zinc-900/40 rounded-3xl p-6 sm:p-8 shadow-sm border border-black/5 dark:border-white/10 backdrop-blur-md transition-transform hover:-translate-y-1 hover:shadow-md cursor-default flex flex-col">
+    <div className="w-[300px] sm:w-[350px] flex-shrink-0 bg-white/95 dark:bg-zinc-900/90 rounded-3xl p-6 sm:p-8 shadow-sm border border-black/5 dark:border-white/10 transition-transform hover:-translate-y-1 hover:shadow-md cursor-default flex flex-col">
       <div className="flex justify-between items-start mb-5">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
@@ -115,7 +114,7 @@ const MarqueeRow = ({ items, direction = "left", speed = 10 }: { items: typeof t
   return (
     <div className="relative flex overflow-hidden w-full group">
       <div 
-        className={cn("flex whitespace-nowrap min-w-full gap-6 px-3")}
+        className={cn("flex whitespace-nowrap min-w-full gap-6 px-3 will-change-transform")}
         style={{
           animation: `marquee-${direction} ${speed}s linear infinite`,
         }}
@@ -150,7 +149,6 @@ export const StaggerTestimonials: React.FC = () => {
           backgroundImage: 'url(/images/crepe-paper-muted.png)',
           backgroundRepeat: 'repeat',
           backgroundSize: '400px 400px',
-          mixBlendMode: 'multiply',
         }}
         aria-hidden="true"
       />
@@ -165,23 +163,26 @@ export const StaggerTestimonials: React.FC = () => {
         </p>
       </div>
 
-      <div className="relative z-20 flex flex-col gap-6 w-full mask-edges">
-        <MarqueeRow items={testimonialsRow1} direction="left" speed={20} />
-        <MarqueeRow items={testimonialsRow2} direction="right" speed={18} />
+      <div className="relative z-20 flex flex-col gap-6 w-full">
+        {/* Left and Right Overlays for fading effect (Better performance than mask-image) */}
+        <div className="absolute top-0 left-0 bottom-0 w-20 sm:w-40 bg-gradient-to-r from-background to-transparent z-30 pointer-events-none" />
+        <div className="absolute top-0 right-0 bottom-0 w-20 sm:w-40 bg-gradient-to-l from-background to-transparent z-30 pointer-events-none" />
+        
+        <MarqueeRow items={testimonialsRow1} direction="left" speed={25} />
+        <MarqueeRow items={testimonialsRow2} direction="right" speed={22} />
       </div>
 
       <style jsx global>{`
         @keyframes marquee-left {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-33.33%); }
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-33.33%, 0, 0); }
         }
         @keyframes marquee-right {
-          0% { transform: translateX(-33.33%); }
-          100% { transform: translateX(0); }
+          0% { transform: translate3d(-33.33%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
         }
-        .mask-edges {
-          -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-          mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        .will-change-transform {
+          will-change: transform;
         }
       `}</style>
     </div>

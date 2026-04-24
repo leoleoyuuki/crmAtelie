@@ -71,7 +71,6 @@ export function AllFeatures() {
           backgroundImage: 'url(/images/crepe-paper-muted.png)',
           backgroundRepeat: 'repeat',
           backgroundSize: '400px 400px',
-          mixBlendMode: 'multiply',
         }}
         aria-hidden="true"
       />
@@ -92,26 +91,21 @@ export function AllFeatures() {
           {features.map((feature) => (
             <div
               key={feature.titleFull}
-              className={cn('flex group', feature.className)}
+              className={cn('flex', feature.className)}
             >
-              <Card className="flex-1 bg-card/50 backdrop-blur-sm border-primary/10 shadow-lg rounded-[2rem] overflow-hidden relative transition-all duration-300 hover:border-primary/30">
-                <div className={cn(
-                  "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-                  feature.color
-                )} />
-
+              <Card className="flex-1 bg-white/95 dark:bg-zinc-900/90 border-primary/10 shadow-lg rounded-[2rem] overflow-hidden relative">
                 <CardHeader className="p-5 md:p-8 pb-2 relative z-10">
-                  <div className="bg-primary/10 p-3 md:p-4 rounded-2xl w-fit text-primary transition-transform duration-300 group-hover:scale-110 shadow-sm will-change-transform">
+                  <div className="bg-primary/10 p-3 md:p-4 rounded-2xl w-fit text-primary shadow-sm">
                     <feature.icon className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                 </CardHeader>
 
                 <CardContent className="p-5 md:p-8 pt-2 relative z-10 text-left">
-                  <CardTitle className="text-lg md:text-2xl font-headline font-bold mb-2 md:mb-4 group-hover:text-primary transition-colors leading-tight">
+                  <CardTitle className="text-lg md:text-2xl font-headline font-bold mb-2 md:mb-4 leading-tight">
                     <span className="md:hidden">{feature.title}</span>
                     <span className="hidden md:inline">{feature.titleFull}</span>
                   </CardTitle>
-                  <p className="text-muted-foreground text-xs md:text-base leading-relaxed line-clamp-3 md:line-clamp-none opacity-80 group-hover:opacity-100 transition-opacity">
+                  <p className="text-muted-foreground text-xs md:text-base leading-relaxed line-clamp-3 md:line-clamp-none opacity-80">
                     {feature.description}
                   </p>
                 </CardContent>

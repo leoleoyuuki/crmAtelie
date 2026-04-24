@@ -32,9 +32,9 @@ export function KineticMarquee({
       <div className="absolute right-0 top-0 bottom-0 w-24 z-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
 
       <div
-        className="flex whitespace-nowrap"
+        className="flex whitespace-nowrap will-change-transform"
         style={{
-          animation: `marquee-scroll ${speed}s linear infinite`,
+          animation: `marquee-left ${speed}s linear infinite`,
           animationDirection: reverse ? 'reverse' : 'normal',
         }}
       >
@@ -50,14 +50,17 @@ export function KineticMarquee({
         ))}
       </div>
 
-      <style jsx>{`
-        @keyframes marquee-scroll {
+      <style jsx global>{`
+        @keyframes marquee-left {
           0% {
-            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
           }
           100% {
-            transform: translateX(-33.333%);
+            transform: translate3d(-33.333%, 0, 0);
           }
+        }
+        .will-change-transform {
+          will-change: transform;
         }
       `}</style>
     </div>

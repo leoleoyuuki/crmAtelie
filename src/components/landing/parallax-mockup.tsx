@@ -51,13 +51,11 @@ export function ParallaxMockup() {
           key={card.label}
           className={cn(
             'absolute z-20 hidden md:flex items-center gap-3',
-            'bg-card/90 backdrop-blur-xl px-4 py-3 rounded-2xl',
+            'bg-white/95 dark:bg-zinc-900/90 px-4 py-3 rounded-2xl',
             'border border-white/10 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)]',
             'shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]',
-            'animate-float',
             card.position
           )}
-          style={{ animationDelay: card.animDelay }}
         >
           <div className={cn('p-2 rounded-xl', card.bg)}>
             <card.icon className={cn('h-4 w-4', card.color)} />

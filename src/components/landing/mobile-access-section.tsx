@@ -51,7 +51,6 @@ export function MobileAccessSection() {
           backgroundImage: 'url(/images/crumpled-paper-texture.png)',
           backgroundRepeat: 'repeat',
           backgroundSize: '400px 400px',
-          mixBlendMode: 'multiply',
         }}
         aria-hidden="true"
       />
@@ -67,7 +66,7 @@ export function MobileAccessSection() {
 
           <div
             key={isMobile ? 'mobile-view' : 'desktop-view'}
-            className="space-y-8 animate-fade-in-up"
+            className="space-y-8"
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em]">
               <Sparkles className="h-3.5 w-3.5" />
@@ -89,7 +88,7 @@ export function MobileAccessSection() {
 
             <div className="space-y-4 max-w-md">
               {currentContent.features.map((item, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/40 dark:bg-white/5 border border-white/20 backdrop-blur-md shadow-sm transition-transform hover:scale-[1.02] will-change-transform">
+                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/60 dark:bg-zinc-900/40 border border-white/20 shadow-sm">
                   <div className="bg-primary/10 p-2.5 rounded-xl text-primary shrink-0">
                     <item.icon className="h-5 w-5" />
                   </div>
@@ -103,14 +102,14 @@ export function MobileAccessSection() {
 
             <div
               onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] cursor-pointer group w-fit transition-all hover:opacity-80"
+              className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] cursor-pointer group w-fit"
             >
               {currentContent.linkText}
-              <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="h-3 w-3" />
             </div>
 
             <Dialog open={showModal} onOpenChange={setShowModal}>
-              <DialogContent className="sm:max-w-[450px] border-primary/10 bg-background/95 backdrop-blur-xl">
+              <DialogContent className="sm:max-w-[450px] border-primary/10 bg-background/98">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-headline font-bold flex items-center gap-2">
                     {isMobile ? <Monitor className="h-6 w-6 text-primary" /> : <Smartphone className="h-6 w-6 text-primary" />}
@@ -168,7 +167,7 @@ export function MobileAccessSection() {
                 <div className="flex justify-center pt-2">
                   <button
                     onClick={() => setShowModal(false)}
-                    className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-sm transition-transform active:scale-95 shadow-lg shadow-primary/20"
+                    className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/20"
                   >
                     Entendi
                   </button>
@@ -179,9 +178,9 @@ export function MobileAccessSection() {
 
           <div className="relative flex justify-center lg:justify-end min-h-fit lg:min-h-[600px] items-center py-10 lg:py-0">
             {!isMobile ? (
-              /* iPhone mockup — float via CSS */
+              /* iPhone mockup — float removed */
               <div className="flex justify-center py-10 relative">
-                <div className="animate-float relative border-zinc-900 bg-zinc-900 border-[8px] rounded-[3rem] h-[550px] w-[270px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/20 overflow-hidden">
+                <div className="relative border-zinc-900 bg-zinc-900 border-[8px] rounded-[3rem] h-[550px] w-[270px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.4)] ring-1 ring-white/20 overflow-hidden">
                   <div className="rounded-[2.4rem] overflow-hidden w-full h-full bg-background relative flex flex-col">
                     {/* Dynamic Island */}
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-3xl z-50" />
