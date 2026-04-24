@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { motion, useAnimation, useInView, Variants } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TypingTextProps {
@@ -17,53 +16,45 @@ export function TypingText({
   className,
   delay = 0,
   speed = 0.02,
-  as: Tag = 'span',
 }: TypingTextProps) {
-  const controls = useAnimation();
-  const ref = React.useRef(null);
-  const isInView = useInView(ref, { once: true });
+  const ref = useRef<HTMLSpanElement>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (isInView) {
-      const timeout = setTimeout(() => {
-        controls.start('visible');
-      }, delay);
-      return () => clearTimeout(timeout);
-    }
-  }, [isInView, controls, delay]);
+    const el = ref.current;
+    if (!el) return;
 
-  const container: Variants = {
-    hidden: { opacity: 1 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: speed,
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          const timer = setTimeout(() => setVisible(true), delay);
+          observer.disconnect();
+          return () => clearTimeout(timer);
+        }
       },
-    },
-  };
+      { threshold: 0.1 }
+    );
 
-  const child: Variants = {
-    visible: {
-      opacity: 1,
-    },
-    hidden: {
-      opacity: 0,
-    },
-  };
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [delay]);
 
   return (
-    <motion.div
-      ref={ref}
-      variants={container}
-      initial="hidden"
-      animate={controls}
-      className={cn('inline-block', className)}
-    >
+    <span ref={ref} className={cn('inline-block', className)} aria-label={text}>
       {text.split('').map((char, index) => (
-        <motion.span key={index} variants={child}>
+        <span
+          key={index}
+          aria-hidden="true"
+          style={{
+            display: 'inline-block',
+            opacity: visible ? 1 : 0,
+            transition: `opacity 0.08s ease`,
+            transitionDelay: visible ? `${index * speed}s` : '0s',
+          }}
+        >
           {char === ' ' ? '\u00A0' : char}
-        </motion.span>
+        </span>
       ))}
-    </motion.div>
+    </span>
   );
 }

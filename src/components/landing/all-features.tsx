@@ -1,5 +1,4 @@
 'use client';
-
 import {
   BarChart3,
   Eye,
@@ -8,7 +7,6 @@ import {
   StickyNote,
   Users,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { cn } from '@/lib/utils';
 
@@ -79,11 +77,7 @@ export function AllFeatures() {
       />
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-          >
+          <div>
             <h2 className="text-3xl font-bold font-headline tracking-tight sm:text-5xl mb-4">
               Ferramentas profissionais para <br className="hidden md:block" />
               <span className="text-primary italic">artesãos modernos</span>
@@ -91,31 +85,27 @@ export function AllFeatures() {
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Tudo o que você precisa para sair do amadorismo e escalar sua produção com organização.
             </p>
-          </motion.div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 auto-rows-fr">
-          {features.map((feature, index) => (
-            <motion.div
+          {features.map((feature) => (
+            <div
               key={feature.titleFull}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              className={cn("flex group", feature.className)}
+              className={cn('flex group', feature.className)}
             >
               <Card className="flex-1 bg-card/50 backdrop-blur-sm border-primary/10 shadow-lg rounded-[2rem] overflow-hidden relative transition-all duration-300 hover:border-primary/30">
                 <div className={cn(
-                    "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-                    feature.color
+                  "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+                  feature.color
                 )} />
-                
+
                 <CardHeader className="p-5 md:p-8 pb-2 relative z-10">
-                  <div className="bg-primary/10 p-3 md:p-4 rounded-2xl w-fit text-primary transition-all duration-300 group-hover:scale-110 shadow-sm">
+                  <div className="bg-primary/10 p-3 md:p-4 rounded-2xl w-fit text-primary transition-transform duration-300 group-hover:scale-110 shadow-sm will-change-transform">
                     <feature.icon className="h-5 w-5 md:h-6 md:w-6" />
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="p-5 md:p-8 pt-2 relative z-10 text-left">
                   <CardTitle className="text-lg md:text-2xl font-headline font-bold mb-2 md:mb-4 group-hover:text-primary transition-colors leading-tight">
                     <span className="md:hidden">{feature.title}</span>
@@ -126,7 +116,7 @@ export function AllFeatures() {
                   </p>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
