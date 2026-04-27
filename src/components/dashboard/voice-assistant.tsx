@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { addOrder, addSale, addCustomer, addPurchase, addFixedCost, searchCustomers } from "@/lib/data";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, Check, ChevronsUpDown } from "lucide-react";
+import { Search, UserPlus, Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OrderStatus, Customer } from "@/lib/types";
 
@@ -47,6 +47,7 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
   const [hasPreSelected, setHasPreSelected] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { toast } = useToast();
@@ -109,6 +110,19 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
       }
     }
   }, [aiResponse, customers, isManualSelection, hasPreSelected]);
+
+  useEffect(() => {
+    const handleTour = () => {
+      setIsTourOpen(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("start-voice-tour", handleTour);
+    return () => window.removeEventListener("start-voice-tour", handleTour);
+  }, []);
+
+  useEffect(() => {
+    if (isModalOpen) setIsTourOpen(false);
+  }, [isModalOpen]);
 
   useEffect(() => {
     // Initialize speech recognition
@@ -530,21 +544,63 @@ export function VoiceAssistant({ onResult }: VoiceAssistantProps) {
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        className="h-10 w-10 shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border-primary/30 relative select-none"
-        style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
-        onClick={() => setIsModalOpen(true)}
-        title="Assistente Inteligente 🎙️"
-      >
-        <Mic className="h-5 w-5" />
-        <span className="absolute -top-1 -right-1 flex h-3 w-3 pointer-events-none">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-        </span>
-      </Button>
+      <div className="relative">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 shrink-0 bg-primary/10 text-primary hover:bg-primary/20 border-primary/30 relative select-none"
+          style={{ WebkitTouchCallout: 'none', WebkitUserSelect: 'none' }}
+          onClick={() => {
+            setIsModalOpen(true);
+            setIsTourOpen(false);
+          }}
+          title="Assistente Inteligente 🎙️"
+        >
+          <Mic className="h-5 w-5" />
+          <span className="absolute -top-1 -right-1 flex h-3 w-3 pointer-events-none">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+          </span>
+        </Button>
+
+        {isTourOpen && (
+          <div className="absolute top-12 right-0 z-50 w-72 p-4 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-[#E8D8C7] animate-in fade-in zoom-in duration-300 origin-top-right">
+            <div className="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-t border-l border-[#E8D8C7]" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-[#C26B42]/10 rounded-full">
+                  <Mic className="h-4 w-4 text-[#C26B42]" />
+                </div>
+                <h4 className="font-headline font-bold text-sm text-[#4E3422]">Assistente Inteligente</h4>
+              </div>
+              <p className="text-xs text-[#8B5E3C] leading-relaxed">
+                Este é seu novo ajudante! Clique aqui e fale o que deseja adicionar ao sistema: 
+                <span className="font-bold"> pedidos, vendas, clientes ou despesas.</span> 
+                Eu entendo sua voz e registro tudo automaticamente.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-[10px] h-8 bg-[#C26B42] text-white hover:bg-[#A85935] border-none rounded-full"
+                onClick={() => {
+                  setIsModalOpen(true);
+                  setIsTourOpen(false);
+                }}
+              >
+                Começar Agora
+              </Button>
+              <button 
+                onClick={() => setIsTourOpen(false)}
+                className="absolute top-2 right-2 text-[#A47148] hover:text-[#4E3422] transition-colors"
+                title="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <Dialog open={isModalOpen} onOpenChange={(open) => {
         if (!open && isListening) stopListening();

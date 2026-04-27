@@ -47,17 +47,19 @@ import { cn, formatCurrency } from '@/lib/utils';
    Mimics the branded "sliding feature cards" in the reference
 ───────────────────────────────────────────────────────────── */
 const promoSlides = [
-  {
-    tag: 'AtelierFlow',
-    title: 'Controle Total do Seu Ateliê',
-    subtitle: 'Pedidos, clientes e finanças em um só lugar.',
-    cta: 'Explorar',
-    ctaHref: '/pedidos',
-    gradient: 'from-[#A67C52] via-[#8B5E3C] to-[#6F4A2E]',
-    accent: '#A67C52',
-    image: '/images/promo/atelier2.png',
+
+    {
+    tag: 'IA de Voz',
+    title: 'Assistente Inteligente I.A.',
+    subtitle: 'Adicione pedidos, vendas, clientes ou despesas apenas falando.',
+    cta: 'Experimentar',
+    ctaHref: '/',
+    gradient: 'from-[#E8D8C7] via-[#D2A679] to-[#A47148]',
+    accent: '#E8D8C7',
+    image: '/images/promo/voice-assistant-gpt.png',
+    bgImage: '/images/gradientes/verde-laranja-bege.png', 
   },
-  {
+    {
     tag: 'Financeiro',
     title: 'Veja Seu Lucro Real',
     subtitle: 'Acompanhe receitas, custos e margem em tempo real.',
@@ -67,7 +69,7 @@ const promoSlides = [
     accent: '#BDA68E',
     image: '/images/promo/finance2.png',
   },
-  {
+   {
     tag: 'Tarefas',
     title: 'Pedidos Prontos a Tempo',
     subtitle: 'Nunca perca um prazo com nossa gestão de pedidos.',
@@ -77,6 +79,23 @@ const promoSlides = [
     accent: '#5D6355',
     image: '/images/promo/tasks2.png',
   },
+
+    {
+    tag: 'AtelierFlow',
+    title: 'Controle Total do Seu Ateliê',
+    subtitle: 'Pedidos, clientes e finanças em um só lugar.',
+    cta: 'Explorar',
+    ctaHref: '/pedidos',
+    gradient: 'from-[#4E3422] via-[#A47148] to-[#D2A679]',
+    accent: '#D2A679',
+    image: '/images/promo/atelier2.png',
+    bgImage: '', // Optional: Add a URL here for a full background image
+  },
+  
+
+ 
+
+
 ];
 
 function PromoCarousel() {
@@ -97,14 +116,32 @@ function PromoCarousel() {
   const prev = () => { goTo((current - 1 + promoSlides.length) % promoSlides.length); };
   const next = () => { goTo((current + 1) % promoSlides.length); };
 
-  const slide = promoSlides[current];
+  const slide = promoSlides[current] as typeof promoSlides[0] & { bgImage?: string };
+  const isTourCard = slide.tag.includes('IA de Voz');
+
+  const handleCtaClick = (e: React.MouseEvent) => {
+    if (isTourCard) {
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('start-voice-tour'));
+    }
+  };
 
   return (
-    <div className="relative h-full min-h-[220px] sm:min-h-[340px] lg:min-h-0 rounded-2xl overflow-hidden select-none">
-      {/* Gradient background */}
-      <div
-        className={cn('absolute inset-0 bg-gradient-to-br transition-all duration-700', slide.gradient)}
-      />
+    <div className="relative h-full min-h-[220px] sm:min-h-[340px] lg:min-h-0 rounded-2xl overflow-hidden shadow-sm group/carousel">
+      {/* Background Layer: Image or Gradient */}
+      <div className="absolute inset-0 transition-transform duration-700 group-hover/carousel:scale-105">
+        <div
+          className={cn('absolute inset-0 bg-gradient-to-br transition-all duration-700', slide.gradient)}
+        />
+        {slide.bgImage && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-opacity duration-700 pointer-events-none" 
+            style={{ backgroundImage: `url(${slide.bgImage})` }}
+          />
+        )}
+        {/* Subtle texture for refined look */}
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] mix-blend-overlay pointer-events-none" />
+      </div>
       {/* Decorative circles and blur effects */}
       <div className="absolute -bottom-8 -right-8 h-40 w-40 rounded-full bg-white/10 blur-xl" />
       <div className="absolute top-4 right-8 h-20 w-20 rounded-full bg-white/10 blur-lg" />
@@ -130,17 +167,19 @@ function PromoCarousel() {
             </div>
           </div>
 
-          <div className="space-y-1.5 mt-2 relative">
-            <div className="absolute -inset-x-8 -inset-y-4 bg-white/5 blur-2xl rounded-full -z-10 pointer-events-none" />
-            <h3 className="text-xl sm:text-2xl font-headline font-black leading-tight drop-shadow-md">{slide.title}</h3>
-            <p className="text-[13px] sm:text-sm text-white/90 leading-snug drop-shadow-md max-w-[240px]">{slide.subtitle}</p>
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="space-y-1.5 relative">
+              <div className="absolute -inset-x-8 -inset-y-4 bg-white/5 blur-2xl rounded-full -z-10 pointer-events-none" />
+              <h3 className="text-xl sm:text-2xl font-headline font-black leading-tight drop-shadow-md">{slide.title}</h3>
+              <p className="text-[13px] sm:text-sm text-white/90 leading-snug drop-shadow-md max-w-[240px]">{slide.subtitle}</p>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between mt-4">
-            <Link href={slide.ctaHref}>
-              <button className="flex items-center gap-1.5 bg-white text-primary text-[11px] font-black px-4 py-2 rounded-full hover:scale-105 transition-all shadow-md group">
+          <div className="flex items-center justify-between mt-auto pt-2">
+            <Link href={isTourCard ? '#' : slide.ctaHref} onClick={handleCtaClick}>
+              <button className="flex items-center gap-1.5 bg-white text-primary text-[11px] font-black px-4 py-2 rounded-full hover:scale-105 active:scale-95 transition-all shadow-md group/cta">
                 {slide.cta}
-                <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                <ArrowRight className="h-3 w-3 group-hover/cta:translate-x-0.5 transition-transform" />
               </button>
             </Link>
             {/* Dots */}
@@ -148,7 +187,10 @@ function PromoCarousel() {
               {promoSlides.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => goTo(i)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goTo(i);
+                  }}
                   className={cn(
                     'h-1.5 rounded-full transition-all duration-300',
                     i === current ? 'w-6 bg-white' : 'w-1.5 bg-white/40'
