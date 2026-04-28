@@ -756,16 +756,18 @@ export default function DashboardPage() {
 
       {/* ── FINANCIAL CHART ─────────────────────────────────── */}
       <div className="rounded-3xl border bg-card shadow-sm overflow-hidden">
-        <div className="px-6 py-5 border-b bg-muted/5 flex items-center justify-between">
+        {/* Gradient accent strip */}
+        <div className="h-1 w-full bg-gradient-to-r from-primary/60 via-primary to-primary/40" />
+        <div className="px-7 py-5 flex items-center justify-between">
           <div>
-            <h3 className="font-headline font-bold text-xl">Desempenho Financeiro</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{periodLabel}</p>
+            <h3 className="font-headline font-bold text-xl tracking-tight">Desempenho Financeiro</h3>
+            <p className="text-[11px] font-semibold text-muted-foreground/70 mt-0.5 uppercase tracking-widest">{periodLabel}</p>
           </div>
-          <Badge variant="secondary" className="bg-primary/10 text-primary border-none">
-            Faturamento &amp; Lucro
+          <Badge variant="secondary" className="bg-primary/8 text-primary border border-primary/15 font-bold text-[10px] tracking-wider uppercase px-3 py-1.5 rounded-full">
+            Receitas &amp; Despesas
           </Badge>
         </div>
-        <div className="p-6">
+        <div className="px-7 pb-7">
           <ProfitChart data={profitData} isPrivacyMode={isPrivacyMode} />
         </div>
       </div>

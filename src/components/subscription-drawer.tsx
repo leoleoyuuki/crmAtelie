@@ -64,7 +64,7 @@ function BillingToggle({ selected, onChange }: { selected: 'mensal' | 'anual', o
       >
         Anual
         {selected !== 'anual' && (
-          <span className="absolute -top-2 -right-2 bg-[#10b981] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black animate-bounce shadow-lg">
+          <span className="absolute -top-2 -right-2 bg-[#10b981] text-white text-[9px] px-1.5 py-0.5 rounded-full font-black animate-pulse shadow-lg">
             -R$200
           </span>
         )}
@@ -200,10 +200,11 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
           if (!v) setShowCouponScreen(false);
           onOpenChange?.(v);
         }}>
-        <SheetContent side="bottom" className="p-0 border-t border-primary/20 rounded-t-3xl sm:rounded-none sm:rounded-t-[40px] w-full max-w-none sm:mx-0 sm:right-auto sm:left-0 sm:translate-x-0 h-auto max-h-[95vh] overflow-y-auto bg-background/95 backdrop-blur-xl shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.1)]">
+        <SheetContent side="bottom" className="p-0 border-t border-primary/20 rounded-t-3xl sm:rounded-none sm:rounded-t-[40px] w-full max-w-none sm:mx-0 sm:right-auto sm:left-0 sm:translate-x-0 h-auto max-h-[95vh] overflow-y-auto bg-background shadow-[0_-20px_50px_-20px_rgba(0,0,0,0.1)]">
           <div className="relative overflow-hidden w-full">
-            <div className="absolute top-[-50%] right-[-10%] w-[50%] h-[150%] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-20%] left-[-10%] w-[30%] h-[100%] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+            {/* Lightweight gradient accents — no blur, GPU-friendly */}
+            <div className="absolute top-0 right-0 w-1/2 h-64 bg-gradient-to-bl from-primary/8 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-1/3 h-48 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
             
             <div className="max-w-7xl mx-auto px-6 sm:px-12 py-10 lg:py-16 relative z-10 w-full">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center">
@@ -344,11 +345,10 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
                         </Button>
                         <Button 
                           size="lg"
-                          className="flex-1 h-14 rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden bg-primary hover:bg-primary/95"
+                          className="flex-1 h-14 rounded-2xl font-black shadow-xl hover:shadow-lg transition-all duration-200 hover:scale-[1.02] bg-primary hover:bg-primary/95"
                           onClick={handlePortalSession}
                           disabled={isLoading}
                         >
-                          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
                           {isLoading ? (
                             <Loader2 className="animate-spin h-5 w-5" />
                           ) : (
@@ -366,7 +366,7 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
                   {!showCouponScreen && (
                     <Button 
                       size="lg"
-                      className="w-full lg:max-w-md h-16 text-lg rounded-2xl font-black shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden bg-primary hover:bg-primary/95 mt-4"
+                      className="w-full lg:max-w-md h-16 text-lg rounded-2xl font-black shadow-xl hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group bg-primary hover:bg-primary/95 mt-4"
                       onClick={() => {
                           if (profile?.stripeCustomerId) {
                               setShowCouponScreen(true);
@@ -376,9 +376,6 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
                       }}
                       disabled={isLoading}
                     >
-                      <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
-                      <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
-                      
                       {isLoading ? (
                         <Loader2 className="animate-spin h-6 w-6" />
                       ) : (
@@ -392,11 +389,6 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
                 </div>
               </div>
             </div>
-            <style jsx>{`
-            @keyframes shimmer {
-              100% { transform: translateX(100%); }
-            }
-          `}</style>
           </div>
         </SheetContent>
       </Sheet>
