@@ -653,6 +653,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
     { href: "/admin/ativacao", label: "Gerar Códigos", icon: KeyRound },
   ]
 
+
   const handleLinkClick = () => {
     if (isMobile) {
       setOpenMobile(false);

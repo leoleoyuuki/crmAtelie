@@ -6,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { AuthWrapper } from '@/components/auth-wrapper';
 
 export const metadata: Metadata = {
-  title: 'AtelierFlow — Sistema de Gestão para Ateliês',
+  title: 'AtelierFlow',
   description: 'Otimize seu fluxo de trabalho de alfaiataria e artesanato.',
 };
 
