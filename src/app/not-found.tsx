@@ -2,8 +2,12 @@
 import Link from 'next/link';
 import { ArrowLeft, Home, Search } from 'lucide-react';
 import Logo from '@/components/icons/logo';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase/auth/use-user';
 
 export default function NotFound() {
+  const router = useRouter();
+  const { user } = useUser();
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex flex-col">
 
@@ -110,18 +114,33 @@ export default function NotFound() {
                 <Home className="w-4 h-4" />
                 Ir para o início
               </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
-                style={{
-                  background: 'hsla(47,22%,100%,0.12)',
-                  border: '1px solid hsla(47,22%,100%,0.25)',
-                  backdropFilter: 'blur(8px)',
-                }}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Acessar o sistema
-              </Link>
+              {user ? (
+                <button
+                  onClick={() => router.back()}
+                  className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+                  style={{
+                    background: 'hsla(47,22%,100%,0.12)',
+                    border: '1px solid hsla(47,22%,100%,0.25)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Voltar
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+                  style={{
+                    background: 'hsla(47,22%,100%,0.12)',
+                    border: '1px solid hsla(47,22%,100%,0.25)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Acessar o sistema
+                </Link>
+              )}
             </div>
           </div>
 

@@ -16,6 +16,14 @@ import type { UserProfile } from '@/lib/types';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { notifyTrialExpiredAction } from '@/app/actions/notifications';
 
+const knownAppRoutes = [
+  '/', '/pedidos', '/clientes', '/tarefas', '/compras',
+  '/estoque', '/configuracoes', '/ajuda', '/vendas',
+  '/catalogo', '/tabela-precos', '/ativacao', '/implementando',
+  '/admin', '/freetools', '/calculadora', '/print', '/blog',
+  '/landing', '/login',
+];
+
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { user, loading: userLoading } = useUser();
   const { db } = useFirebase();
@@ -149,12 +157,6 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     }
     // Rotas conhecidas do app (requerem login): mostra landing
     // Rotas desconhecidas: deixa o Next.js renderizar o not-found.tsx
-    const knownAppRoutes = [
-      '/', '/pedidos', '/clientes', '/tarefas', '/compras',
-      '/estoque', '/configuracoes', '/ajuda', '/vendas',
-      '/catalogo', '/tabela-precos', '/ativacao', '/implementando',
-      '/admin', '/freetools', '/calculadora', '/print',
-    ];
     const isKnownAppRoute = knownAppRoutes.some(r =>
       pathname === r || pathname.startsWith(r + '/')
     );
@@ -175,6 +177,14 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
 
   if (!profile?.phone) {
     return <PhoneRequiredScreen profile={profile} />;
+  }
+
+  // Usuário logado em rota desconhecida → 404 sem AppShell
+  const isKnownAppRoute = knownAppRoutes.some(r =>
+    pathname === r || pathname.startsWith(r + '/')
+  );
+  if (!isKnownAppRoute) {
+    return <div className="w-full">{children}</div>;
   }
 
   return (
