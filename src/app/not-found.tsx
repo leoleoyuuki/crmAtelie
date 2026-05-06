@@ -101,7 +101,7 @@ export default function NotFound() {
 
             {/* Description */}
             <p className="mt-4 text-sm text-white/70 leading-relaxed max-w-[44ch]">
-              Nossa costureira vasculhou o ateliê inteiro com a lupa, mas não conseguiu encontrar essa página.
+              Nossa artesã vasculhou o ateliê inteiro com a lupa, mas não conseguiu encontrar essa página.
             </p>
 
             {/* CTA buttons */}
