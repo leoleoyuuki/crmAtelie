@@ -147,7 +147,22 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith('/blog') || pathname.startsWith('/freetools')) {
         return <div className="w-full">{children}</div>;
     }
-    return <LandingPage />;
+    // Rotas conhecidas do app (requerem login): mostra landing
+    // Rotas desconhecidas: deixa o Next.js renderizar o not-found.tsx
+    const knownAppRoutes = [
+      '/', '/pedidos', '/clientes', '/tarefas', '/compras',
+      '/estoque', '/configuracoes', '/ajuda', '/vendas',
+      '/catalogo', '/tabela-precos', '/ativacao', '/implementando',
+      '/admin', '/freetools', '/calculadora', '/print',
+    ];
+    const isKnownAppRoute = knownAppRoutes.some(r =>
+      pathname === r || pathname.startsWith(r + '/')
+    );
+    if (isKnownAppRoute) {
+      return <LandingPage />;
+    }
+    // Rota desconhecida → renderiza o not-found.tsx do Next.js
+    return <div className="w-full">{children}</div>;
   }
 
   if (pathname === '/ativacao' || pathname === '/ativacao/sucesso' || pathname.startsWith('/admin') || pathname.startsWith('/blog')) {
