@@ -1,8 +1,12 @@
-import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/google-genai';
+import { GoogleGenAI } from "@google/genai";
 
-export const ai = genkit({
-  plugins: [googleAI()],
-  // Utilizando Gemma 3 para chamadas gratuitas em tarefas básicas
-  model: 'googleai/gemma-4-26b-a4b-it', // Ou gemma-3-27b-it se precisar de mais potência
+// Usando o SDK direto do Google Generative AI (@google/genai) para garantir suporte 
+// ao modelo Gemma 3 e à versão de API desejada.
+export const ai = new GoogleGenAI({ 
+  apiKey: process.env.GEMINI_API_KEY || "",
+  httpOptions: {
+    apiVersion: "v1beta"
+  }
 });
+
+export const DEFAULT_AI_MODEL = "gemma-4-26b-a4b-it";

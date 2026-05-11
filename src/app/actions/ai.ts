@@ -1,6 +1,6 @@
 "use server"
 
-import { ai } from '@/ai/genkit';
+import { ai, DEFAULT_AI_MODEL } from '@/ai/genkit';
 import { z } from 'zod';
 
 const UniversalVoiceResponseSchema = z.object({
@@ -53,8 +53,9 @@ export async function processUniversalVoiceCommand(transcription: string) {
 
     for (let i = 0; i < retries; i++) {
         try {
-            response = await ai.generate({
-                prompt: `
+            const result = await ai.models.generateContent({
+                model: DEFAULT_AI_MODEL,
+                contents: `
         Você é um assistente cirúrgico de extração de dados e roteamento de intenções.
         Sua tarefa em duas etapas é:
         1. Classificar o que o usuário deseja fazer de acordo com o áudio. OPÇÕES:
@@ -90,6 +91,7 @@ export async function processUniversalVoiceCommand(transcription: string) {
         NAO INCLUA MARCAÇÕES MARKDOWN.
       `,
             });
+            response = result;
             break; // Success, exit loop
         } catch (error) {
             if (i === retries - 1) throw error;
@@ -99,7 +101,7 @@ export async function processUniversalVoiceCommand(transcription: string) {
         }
     }
 
-    if (!response) {
+    if (!response || !response.text) {
         throw new Error("Falha ao obter resposta da IA após várias tentativas.");
     }
 
