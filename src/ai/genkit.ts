@@ -9,4 +9,4 @@ export const ai = new GoogleGenAI({
   }
 });
 
-export const DEFAULT_AI_MODEL = "gemma-4-26b-a4b-it";
+export const DEFAULT_AI_MODEL = "gemini-3.1-flash-lite-preview";
