@@ -47,8 +47,14 @@ export async function processUniversalVoiceCommand(transcription: string) {
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
 
-    const response = await ai.generate({
-      prompt: `
+    let response;
+    let retries = 3;
+    let delay = 1000;
+
+    for (let i = 0; i < retries; i++) {
+        try {
+            response = await ai.generate({
+                prompt: `
         Você é um assistente cirúrgico de extração de dados e roteamento de intenções.
         Sua tarefa em duas etapas é:
         1. Classificar o que o usuário deseja fazer de acordo com o áudio. OPÇÕES:
@@ -83,7 +89,19 @@ export async function processUniversalVoiceCommand(transcription: string) {
         NENHUM TEXTO ADICIONAL ANTES OU DEPOIS. 
         NAO INCLUA MARCAÇÕES MARKDOWN.
       `,
-    });
+            });
+            break; // Success, exit loop
+        } catch (error) {
+            if (i === retries - 1) throw error;
+            console.warn(`Retry ${i + 1}/${retries} for AI command failed:`, error);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2; // Exponential backoff
+        }
+    }
+
+    if (!response) {
+        throw new Error("Falha ao obter resposta da IA após várias tentativas.");
+    }
 
     const text = response.text;
     const jsonStr = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
@@ -96,7 +114,7 @@ export async function processUniversalVoiceCommand(transcription: string) {
     
     return parsed as UniversalVoiceResponse;
   } catch (error) {
-    console.error("Failed to process universal voice command:", error);
+    console.error("Failed to process universal voice command after retries:", error);
     throw new Error("Falha ao processar o áudio com IA.");
   }
 }
