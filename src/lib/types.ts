@@ -40,6 +40,7 @@ export interface Order {
   createdAt: Date;
   userId: string;
   materialsUsed?: UsedMaterial[];
+  customData?: { [key: string]: string };
 }
 
 export interface PriceTableItem {
@@ -48,6 +49,15 @@ export interface PriceTableItem {
     description?: string;
     price: number;
     userId: string;
+}
+
+export interface TicketSettings {
+  showLogo?: boolean;
+  logoUrl?: string;
+  businessName?: string;
+  footerText?: string;
+  customFields?: { label: string; value: string }[];
+  orderCustomFields?: { label: string; type: 'text' | 'time' }[];
 }
 
 export interface UserProfile {
@@ -66,6 +76,8 @@ export interface UserProfile {
   passwordHash?: string;
   privacyMode?: boolean;
   hasSeenOnboarding?: boolean;
+  ticketSettings?: TicketSettings;
+  specialFeature?: boolean;
 }
 
 export interface AccessToken {

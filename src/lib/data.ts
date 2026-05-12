@@ -20,7 +20,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { normalizeForSearch } from '@/lib/search-utils';
-import { Order, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost, Sale } from '@/lib/types';
+import { Order, Customer, OrderItem, PriceTableItem, Material, UsedMaterial, Purchase, UserSummary, FixedCost, Sale, UserProfile } from '@/lib/types';
 import { subMonths, format, startOfMonth, endOfMonth, subDays, getYear, getMonth, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/firebase/config';
@@ -49,6 +49,13 @@ function isUserInTrial(userData: any): boolean {
     } catch (e) {
         return false;
     }
+}
+
+export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+    const docRef = doc(db, 'users', userId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return null;
+    return fromFirebase(docSnap.data(), docSnap.id) as UserProfile;
 }
 
 

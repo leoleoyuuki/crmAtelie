@@ -9,11 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, ShieldCheck, Zap, Sparkles, User as UserIcon, Key, Loader2 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CreditCard, ShieldCheck, Zap, Sparkles, User as UserIcon, Key, Loader2, Clock } from "lucide-react";
 import type { UserProfile } from "@/lib/types";
 import { SubscriptionDrawer } from "@/components/subscription-drawer";
 import { isValid } from "date-fns";
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/firebase/config";
+import { Plus, Trash2, Settings as SettingsIcon } from "lucide-react";
+import type { TicketSettings } from "@/lib/types";
 
 export default function SettingsPage() {
     const { user } = useUser();
@@ -35,6 +41,22 @@ export default function SettingsPage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+    
+    // Ticket States
+    const [ticketBusinessName, setTicketBusinessName] = useState("");
+    const [ticketFooterText, setTicketFooterText] = useState("");
+    const [ticketCustomFields, setTicketCustomFields] = useState<{ label: string; value: string }[]>([]);
+    const [orderCustomFields, setOrderCustomFields] = useState<{ label: string; type: 'text' | 'time' }[]>([]);
+    const [isUpdatingTicket, setIsUpdatingTicket] = useState(false);
+
+    useEffect(() => {
+        if (profile?.ticketSettings) {
+            setTicketBusinessName(profile.ticketSettings.businessName || "");
+            setTicketFooterText(profile.ticketSettings.footerText || "");
+            setTicketCustomFields(profile.ticketSettings.customFields || []);
+            setOrderCustomFields(profile.ticketSettings.orderCustomFields || []);
+        }
+    }, [profile]);
 
     useEffect(() => {
         if (user?.displayName) {
@@ -157,6 +179,64 @@ export default function SettingsPage() {
         } finally {
             setIsUpdatingPassword(false);
         }
+    };
+
+    const handleUpdateTicketSettings = async () => {
+        if (!user) return;
+        
+        setIsUpdatingTicket(true);
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                ticketSettings: {
+                    ...profile?.ticketSettings, // Preserve existing (like logoUrl)
+                    businessName: ticketBusinessName.trim(),
+                    footerText: ticketFooterText.trim(),
+                    customFields: ticketCustomFields,
+                    orderCustomFields: orderCustomFields,
+                }
+            });
+            toast({
+                title: "Configurações de ticket salvas",
+                description: "O layout do seu comprovante foi atualizado.",
+            });
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Erro ao salvar configurações",
+                description: error.message || "Tente novamente em instantes."
+            });
+        } finally {
+            setIsUpdatingTicket(false);
+        }
+    };
+
+    const addCustomField = () => {
+        setTicketCustomFields([...ticketCustomFields, { label: "", value: "" }]);
+    };
+
+    const removeCustomField = (index: number) => {
+        setTicketCustomFields(ticketCustomFields.filter((_, i) => i !== index));
+    };
+
+    const updateCustomField = (index: number, field: 'label' | 'value', value: string) => {
+        const updated = [...ticketCustomFields];
+        updated[index][field] = value;
+        setTicketCustomFields(updated);
+    };
+
+    const addOrderCustomField = () => {
+        setOrderCustomFields([...orderCustomFields, { label: "", type: "text" }]);
+    };
+
+    const removeOrderCustomField = (index: number) => {
+        setOrderCustomFields(orderCustomFields.filter((_, i) => i !== index));
+    };
+
+    const updateOrderCustomField = (index: number, field: 'label' | 'type', value: string) => {
+        const updated = [...orderCustomFields];
+        updated[index][field] = value as any;
+        setOrderCustomFields(updated);
     };
 
     return (
@@ -314,6 +394,138 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* ── TICKET PERSONALIZATION (Special Feature) ─────────── */}
+                {profile?.specialFeature && (
+                    <Card className="border-border shadow-sm overflow-hidden">
+                        <CardHeader className="bg-muted/30 pb-4 border-b">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-xl">
+                                    <SettingsIcon className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg">Personalização do Comprovante</CardTitle>
+                                    <CardDescription>Configure como seus clientes visualizam o ticket do pedido.</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="pt-6 space-y-6">
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="ticket-business-name">Nome do Negócio</Label>
+                                    <Input 
+                                        id="ticket-business-name" 
+                                        placeholder="Ex: Atelier da Maria" 
+                                        value={ticketBusinessName}
+                                        onChange={(e) => setTicketBusinessName(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="ticket-footer">Mensagem de Rodapé</Label>
+                                    <Input 
+                                        id="ticket-footer" 
+                                        placeholder="Ex: Obrigado pela preferência!" 
+                                        value={ticketFooterText}
+                                        onChange={(e) => setTicketFooterText(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label>Campos Personalizados (Ex: CNPJ, Endereço)</Label>
+                                    <Button variant="outline" size="sm" onClick={addCustomField}>
+                                        <Plus className="h-4 w-4 mr-1" /> Add Campo
+                                    </Button>
+                                </div>
+                                
+                                <div className="grid gap-3">
+                                    {ticketCustomFields.map((field, index) => (
+                                        <div key={index} className="flex gap-2 items-center">
+                                            <Input 
+                                                placeholder="Rótulo (ex: CNPJ)" 
+                                                value={field.label}
+                                                onChange={(e) => updateCustomField(index, 'label', e.target.value)}
+                                                className="flex-1"
+                                            />
+                                            <Input 
+                                                placeholder="Valor" 
+                                                value={field.value}
+                                                onChange={(e) => updateCustomField(index, 'value', e.target.value)}
+                                                className="flex-[2]"
+                                            />
+                                            <Button variant="ghost" size="icon" onClick={() => removeCustomField(index)} className="text-red-500">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    {ticketCustomFields.length === 0 && (
+                                        <p className="text-xs text-muted-foreground italic text-center py-2 border border-dashed rounded-lg">
+                                            Nenhum campo personalizado adicionado.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <Label className="text-primary font-bold">Campos do Pedido (Captura de Dados)</Label>
+                                        <p className="text-xs text-muted-foreground">Defina campos extras para preencher em cada pedido (ex: Horário, Técnico).</p>
+                                    </div>
+                                    <Button variant="outline" size="sm" onClick={addOrderCustomField}>
+                                        <Plus className="h-4 w-4 mr-1" /> Add Campo de Dados
+                                    </Button>
+                                </div>
+                                
+                                <div className="grid gap-3">
+                                    {orderCustomFields.map((field, index) => (
+                                        <div key={index} className="flex gap-2 items-center bg-muted/20 p-2 rounded-lg border border-border/50">
+                                            <Input 
+                                                placeholder="Rótulo (ex: Horário)" 
+                                                value={field.label}
+                                                onChange={(e) => updateOrderCustomField(index, 'label', e.target.value)}
+                                                className="flex-1 bg-background"
+                                            />
+                                            <Select 
+                                                value={field.type} 
+                                                onValueChange={(val) => updateOrderCustomField(index, 'type', val)}
+                                            >
+                                                <SelectTrigger className="w-[120px] bg-background">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="text">Texto</SelectItem>
+                                                    <SelectItem value="time">Horário</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <Button variant="ghost" size="icon" onClick={() => removeOrderCustomField(index)} className="text-red-500">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    {orderCustomFields.length === 0 && (
+                                        <p className="text-xs text-muted-foreground italic text-center py-2 border border-dashed rounded-lg">
+                                            Nenhum campo de dados configurado para o pedido.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </CardContent>
+                        <CardFooter className="bg-muted/10 border-t pt-4">
+                            <Button 
+                                onClick={handleUpdateTicketSettings} 
+                                disabled={isUpdatingTicket}
+                                className="w-full md:w-auto font-bold ml-auto"
+                            >
+                                {isUpdatingTicket ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                                Salvar Configurações de Ticket
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                )}
 
             </div>
             <SubscriptionDrawer 

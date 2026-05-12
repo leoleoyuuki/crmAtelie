@@ -3,6 +3,8 @@
 
 import React, { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useUser } from "@/firebase/auth/use-user";
+import { useDocument } from "@/firebase";
 import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -32,10 +34,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Order, OrderStatus, Customer, PriceTableItem } from "@/lib/types";
+import { Order, OrderStatus, Customer, PriceTableItem, UserProfile } from "@/lib/types";
 import { addOrder, updateOrder, getCustomers, getPriceTableItems, addCustomer } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, UserPlus, Trash2, Search } from "lucide-react";
+import { PlusCircle, UserPlus, Trash2, Search, Clock } from "lucide-react";
 import { CustomerFormDialog } from "./customer-form-dialog";
 import { TrialLimitScreen } from "./trial-limit-screen";
 import { Separator } from "../ui/separator";
@@ -55,6 +57,7 @@ const orderFormSchema = z.object({
   items: z.array(orderItemSchema).min(1, "O pedido deve ter pelo menos um item."),
   dueDate: z.date({ required_error: "A data de entrega é obrigatória." }),
   status: z.enum(['Novo', 'Em Processo', 'Aguardando Retirada', 'Concluído']),
+  customData: z.record(z.string()).optional(),
 });
 
 type OrderFormValues = z.infer<typeof orderFormSchema>;
@@ -252,6 +255,8 @@ export function OrderFormDialog({
   const [isCustomerSelectOpen, setIsCustomerSelectOpen] = useState(false);
   const [shouldOpenSelect, setShouldOpenSelect] = useState(false);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(false);
+  const { user } = useUser();
+  const { data: profile } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
@@ -333,6 +338,7 @@ export function OrderFormDialog({
     items: [{ serviceType: '', value: 0, quantity: 1, description: '', assignedTo: '' }],
     dueDate: new Date(),
     status: 'Novo',
+    customData: {},
   };
 
   const form = useForm<OrderFormValues>({
@@ -430,6 +436,7 @@ export function OrderFormDialog({
       }
       setIsOpen(false);
       form.reset(defaultValues);
+      setCustomerSearch(""); // Clear search
     } catch (error: any) {
         if (error?.message === "TRIAL_LIMIT_ORDERS") {
             setLimitHit("orders");
@@ -635,6 +642,40 @@ export function OrderFormDialog({
                     </div>
 
                     <Separator />
+
+                    {/* ── CUSTOM ORDER FIELDS ─────────────────────────── */}
+                    {profile?.ticketSettings?.orderCustomFields && profile.ticketSettings.orderCustomFields.length > 0 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 pt-2">
+                                <Clock className="h-4 w-4" /> Informações Adicionais
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/5 p-4 rounded-xl border border-border/50">
+                                {profile.ticketSettings.orderCustomFields.map((cf, idx) => (
+                                    <FormField
+                                        key={idx}
+                                        control={form.control}
+                                        name={`customData.${cf.label}`}
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{cf.label}</FormLabel>
+                                                <FormControl>
+                                                    <Input 
+                                                        type={cf.type === 'time' ? 'time' : 'text'} 
+                                                        placeholder={cf.label}
+                                                        {...field}
+                                                        value={field.value ?? ''}
+                                                        className="bg-background"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                            <Separator />
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
                         <FormField

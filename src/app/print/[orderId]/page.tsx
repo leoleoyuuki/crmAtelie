@@ -3,8 +3,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Order, Customer } from '@/lib/types';
-import { getOrderById, getCustomerById } from '@/lib/data';
+import { Order, Customer, TicketSettings } from '@/lib/types';
+import { getOrderById, getCustomerById, getUserProfile } from '@/lib/data';
 import { OrderTicket } from '@/components/dashboard/order-ticket';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ export default function PrintPage() {
   
   const [order, setOrder] = useState<Order | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [ticketSettings, setTicketSettings] = useState<TicketSettings | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +37,12 @@ export default function PrintPage() {
             setOrder(fetchedOrder);
             const fetchedCustomer = await getCustomerById(fetchedOrder.customerId);
             setCustomer(fetchedCustomer);
+
+            // Fetch User Profile for ticket personalization
+            const userProfile = await getUserProfile(fetchedOrder.userId);
+            if (userProfile?.ticketSettings) {
+                setTicketSettings(userProfile.ticketSettings);
+            }
           } else {
             setError('Pedido não encontrado ou sem permissão.');
           }
@@ -187,7 +194,12 @@ export default function PrintPage() {
         </div>
 
         <div id="printable-area" className="bg-white shadow-2xl rounded-sm">
-          <OrderTicket ref={ticketRef} order={order} customer={customer} />
+          <OrderTicket 
+            ref={ticketRef} 
+            order={order} 
+            customer={customer} 
+            ticketSettings={ticketSettings} 
+          />
         </div>
         
         <p className="no-print mt-8 text-[10px] text-muted-foreground text-center max-w-[200px]">
