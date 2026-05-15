@@ -52,7 +52,7 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
         </div>
 
         <div className="mb-2 text-center">
-            <h2 className="font-bold text-[12pt] uppercase border-b border-dashed border-black/20 pb-1 mb-1">Cliente</h2>
+            <h2 className="font-bold text-[12pt] uppercase border-b border-dashed border-black/50 pb-1 mb-1">Cliente</h2>
             <p className="text-[11pt] font-bold">{order.customerName}</p>
             {customer?.phone && <p className="text-[11pt]">{customer.phone}</p>}
         </div>
@@ -61,7 +61,7 @@ export const OrderTicket = React.forwardRef<HTMLDivElement, OrderTicketProps>(
           <div className="border-t border-dashed border-black py-1 mb-1 text-[10pt]">
             {Object.entries(order.customData).map(([key, value]) => (
               <div key={key} className="flex justify-between">
-                <span className="uppercase text-[8pt] opacity-70">{key}:</span>
+                <span className="uppercase text-[8pt] font-bold">{key}:</span>
                 <span className="font-bold">{value}</span>
               </div>
             ))}

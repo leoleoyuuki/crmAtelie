@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
@@ -8,9 +7,32 @@ import { getOrderById, getCustomerById, getUserProfile } from '@/lib/data';
 import { OrderTicket } from '@/components/dashboard/order-ticket';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Printer, Share2, ArrowLeft, Loader2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
+import { Printer, Share2, ArrowLeft, Loader2, Info, HelpCircle, ChevronRight, Download, MessageCircle, Phone } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/firebase/config';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function PrintPage() {
   const params = useParams();
@@ -23,6 +45,12 @@ export default function PrintPage() {
   const [ticketSettings, setTicketSettings] = useState<TicketSettings | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>('58mm');
+  const [showGuide, setShowGuide] = useState(false);
+  const [showWhatsAppConfirm, setShowWhatsAppConfirm] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [newPhone, setNewPhone] = useState("");
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ticketRef = useRef<HTMLDivElement>(null);
 
@@ -57,12 +85,17 @@ export default function PrintPage() {
     }
   }, [orderId]);
 
-  const handleCopyAsImage = async () => {
+  const handleWhatsAppShare = async (forcePhone?: string) => {
     if (!ticketRef.current) return;
+
+    const phoneToUse = forcePhone || customer?.phone;
+    if (!phoneToUse) {
+        setShowPhoneModal(true);
+        return;
+    }
     
     setIsGeneratingImage(true);
     try {
-      // Delay para garantir renderização completa antes do canvas
       await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(ticketRef.current, {
@@ -80,31 +113,107 @@ export default function PrintPage() {
           if (navigator.clipboard && window.ClipboardItem) {
             const item = new ClipboardItem({ "image/png": blob });
             await navigator.clipboard.write([item]);
-            toast({
-                title: "Imagem Copiada!",
-                description: "Agora é só colar no WhatsApp do cliente.",
-            });
+            
+            // Em vez de abrir direto, mostramos a confirmação com instrução
+            setShowWhatsAppConfirm(true);
+            
           } else {
-            throw new Error("Clipboard API indesejável.");
+            throw new Error("Clipboard API não suportada.");
           }
         } catch (err) {
-          const dataUrl = canvas.toDataURL("image/png");
-          const link = document.createElement('a');
-          link.download = `comprovante-${orderId.substring(0, 5)}.png`;
-          link.href = dataUrl;
-          link.click();
-          toast({
-            title: "Download Iniciado",
-            description: "Não conseguimos copiar automaticamente, então baixamos a imagem.",
-          });
+            toast({
+                variant: "destructive",
+                title: "Erro ao copiar",
+                description: "Tente baixar a imagem ao invés de copiar.",
+            });
         }
       }, "image/png");
     } catch (e) {
       console.error(e);
       toast({
         variant: "destructive",
-        title: "Erro ao gerar imagem",
+        title: "Erro ao processar",
         description: "Tente novamente em alguns instantes.",
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const openWhatsApp = () => {
+    if (!customer?.phone) return;
+    const cleanPhone = customer.phone.replace(/\D/g, '');
+    const whatsappUrl = `https://wa.me/55${cleanPhone}`;
+    window.open(whatsappUrl, '_blank');
+    setShowWhatsAppConfirm(false);
+  };
+
+  const handleSavePhoneAndContinue = async () => {
+    if (!customer?.id || !newPhone.trim()) return;
+    
+    setIsSavingPhone(true);
+    try {
+        const customerRef = doc(db, 'customers', customer.id);
+        const cleanPhone = newPhone.trim();
+        
+        await updateDoc(customerRef, {
+            phone: cleanPhone
+        });
+
+        // Atualiza estado local
+        setCustomer({ ...customer, phone: cleanPhone });
+        setShowPhoneModal(false);
+        
+        toast({
+            title: "Contato salvo!",
+            description: "O número do cliente foi atualizado com sucesso.",
+        });
+
+        // Continua o fluxo passando o telefone diretamente para evitar que o modal reabra
+        setTimeout(() => handleWhatsAppShare(cleanPhone), 500);
+    } catch (e: any) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "Erro ao salvar",
+            description: "Não foi possível atualizar o contato.",
+        });
+    } finally {
+        setIsSavingPhone(false);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    if (!ticketRef.current) return;
+    
+    setIsGeneratingImage(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      const canvas = await html2canvas(ticketRef.current, {
+        scale: 3,
+        backgroundColor: "#ffffff",
+        logging: false,
+        useCORS: true,
+        allowTaint: true,
+      });
+      
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement('a');
+      link.download = `pedido-${order?.id.substring(0, 5) || 'ticket'}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast({
+        title: "Sucesso!",
+        description: "Imagem baixada com sucesso.",
+      });
+    } catch (e) {
+      console.error(e);
+      toast({
+        variant: "destructive",
+        title: "Erro no download",
+        description: "Não foi possível gerar a imagem.",
       });
     } finally {
       setIsGeneratingImage(false);
@@ -134,10 +243,17 @@ export default function PrintPage() {
     <>
       <style jsx global>{`
         @media print {
-          body, html {
+          @page {
+            size: portrait;
             margin: 0;
-            padding: 0;
+          }
+          body, html {
+            margin: 0 !important;
+            padding: 0 !important;
             background: white !important;
+            width: ${paperWidth} !important;
+            height: auto !important;
+            overflow: visible !important;
           }
           .no-print {
             display: none !important;
@@ -149,15 +265,19 @@ export default function PrintPage() {
             visibility: visible;
           }
           #printable-area {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 58mm;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
           }
-        }
-        @page {
-          size: 58mm auto;
-          margin: 0;
+          /* Remove headers and footers */
+          @page {
+            margin: 0;
+            size: auto;
+          }
         }
       `}</style>
       <main className="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8 px-4">
@@ -172,28 +292,91 @@ export default function PrintPage() {
             Voltar
           </Button>
           
-          <div className="p-4 bg-white rounded-xl shadow-sm border space-y-3">
-            <Button className="w-full shadow-md" onClick={() => window.print()}>
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimir (Papel)
-            </Button>
+          <div className="p-4 bg-white rounded-xl shadow-sm border space-y-4">
+            <div className="space-y-1.5">
+                <p className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Largura do Papel</p>
+                <div className="flex bg-muted/50 p-1 rounded-lg border">
+                    <button 
+                        onClick={() => setPaperWidth('58mm')}
+                        className={`flex-1 py-1 text-xs font-medium rounded-md transition-all ${paperWidth === '58mm' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        58mm
+                    </button>
+                    <button 
+                        onClick={() => setPaperWidth('80mm')}
+                        className={`flex-1 py-1 text-xs font-medium rounded-md transition-all ${paperWidth === '80mm' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        80mm
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <Button className="w-full shadow-md h-11" onClick={() => window.print()}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimir Ticket
+                </Button>
+            </div>
+            
             <Button 
-                variant="secondary" 
-                className="w-full shadow-sm" 
-                onClick={handleCopyAsImage}
-                disabled={isGeneratingImage}
+                variant="ghost" 
+                className="w-full text-[10px] h-6 text-muted-foreground" 
+                onClick={() => setShowGuide(!showGuide)}
             >
-                {isGeneratingImage ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Share2 className="mr-2 h-4 w-4" />
-                )}
-                {isGeneratingImage ? "Gerando..." : "Copiar p/ WhatsApp"}
+                {showGuide ? "Ocultar dicas de configuração" : "Problemas com o tamanho? Clique aqui"}
             </Button>
+
+            {showGuide && (
+                <Alert className="bg-blue-50/50 border-blue-200/50">
+                    <HelpCircle className="h-4 w-4 text-blue-600" />
+                    <AlertTitle className="text-blue-900 text-xs font-bold">Dica de Impressão</AlertTitle>
+                    <AlertDescription className="text-blue-800 text-[11px] space-y-1">
+                        <p>Para o tamanho perfeito, na tela de impressão selecione:</p>
+                        <ul className="list-disc pl-4 space-y-0.5">
+                            <li>Layout: <span className="font-bold">Retrato</span></li>
+                            <li>Margens: <span className="font-bold">Mínima</span></li>
+                            <li>Escala: <span className="font-bold">100%</span></li>
+                        </ul>
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            <div className="pt-2 border-t mt-2 space-y-2">
+                <Button 
+                    className="w-full shadow-sm bg-green-600 hover:bg-green-700 text-white" 
+                    onClick={() => handleWhatsAppShare()}
+                    disabled={isGeneratingImage}
+                >
+                    {isGeneratingImage ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                    )}
+                    {isGeneratingImage ? "Gerando..." : "Copiar p/ WhatsApp"}
+                </Button>
+
+                <Button 
+                    variant="secondary" 
+                    className="w-full shadow-sm" 
+                    onClick={handleDownloadImage}
+                    disabled={isGeneratingImage}
+                >
+                    {isGeneratingImage ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                    )}
+                    {isGeneratingImage ? "Gerando..." : "Baixar Imagem"}
+                </Button>
+            </div>
           </div>
         </div>
 
-        <div id="printable-area" className="bg-white shadow-2xl rounded-sm">
+        <div 
+            id="printable-area" 
+            className="bg-white shadow-2xl rounded-sm transition-all duration-300 overflow-hidden"
+            style={{ width: paperWidth === '58mm' ? '220px' : '302px' }}
+        >
           <OrderTicket 
             ref={ticketRef} 
             order={order} 
@@ -205,6 +388,73 @@ export default function PrintPage() {
         <p className="no-print mt-8 text-[10px] text-muted-foreground text-center max-w-[200px]">
             Dica: Ao copiar para o WhatsApp, a imagem mantém a logo e formatação profissional.
         </p>
+
+        <AlertDialog open={showWhatsAppConfirm} onOpenChange={setShowWhatsAppConfirm}>
+            <AlertDialogContent className="max-w-[400px] rounded-2xl">
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2 text-green-600">
+                        <MessageCircle className="h-5 w-5" />
+                        Imagem Copiada!
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-foreground pt-2">
+                        A imagem do ticket já está na sua área de transferência. 
+                        <br /><br />
+                        Clique em <strong>"Ir para o WhatsApp"</strong> e, na conversa que abrir, basta <strong>colar (Ctrl+V)</strong> para enviar.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex flex-col sm:flex-row gap-2 pt-4">
+                    <AlertDialogCancel className="sm:flex-1 rounded-xl">Fechar</AlertDialogCancel>
+                    <AlertDialogAction 
+                        className="sm:flex-1 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold"
+                        onClick={openWhatsApp}
+                    >
+                        Ir para o WhatsApp
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <Dialog open={showPhoneModal} onOpenChange={setShowPhoneModal}>
+            <DialogContent className="max-w-[400px] rounded-2xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Phone className="h-5 w-5 text-primary" />
+                        Contato não cadastrado
+                    </DialogTitle>
+                    <DialogDescription>
+                        Este cliente não possui um WhatsApp cadastrado. Digite o número abaixo para salvar e continuar:
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="new-phone">Número de Telefone</Label>
+                        <Input 
+                            id="new-phone" 
+                            placeholder="(00) 00000-0000" 
+                            value={newPhone}
+                            onChange={(e) => setNewPhone(e.target.value)}
+                            autoFocus
+                        />
+                        <p className="text-[10px] text-muted-foreground italic">
+                            * O número será salvo permanentemente no cadastro do cliente.
+                        </p>
+                    </div>
+                </div>
+                <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="ghost" onClick={() => setShowPhoneModal(false)} className="sm:flex-1 rounded-xl">
+                        Cancelar
+                    </Button>
+                    <Button 
+                        className="sm:flex-1 rounded-xl font-bold"
+                        onClick={handleSavePhoneAndContinue}
+                        disabled={isSavingPhone || !newPhone.trim()}
+                    >
+                        {isSavingPhone ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                        Salvar e Abrir WhatsApp
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
       </main>
     </>
   );
