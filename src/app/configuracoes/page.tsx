@@ -45,6 +45,8 @@ export default function SettingsPage() {
     // Ticket States
     const [ticketBusinessName, setTicketBusinessName] = useState("");
     const [ticketFooterText, setTicketFooterText] = useState("");
+    const [logoUrl, setLogoUrl] = useState("");
+    const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [ticketCustomFields, setTicketCustomFields] = useState<{ label: string; value: string }[]>([]);
     const [orderCustomFields, setOrderCustomFields] = useState<{ label: string; type: 'text' | 'time' }[]>([]);
     const [isUpdatingTicket, setIsUpdatingTicket] = useState(false);
@@ -53,6 +55,7 @@ export default function SettingsPage() {
         if (profile?.ticketSettings) {
             setTicketBusinessName(profile.ticketSettings.businessName || "");
             setTicketFooterText(profile.ticketSettings.footerText || "");
+            setLogoUrl(profile.ticketSettings.logoUrl || "");
             setTicketCustomFields(profile.ticketSettings.customFields || []);
             setOrderCustomFields(profile.ticketSettings.orderCustomFields || []);
         }
@@ -181,6 +184,41 @@ export default function SettingsPage() {
         }
     };
 
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        setIsUploadingLogo(true);
+        const formData = new FormData();
+        formData.append('source', file);
+
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+            if (data.url) {
+                setLogoUrl(data.url);
+                toast({
+                    title: "Logo enviada",
+                    description: "Sua logo foi processada com sucesso.",
+                });
+            } else {
+                throw new Error(data.error || "Falha no upload");
+            }
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Erro no upload",
+                description: error.message || "Não foi possível enviar a imagem."
+            });
+        } finally {
+            setIsUploadingLogo(false);
+        }
+    };
+
     const handleUpdateTicketSettings = async () => {
         if (!user) return;
         
@@ -192,6 +230,7 @@ export default function SettingsPage() {
                     ...profile?.ticketSettings, // Preserve existing (like logoUrl)
                     businessName: ticketBusinessName.trim(),
                     footerText: ticketFooterText.trim(),
+                    logoUrl: logoUrl,
                     customFields: ticketCustomFields,
                     orderCustomFields: orderCustomFields,
                 }
@@ -410,24 +449,73 @@ export default function SettingsPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-6">
-                            <div className="grid gap-4 md:grid-cols-2">
+                            <div className="flex flex-col md:flex-row gap-6 items-start">
                                 <div className="space-y-2">
-                                    <Label htmlFor="ticket-business-name">Nome do Negócio</Label>
-                                    <Input 
-                                        id="ticket-business-name" 
-                                        placeholder="Ex: Atelier da Maria" 
-                                        value={ticketBusinessName}
-                                        onChange={(e) => setTicketBusinessName(e.target.value)}
-                                    />
+                                    <Label>Logo do Negócio</Label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/50">
+                                            {logoUrl ? (
+                                                <>
+                                                    <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                                                    <button 
+                                                        onClick={() => setLogoUrl("")}
+                                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        style={{ opacity: 0.8 }}
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <div className="text-muted-foreground flex flex-col items-center">
+                                                    <Plus className="h-6 w-6 mb-1" />
+                                                    <span className="text-[10px]">Sem logo</span>
+                                                </div>
+                                            )}
+                                            {isUploadingLogo && (
+                                                <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label 
+                                                htmlFor="logo-upload" 
+                                                className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+                                            >
+                                                {isUploadingLogo ? "Enviando..." : logoUrl ? "Alterar Logo" : "Upload Logo"}
+                                            </Label>
+                                            <input 
+                                                id="logo-upload" 
+                                                type="file" 
+                                                accept="image/*" 
+                                                className="hidden" 
+                                                onChange={handleLogoUpload}
+                                                disabled={isUploadingLogo}
+                                            />
+                                            <p className="text-[10px] text-muted-foreground">Hosting by freeimage.host</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="ticket-footer">Mensagem de Rodapé</Label>
-                                    <Input 
-                                        id="ticket-footer" 
-                                        placeholder="Ex: Obrigado pela preferência!" 
-                                        value={ticketFooterText}
-                                        onChange={(e) => setTicketFooterText(e.target.value)}
-                                    />
+
+                                <div className="grid gap-4 md:grid-cols-2 flex-1 w-full">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="ticket-business-name">Nome do Negócio</Label>
+                                        <Input 
+                                            id="ticket-business-name" 
+                                            placeholder="Ex: Atelier da Maria" 
+                                            value={ticketBusinessName}
+                                            onChange={(e) => setTicketBusinessName(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="ticket-footer">Mensagem de Rodapé</Label>
+                                        <Input 
+                                            id="ticket-footer" 
+                                            placeholder="Ex: Obrigado pela preferência!" 
+                                            value={ticketFooterText}
+                                            onChange={(e) => setTicketFooterText(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
