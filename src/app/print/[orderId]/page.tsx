@@ -8,11 +8,12 @@ import { OrderTicket } from '@/components/dashboard/order-ticket';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Printer, Share2, ArrowLeft, Loader2, Info, HelpCircle, ChevronRight, Download, MessageCircle, Phone } from 'lucide-react';
+import { Printer, Share2, ArrowLeft, Loader2, Info, HelpCircle, ChevronRight, Download, MessageCircle, Phone, Ticket, FileText } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from '@/lib/utils';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -45,7 +46,24 @@ export default function PrintPage() {
   const [ticketSettings, setTicketSettings] = useState<TicketSettings | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>('58mm');
+  const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm' | '110mm' | 'A4' | '1/2 A4' | '1/4 A4'>('58mm');
+  const [hasLoadedPreference, setHasLoadedPreference] = useState(false);
+  
+  // Persistência da preferência de largura do papel
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('crmAtelie-preferredPaperWidth');
+    if (savedWidth) {
+      setPaperWidth(savedWidth as any);
+    }
+    setHasLoadedPreference(true);
+  }, []);
+
+  useEffect(() => {
+    if (hasLoadedPreference) {
+      localStorage.setItem('crmAtelie-preferredPaperWidth', paperWidth);
+    }
+  }, [paperWidth, hasLoadedPreference]);
+
   const [showGuide, setShowGuide] = useState(false);
   const [showWhatsAppConfirm, setShowWhatsAppConfirm] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -294,20 +312,42 @@ export default function PrintPage() {
           
           <div className="p-4 bg-white rounded-xl shadow-sm border space-y-4">
             <div className="space-y-1.5">
-                <p className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Largura do Papel</p>
-                <div className="flex bg-muted/50 p-1 rounded-lg border">
-                    <button 
-                        onClick={() => setPaperWidth('58mm')}
-                        className={`flex-1 py-1 text-xs font-medium rounded-md transition-all ${paperWidth === '58mm' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                        58mm
-                    </button>
-                    <button 
-                        onClick={() => setPaperWidth('80mm')}
-                        className={`flex-1 py-1 text-xs font-medium rounded-md transition-all ${paperWidth === '80mm' ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                        80mm
-                    </button>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Impressora Térmica</p>
+                <div className="flex bg-muted/50 p-1 rounded-lg border gap-1">
+                    {[
+                        { id: '58mm', icon: Ticket, size: 12 },
+                        { id: '80mm', icon: Ticket, size: 14 },
+                        { id: '110mm', icon: Ticket, size: 16 }
+                    ].map((size) => (
+                        <button 
+                            key={size.id}
+                            onClick={() => setPaperWidth(size.id as any)}
+                            className={`flex-1 flex flex-col items-center gap-1 py-1.5 px-1 rounded-md transition-all ${paperWidth === size.id ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            <size.icon className={cn(paperWidth === size.id ? "text-primary" : "text-muted-foreground/60")} style={{ width: size.size, height: size.size }} />
+                            <span className="text-[9px] font-bold">{size.id}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-1.5">
+                <p className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Folha Comum</p>
+                <div className="flex bg-muted/50 p-1 rounded-lg border gap-1">
+                    {[
+                        { id: 'A4', label: 'Inteira (A4)', icon: FileText, size: 16 },
+                        { id: '1/2 A4', label: '1/2 (A5)', icon: FileText, size: 14 },
+                        { id: '1/4 A4', label: '1/4 (A6)', icon: FileText, size: 12 }
+                    ].map((size) => (
+                        <button 
+                            key={size.id}
+                            onClick={() => setPaperWidth(size.id as any)}
+                            className={`flex-1 flex flex-col items-center gap-1 py-1.5 px-1 rounded-md transition-all ${paperWidth === size.id ? 'bg-background shadow-sm text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            <size.icon className={cn(paperWidth === size.id ? "text-primary" : "text-muted-foreground/60")} style={{ width: size.size, height: size.size }} />
+                            <span className="text-[9px] font-bold leading-tight">{size.label}</span>
+                        </button>
+                    ))}
                 </div>
             </div>
 
@@ -374,14 +414,21 @@ export default function PrintPage() {
 
         <div 
             id="printable-area" 
-            className="bg-white shadow-2xl rounded-sm transition-all duration-300 overflow-hidden"
-            style={{ width: paperWidth === '58mm' ? '220px' : '302px' }}
+            className="bg-white shadow-2xl rounded-sm transition-all duration-500 overflow-hidden"
+            style={{ 
+                width: paperWidth === '58mm' ? '220px' : 
+                       paperWidth === '80mm' ? '302px' : 
+                       paperWidth === '110mm' ? '416px' :
+                       paperWidth === '1/4 A4' ? '397px' :
+                       paperWidth === '1/2 A4' ? '560px' : '794px'
+            }}
         >
           <OrderTicket 
             ref={ticketRef} 
             order={order} 
             customer={customer} 
             ticketSettings={ticketSettings} 
+            paperWidth={paperWidth}
           />
         </div>
         
