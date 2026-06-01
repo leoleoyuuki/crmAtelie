@@ -9,13 +9,19 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Save, CalculatorIcon, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Save, CalculatorIcon, ChevronDown, Printer, Info } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { useUser } from '@/firebase/auth/use-user';
 import { db } from '@/firebase/config';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDocument } from '@/firebase';
+import { UserProfile } from '@/lib/types';
+import { QuotePrintDialog } from './quote-print-dialog';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { 
     DropdownMenu, 
     DropdownMenuContent, 
@@ -50,6 +56,9 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
   const { toast } = useToast();
   const router = useRouter();
   const [isSaving, setIsSaving] = useState(false);
+  const [isPrintOpen, setIsPrintOpen] = useState(false);
+  const { data: profile } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
+  const [history, setHistory] = useState<any[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -100,11 +109,91 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
   const finalPrice = totalCost + profit;
   const realizedMarginPercentage = totalCost > 0 ? (profit / totalCost) * 100 : 0;
 
+  // Cache last professional & real estate hourly cost
+  const [lastProfCost, setLastProfCost] = useState<number | null>(null);
+  const [lastRECost, setLastRECost] = useState<number | null>(null);
+  const [lastREMonthlyCost, setLastREMonthlyCost] = useState<number | null>(null);
+  const [lastREWeeklyHours, setLastREWeeklyHours] = useState<number | null>(null);
+
+  useEffect(() => {
+    const prof = localStorage.getItem('crmAtelie-lastProfCost');
+    const re = localStorage.getItem('crmAtelie-lastRECost');
+
+    if (prof) {
+      const fixedProf = Number(parseFloat(prof).toFixed(2));
+      setLastProfCost(fixedProf);
+      form.setValue('professionalCostPerHour', fixedProf);
+    }
+    if (re) {
+      const fixedRE = Number(parseFloat(re).toFixed(2));
+      setLastRECost(fixedRE);
+      form.setValue('realEstateCostPerHour', fixedRE);
+    }
+    
+    // Disable monthly real estate calculation by default on load, only restoring the direct hourly rate
+    form.setValue('isMonthlyRealEstate', false);
+  }, [form]);
+
+  // Load history on mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('crmAtelie-quoteHistory');
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error("Erro ao carregar histórico:", e);
+      }
+    }
+  }, []);
+
+  const saveToHistory = () => {
+    const currentValues = form.getValues();
+    if (!currentValues.name) return; // don't save unnamed quotes
+    
+    const newItem = {
+      ...currentValues,
+      finalPrice,
+      timestamp: new Date().toISOString()
+    };
+
+    setHistory(prev => {
+      // Remove any existing item with the same name, then add at top
+      const filtered = prev.filter(item => item.name !== currentValues.name);
+      const updated = [newItem, ...filtered].slice(0, 10);
+      localStorage.setItem('crmAtelie-quoteHistory', JSON.stringify(updated));
+      return updated;
+    });
+  };
   const formatCurrency = (val: number) => {
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
 
   async function handleSave(data: FormValues, destination: 'catalog' | 'priceTable' | 'both') {
+    // Cache final values on save
+    if (data.professionalCostPerHour) {
+      const fixedProf = Number(Number(data.professionalCostPerHour).toFixed(2));
+      localStorage.setItem('crmAtelie-lastProfCost', fixedProf.toString());
+      setLastProfCost(fixedProf);
+    }
+    const computedREHourly = data.isMonthlyRealEstate 
+      ? ((data.realEstateMonthlyCost || 0) / ((data.realEstateWeeklyHours || 1) * 4.33)) 
+      : data.realEstateCostPerHour;
+    if (computedREHourly && computedREHourly > 0) {
+      const fixedRE = Number(computedREHourly.toFixed(2));
+      localStorage.setItem('crmAtelie-lastRECost', fixedRE.toString());
+      setLastRECost(fixedRE);
+    }
+    if (data.realEstateMonthlyCost) {
+      localStorage.setItem('crmAtelie-lastREMonthlyCost', data.realEstateMonthlyCost.toString());
+      setLastREMonthlyCost(Number(data.realEstateMonthlyCost));
+    }
+    if (data.realEstateWeeklyHours) {
+      localStorage.setItem('crmAtelie-lastREWeeklyHours', data.realEstateWeeklyHours.toString());
+      setLastREWeeklyHours(Number(data.realEstateWeeklyHours));
+    }
+    localStorage.setItem('crmAtelie-lastREIsMonthly', data.isMonthlyRealEstate ? 'true' : 'false');
+
+    saveToHistory();
     if (!user) {
         toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado.' });
         return;
@@ -244,9 +333,32 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                                     <FormItem>
                                         <FormLabel>Custo da Hora (R$)</FormLabel>
                                         <FormControl>
-                                            <Input type="number" step="0.01" {...field} className="bg-muted/30" />
+                                            <Input 
+                                                type="number" 
+                                                step="0.01" 
+                                                {...field} 
+                                                className="bg-muted/30" 
+                                                onBlur={(e) => {
+                                                    field.onBlur();
+                                                    const val = parseFloat(e.target.value);
+                                                    if (val && val > 0) {
+                                                        const fixedProf = Number(val.toFixed(2));
+                                                        localStorage.setItem('crmAtelie-lastProfCost', fixedProf.toString());
+                                                        setLastProfCost(fixedProf);
+                                                    }
+                                                }}
+                                            />
                                         </FormControl>
                                         <FormMessage />
+                                        {lastProfCost !== null && Number(watchedValues.professionalCostPerHour) !== lastProfCost && (
+                                            <button
+                                                type="button"
+                                                onClick={() => form.setValue('professionalCostPerHour', lastProfCost)}
+                                                className="text-[10px] text-primary hover:underline block text-left mt-1"
+                                            >
+                                                Usar último valor: {formatCurrency(lastProfCost)}
+                                            </button>
+                                        )}
                                     </FormItem>
                                 )}
                             />
@@ -273,7 +385,21 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                                     render={({ field }) => (
                                         <div className="flex items-center space-x-2">
                                             <Switch checked={field.value} onCheckedChange={field.onChange} />
-                                            <FormLabel className="text-[10px] text-muted-foreground font-normal">Cálculo Mensal</FormLabel>
+                                            <div className="flex items-center gap-1">
+                                                <FormLabel className="text-[10px] text-muted-foreground font-normal cursor-pointer">Cálculo Mensal</FormLabel>
+                                                <TooltipProvider>
+                                                    <Tooltip delayDuration={200}>
+                                                        <TooltipTrigger asChild>
+                                                            <button type="button" className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded-full hover:bg-muted">
+                                                                <Info className="h-3 w-3" />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-[240px] text-xs leading-relaxed bg-popover text-popover-foreground border shadow-lg p-2.5 rounded-lg">
+                                                            Não sabe o custo da sua hora? Ative esta opção para calcular automaticamente com base nas despesas mensais do ateliê (aluguel, água, energia) e na sua jornada semanal.
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
                                         </div>
                                     )}
                                 />
@@ -288,7 +414,27 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                                             <FormItem>
                                                 <FormLabel className="text-xs">Custo Mensal (R$)</FormLabel>
                                                 <FormControl>
-                                                    <Input type="number" step="0.01" {...field} className="bg-muted/30" />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="0.01" 
+                                                        {...field} 
+                                                        className="bg-muted/30" 
+                                                        onBlur={(e) => {
+                                                            field.onBlur();
+                                                            const val = parseFloat(e.target.value);
+                                                            if (val && val > 0) {
+                                                                localStorage.setItem('crmAtelie-lastREMonthlyCost', val.toString());
+                                                                setLastREMonthlyCost(val);
+                                                                // Recalculate and update the cached hourly rate based on the blurred values
+                                                                const computed = val / ((Number(form.getValues('realEstateWeeklyHours')) || 1) * 4.33);
+                                                                if (computed && computed > 0) {
+                                                                    const fixedRE = Number(computed.toFixed(2));
+                                                                    localStorage.setItem('crmAtelie-lastRECost', fixedRE.toString());
+                                                                    setLastRECost(fixedRE);
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -301,7 +447,27 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                                             <FormItem>
                                                 <FormLabel className="text-xs">Horas/Semana</FormLabel>
                                                 <FormControl>
-                                                    <Input type="number" step="1" {...field} className="bg-muted/30" />
+                                                    <Input 
+                                                        type="number" 
+                                                        step="1" 
+                                                        {...field} 
+                                                        className="bg-muted/30" 
+                                                        onBlur={(e) => {
+                                                            field.onBlur();
+                                                            const val = parseInt(e.target.value, 10);
+                                                            if (val && val > 0) {
+                                                                localStorage.setItem('crmAtelie-lastREWeeklyHours', val.toString());
+                                                                setLastREWeeklyHours(val);
+                                                                // Recalculate and update the cached hourly rate based on the blurred values
+                                                                const computed = (Number(form.getValues('realEstateMonthlyCost')) || 0) / (val * 4.33);
+                                                                if (computed && computed > 0) {
+                                                                    const fixedRE = Number(computed.toFixed(2));
+                                                                    localStorage.setItem('crmAtelie-lastRECost', fixedRE.toString());
+                                                                    setLastRECost(fixedRE);
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -320,9 +486,32 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                                         <FormItem>
                                             <FormLabel>Custo da Hora (R$)</FormLabel>
                                             <FormControl>
-                                                <Input type="number" step="0.01" {...field} className="bg-muted/30" />
+                                                <Input 
+                                                    type="number" 
+                                                    step="0.01" 
+                                                    {...field} 
+                                                    className="bg-muted/30" 
+                                                    onBlur={(e) => {
+                                                        field.onBlur();
+                                                        const val = parseFloat(e.target.value);
+                                                        if (val && val > 0) {
+                                                            const fixedRE = Number(val.toFixed(2));
+                                                            localStorage.setItem('crmAtelie-lastRECost', fixedRE.toString());
+                                                            setLastRECost(fixedRE);
+                                                        }
+                                                    }}
+                                                />
                                             </FormControl>
                                             <FormMessage />
+                                            {lastRECost !== null && Number(watchedValues.realEstateCostPerHour) !== lastRECost && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => form.setValue('realEstateCostPerHour', lastRECost)}
+                                                    className="text-[10px] text-primary hover:underline block text-left mt-1"
+                                                >
+                                                    Usar último valor: {formatCurrency(lastRECost)}
+                                                </button>
+                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -470,7 +659,21 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                 </Card>
                 
                 {!isPublic && (
-                    <div className="pt-4 lg:hidden">
+                    <div className="pt-4 lg:hidden flex flex-col gap-3">
+                        <Button 
+                            type="button" 
+                            size="lg" 
+                            variant="outline" 
+                            className="w-full text-base font-bold shadow-sm"
+                            onClick={() => {
+                                saveToHistory();
+                                setIsPrintOpen(true);
+                            }}
+                        >
+                            <Printer className="h-5 w-5 mr-2 text-primary" />
+                            Imprimir Orçamento
+                        </Button>
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button type="button" size="lg" className="w-full text-base font-bold shadow-xl" disabled={isSaving}>
@@ -552,44 +755,60 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                     </div>
 
                     {!isPublic ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button 
-                                    type="button" 
-                                    size="lg" 
-                                    className="w-full text-base font-bold shadow-xl lg:flex hidden" 
-                                    disabled={isSaving}
-                                >
-                                    {isSaving ? "Salvando..." : (
-                                        <>
-                                            <Save className="h-5 w-5 mr-2" />
-                                            Salvar Orçamento
-                                            <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
-                                        </>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
-                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
-                                    <div className="flex flex-col text-left">
-                                        <span className="font-bold text-sm">Salvar no Catálogo</span>
-                                        <span className="text-[10px] text-muted-foreground">Ficha técnica completa com materiais</span>
-                                    </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
-                                    <div className="flex flex-col text-left">
-                                        <span className="font-bold text-sm">Salvar na Tabela de Preços</span>
-                                        <span className="text-[10px] text-muted-foreground">Apenas nome e preço final</span>
-                                    </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer border-t mt-1 pt-3 bg-primary/5">
-                                    <div className="flex flex-col text-left">
-                                        <span className="font-bold text-sm text-primary">Salvar em Ambos</span>
-                                        <span className="text-[10px] text-primary/70">Registros no catálogo e na tabela</span>
-                                    </div>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="space-y-3 lg:flex lg:flex-col hidden w-full">
+                            <Button 
+                                type="button" 
+                                size="lg" 
+                                variant="outline" 
+                                className="w-full text-base font-bold shadow-sm"
+                                onClick={() => {
+                                    saveToHistory();
+                                    setIsPrintOpen(true);
+                                }}
+                            >
+                                <Printer className="h-5 w-5 mr-2 text-primary" />
+                                Imprimir Orçamento
+                            </Button>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button 
+                                        type="button" 
+                                        size="lg" 
+                                        className="w-full text-base font-bold shadow-xl lg:flex hidden" 
+                                        disabled={isSaving}
+                                    >
+                                        {isSaving ? "Salvando..." : (
+                                            <>
+                                                <Save className="h-5 w-5 mr-2" />
+                                                Salvar Orçamento
+                                                <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                                            </>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-64 rounded-xl p-2">
+                                    <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'catalog'))()} className="rounded-xl py-3 cursor-pointer">
+                                        <div className="flex flex-col text-left">
+                                            <span className="font-bold text-sm">Salvar no Catálogo</span>
+                                            <span className="text-[10px] text-muted-foreground">Ficha técnica completa com materiais</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'priceTable'))()} className="rounded-xl py-3 cursor-pointer">
+                                        <div className="flex flex-col text-left">
+                                            <span className="font-bold text-sm">Salvar na Tabela de Preços</span>
+                                            <span className="text-[10px] text-muted-foreground">Apenas nome e preço final</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => form.handleSubmit((data) => handleSave(data, 'both'))()} className="rounded-xl py-3 cursor-pointer border-t mt-1 pt-3 bg-primary/5">
+                                        <div className="flex flex-col text-left">
+                                            <span className="font-bold text-sm text-primary">Salvar em Ambos</span>
+                                            <span className="text-[10px] text-primary/70">Registros no catálogo e na tabela</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     ) : (
                         <Button 
                             type="button" 
@@ -605,6 +824,54 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                 </div>
             </Card>
 
+            {history.length > 0 && (
+                <Card className="border-border/50 shadow-md">
+                    <CardHeader className="py-3 flex flex-row items-center justify-between border-b">
+                        <div className="text-left">
+                            <CardTitle className="text-sm font-bold">Histórico Local</CardTitle>
+                            <CardDescription className="text-[10px]">Últimos 10 orçamentos</CardDescription>
+                        </div>
+                        <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                                localStorage.removeItem('crmAtelie-quoteHistory');
+                                setHistory([]);
+                                toast({ title: "Histórico limpo" });
+                            }}
+                        >
+                            Limpar
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="p-0 max-h-60 overflow-y-auto divide-y">
+                        {history.map((item, idx) => (
+                            <div key={idx} className="p-3 flex items-center justify-between hover:bg-muted/30 transition-colors gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-bold truncate text-foreground text-left">{item.name}</p>
+                                    <p className="text-[10px] text-muted-foreground text-left">
+                                        {formatCurrency(item.finalPrice)} • {format(new Date(item.timestamp), "dd/MM HH:mm", { locale: ptBR })}
+                                    </p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-[10px] font-bold px-2 py-0"
+                                    onClick={() => {
+                                        form.reset(item);
+                                        toast({ title: "Orçamento carregado!" });
+                                    }}
+                                >
+                                    Carregar
+                                </Button>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
+
             <div className="bg-primary/5 border border-primary/20 p-4 rounded-2xl flex items-start gap-3">
                 <CalculatorIcon className="h-5 w-5 text-primary mt-0.5" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -612,6 +879,18 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
                 </p>
             </div>
         </div>
+
+        {!isPublic && (
+            <QuotePrintDialog
+                open={isPrintOpen}
+                onOpenChange={setIsPrintOpen}
+                name={form.getValues('name')}
+                description={form.getValues('description')}
+                materials={watchedValues.materials as any}
+                finalPrice={finalPrice}
+                ticketSettings={profile?.ticketSettings}
+            />
+        )}
     </div>
   );
 }
