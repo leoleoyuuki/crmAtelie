@@ -5,8 +5,8 @@ import { GoogleGenAI } from "@google/genai";
 export const ai = new GoogleGenAI({ 
   apiKey: process.env.GEMINI_API_KEY || "",
   httpOptions: {
-    apiVersion: "v1beta"
+    apiVersion: "v1"
   }
 });
 
-export const DEFAULT_AI_MODEL = "gemini-3.1-flash-lite-preview";
+export const DEFAULT_AI_MODEL = "gemini-3.1-flash-lite";
