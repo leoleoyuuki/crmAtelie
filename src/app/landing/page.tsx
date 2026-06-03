@@ -10,13 +10,38 @@ import { StaggerTestimonials } from '@/components/ui/stagger-testimonials';
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen w-full bg-background overflow-x-hidden">
+    <div className="relative min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 overflow-x-hidden">
+      {/* ── Global Grid / Checkered Background ── */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        aria-hidden="true"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+        }}
+      />
+      {/* Dark‑mode override for the grid */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 hidden dark:block"
+        aria-hidden="true"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '48px 48px',
+        }}
+      />
+
       <Header />
-      <main className="w-full">
+      <main className="w-full relative z-10">
         <HeroSection />
-        <div id="recursos" className="w-full">
+        {/* <div id="recursos" className="w-full">
           <FeatureHighlights />
-        </div>
+        </div> */}
         <FaqSection />
         <StaggerTestimonials />
         <AllFeatures />

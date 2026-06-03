@@ -28,18 +28,7 @@ const objections = [
 
 export function FaqSection() {
   return (
-    <div className="py-24 sm:py-32 relative overflow-hidden bg-background">
-      {/* Crumpled Paper Texture Overlay */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none opacity-[0.05] dark:opacity-[0.03]"
-        style={{
-          backgroundImage: 'url(/images/crumpled-paper-texture.png)',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '400px 400px',
-        }}
-        aria-hidden="true"
-      />
-
+    <div className="py-24 sm:py-32 relative overflow-hidden bg-transparent">
       <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="text-center mb-16 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-[0.2em] mb-6">
@@ -57,21 +46,21 @@ export function FaqSection() {
           {objections.map((item, index) => (
             <div
               key={index}
-              className="relative"
+              className="group relative"
             >
-              <div className="h-full p-8 rounded-[2.5rem] bg-white/60 dark:bg-zinc-900/40 border border-white/10 shadow-xl">
+              <div className="h-full p-8 rounded-[2.5rem] bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] dark:group-hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] group-hover:border-primary/20">
                 <div className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center mb-6 bg-background/50 shadow-sm",
+                  "w-12 h-12 rounded-2xl flex items-center justify-center mb-6 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50 shadow-sm transition-transform duration-500 group-hover:scale-110",
                   item.iconColor
                 )}>
                   <item.icon className="h-6 w-6" />
                 </div>
 
-                <h3 className="text-xl font-bold font-headline mb-4 text-foreground leading-tight">
+                <h3 className="text-xl font-bold font-headline mb-4 text-foreground leading-tight transition-colors duration-300 group-hover:text-primary">
                   {item.question}
                 </h3>
 
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm leading-relaxed font-light">
                   {item.answer}
                 </p>
               </div>

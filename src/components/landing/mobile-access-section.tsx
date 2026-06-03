@@ -43,18 +43,7 @@ export function MobileAccessSection() {
   const currentContent = isMobile ? content.mobile : content.desktop;
 
   return (
-    <div className="py-24 sm:py-40 relative overflow-hidden bg-background">
-      {/* Crumpled Paper Texture Overlay */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none opacity-[0.05] dark:opacity-[0.03]"
-        style={{
-          backgroundImage: 'url(/images/crumpled-paper-texture.png)',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '400px 400px',
-        }}
-        aria-hidden="true"
-      />
-
+    <div className="py-24 sm:py-40 relative overflow-hidden bg-transparent">
       {/* Static background blobs — no animation */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/4 -left-20 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px]" />

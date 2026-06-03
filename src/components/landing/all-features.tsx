@@ -1,119 +1,136 @@
 'use client';
-import {
-  BarChart3,
-  Eye,
-  ListChecks,
-  Printer,
-  StickyNote,
-  Users,
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { cn } from '@/lib/utils';
 
 const features = [
   {
-    icon: StickyNote,
-    title: 'Pedidos',
-    titleFull: 'Gestão de Pedidos',
-    description: 'Crie e acompanhe pedidos complexos com múltiplos serviços, prazos e prioridades em um clique.',
-    className: 'col-span-2 md:col-span-2',
-    color: 'from-orange-500/10 to-transparent',
+    iconPath: '/images/bnbIcons/ShoppingBag.png',
+    title: 'Pedidos & Clientes',
+    titleFull: 'Gestão de Pedidos & Clientes',
+    description: 'Centralize encomendas, prazos e contatos de forma unificada. Acesse o histórico de compras e as preferências de cada cliente em segundos.',
+    accentColor: 'orange',
   },
   {
-    icon: BarChart3,
-    title: 'Finanças',
-    titleFull: 'Financeiro',
-    description: 'Gráficos de faturamento e custos reais para sua saúde financeira.',
-    className: 'col-span-1 md:col-span-1',
-    color: 'from-blue-500/10 to-transparent',
+    iconPath: '/images/bnbIcons/DollarSign.png',
+    title: 'Financeiro',
+    titleFull: 'Fluxo de Caixa',
+    description: 'Monitore entradas, saídas e custos. Veja relatórios claros sobre a saúde financeira do seu ateliê.',
+    accentColor: 'emerald',
   },
   {
-    icon: ListChecks,
+    iconPath: '/images/bnbIcons/CalendarRange.png',
     title: 'Tarefas',
-    titleFull: 'Tarefas',
-    description: 'Agenda inteligente que organiza seu dia automaticamente.',
-    className: 'col-span-1 md:col-span-1',
-    color: 'from-green-500/10 to-transparent',
+    titleFull: 'Agenda Inteligente',
+    description: 'Visualize suas próximas entregas organizadas automaticamente com base na urgência de cada pedido.',
+    accentColor: 'amber',
   },
   {
-    icon: Users,
-    title: 'Clientes',
-    titleFull: 'CRM de Clientes',
-    description: 'Histórico completo e comunicação via WhatsApp integrada para fidelizar quem compra.',
-    className: 'col-span-2 md:col-span-2',
-    color: 'from-purple-500/10 to-transparent',
-  },
-  {
-    icon: Printer,
+    iconPath: '/images/bnbIcons/Printer.png',
     title: 'Comprovantes',
-    titleFull: 'Comprovantes',
-    description: 'Gere tickets térmicos de 58mm ou envie cópias digitais impecáveis via WhatsApp.',
-    className: 'col-span-2 md:col-span-2',
-    color: 'from-primary/10 to-transparent',
+    titleFull: 'Impressão de Comprovantes',
+    description: 'Emita comprovantes profissionais em formato térmico de 58mm ou envie o recibo digital direto para o WhatsApp do cliente.',
+    accentColor: 'sky',
   },
   {
-    icon: Eye,
+    iconPath: '/images/bnbIcons/Calculator.png',
+    title: 'Orçamentos',
+    titleFull: 'Calculadora de Orçamentos',
+    description: 'Calcule preços de serviços com base no tempo gasto, custo de materiais e margem de lucro.',
+    accentColor: 'indigo',
+  },
+  {
+    iconPath: '/images/bnbIcons/Mic.png',
+    title: 'Voz com IA',
+    titleFull: 'Alimentação por Voz com IA',
+    description: 'Cadastre novos pedidos ou altere o status de uma encomenda apenas falando. Nossa inteligência artificial interpreta e organiza tudo para você.',
+    accentColor: 'violet',
+  },
+  {
+    iconPath: '/images/bnbIcons/Lock.png',
     title: 'Privacidade',
-    titleFull: 'Privacidade',
-    description: 'Esconda valores sensíveis para usar o sistema com segurança na frente de clientes.',
-    className: 'col-span-2 md:col-span-1',
-    color: 'from-secondary/10 to-transparent',
+    titleFull: 'Modo Privacidade',
+    description: 'Esconda valores de faturamento e lucros na tela com um clique, ideal para usar o sistema na frente dos seus clientes.',
+    accentColor: 'rose',
   },
 ];
 
+const accentMap: Record<string, { text: string; dot: string }> = {
+  orange: { text: 'text-orange-600 dark:text-orange-400', dot: 'bg-orange-500' },
+  emerald: { text: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
+  amber: { text: 'text-amber-600 dark:text-amber-400', dot: 'bg-amber-500' },
+  sky: { text: 'text-sky-600 dark:text-sky-400', dot: 'bg-sky-500' },
+  indigo: { text: 'text-indigo-600 dark:text-indigo-400', dot: 'bg-indigo-500' },
+  violet: { text: 'text-violet-600 dark:text-violet-400', dot: 'bg-violet-500' },
+  rose: { text: 'text-rose-600 dark:text-rose-400', dot: 'bg-rose-500' },
+};
+
 export function AllFeatures() {
   return (
-    <div className="py-24 sm:py-32 relative overflow-hidden bg-muted/20">
-      {/* Crepe Paper Texture Overlay */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] dark:opacity-[0.08]"
-        style={{
-          backgroundImage: 'url(/images/crepe-paper-muted.png)',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '400px 400px',
-        }}
-        aria-hidden="true"
-      />
+    <section className="relative py-28 sm:py-36 overflow-hidden">
+      {/* ── MANTIDO: Ambient colour blobs da sua identidade ── */}
+      <div className="absolute -top-32 -left-32 w-[32rem] h-[32rem] bg-primary/[0.06] rounded-full blur-[120px] pointer-events-none z-0" />
+      <div className="absolute -bottom-32 -right-32 w-[32rem] h-[32rem] bg-orange-400/[0.06] rounded-full blur-[120px] pointer-events-none z-0" />
+
       <div className="container mx-auto px-4 md:px-6 relative z-10">
-        <div className="text-center mb-16">
-          <div>
-            <h2 className="text-3xl font-bold font-headline tracking-tight sm:text-5xl mb-4">
-              Ferramentas profissionais para <br className="hidden md:block" />
-              <span className="text-primary italic">artesãos modernos</span>
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Tudo o que você precisa para sair do amadorismo e escalar sua produção com organização.
-            </p>
-          </div>
+        
+        {/* ── MANTIDO: Seu Header original ── */}
+        <div className="text-center mb-32">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold uppercase tracking-[0.15em] mb-5">
+            ✦ Recursos Premium
+          </span>
+
+          <h2 className="text-3xl font-extrabold font-headline tracking-tight sm:text-5xl lg:text-6xl mb-6 text-zinc-900 dark:text-white leading-[1.1]">
+            Otimize <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent italic font-serif">cada segundo</span> <br className="hidden md:block" />
+            do seu trabalho...
+          </h2>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 auto-rows-fr">
-          {features.map((feature) => (
-            <div
-              key={feature.titleFull}
-              className={cn('flex', feature.className)}
-            >
-              <Card className="flex-1 bg-white/95 dark:bg-zinc-900/90 border-primary/10 shadow-lg rounded-[2rem] overflow-hidden relative">
-                <CardHeader className="p-5 md:p-8 pb-2 relative z-10">
-                  <div className="bg-primary/10 p-3 md:p-4 rounded-2xl w-fit text-primary shadow-sm">
-                    <feature.icon className="h-5 w-5 md:h-6 md:w-6" />
-                  </div>
-                </CardHeader>
+        {/* ── NOVO: Estrutura inspirada na image_a3c2b9.png ── */}
+        <div className="max-w-6xl mx-auto space-y-40 md:space-y-64">
+          {features.map((feature, index) => {
+            const a = accentMap[feature.accentColor];
+            const isEven = index % 2 === 0;
 
-                <CardContent className="p-5 md:p-8 pt-2 relative z-10 text-left">
-                  <CardTitle className="text-lg md:text-2xl font-headline font-bold mb-2 md:mb-4 leading-tight">
-                    <span className="md:hidden">{feature.title}</span>
-                    <span className="hidden md:inline">{feature.titleFull}</span>
-                  </CardTitle>
-                  <p className="text-muted-foreground text-xs md:text-base leading-relaxed line-clamp-3 md:line-clamp-none opacity-80">
+            return (
+              <div 
+                key={feature.titleFull}
+                className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center"
+              >
+                {/* Texto: Alterna ordem baseada no index (Z-Layout) */}
+                <div className={cn("space-y-6", isEven ? "md:order-1" : "md:order-2")}>
+                  <div className="space-y-2">
+                    <h3 className={cn("text-2xl md:text-4xl font-headline font-bold transition-colors duration-300", a.text)}>
+                      {feature.title}
+                    </h3>
+                    <div className={cn("w-12 h-1 rounded-full", a.dot)} />
+                  </div>
+                  
+                  <p className="text-zinc-500 dark:text-zinc-400 text-lg md:text-xl leading-relaxed font-light max-w-md">
                     {feature.description}
                   </p>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+                </div>
+
+                {/* Área do Vídeo/Imagem: Fundo com sua textura de vidro (backdrop-blur) */}
+                <div className={cn("relative group", isEven ? "md:order-2" : "md:order-1")}>
+                  <div className="relative rounded-3xl border border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 p-3 backdrop-blur-xl shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]">
+                    
+                    {/* Espaço para o seu Vídeo */}
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
+                       {/* Substitua por: <video src={...} autoPlay muted loop /> */}
+                       <div className="flex flex-col items-center gap-3">
+                          <img src={feature.iconPath} alt="" className="w-16 h-16 opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
+                          <span className="text-[10px] font-mono text-zinc-400 tracking-widest uppercase">Video Demo Here</span>
+                       </div>
+                    </div>
+                  </div>
+
+                  {/* Decoração sutil de luz atrás do vídeo usando sua cor de acento */}
+                  <div className={cn("absolute -inset-4 blur-3xl opacity-10 -z-10 rounded-full", a.dot)} />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

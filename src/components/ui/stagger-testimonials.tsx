@@ -134,25 +134,7 @@ const MarqueeRow = ({ items, direction = "left", speed = 10 }: { items: typeof t
 
 export const StaggerTestimonials: React.FC = () => {
   return (
-    <div className="relative w-full overflow-hidden bg-background pb-20 pt-16">
-      {/* 
-        Linear Gradient Transition 
-        Starts EXACTLY with the color of the previous section (muted/20) to eliminate the sharp line,
-        then gracefully blends into a primary tint, and finally fades to transparent.
-      */}
-      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-muted/20 via-primary/10 to-transparent z-10 pointer-events-none" />
-
-      {/* Crepe Paper Texture Overlay */}
-      <div
-        className="absolute inset-0 z-0 pointer-events-none opacity-[0.06] dark:opacity-[0.04]"
-        style={{
-          backgroundImage: 'url(/images/crepe-paper-muted.png)',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '400px 400px',
-        }}
-        aria-hidden="true"
-      />
-
+    <div className="relative w-full overflow-hidden bg-transparent pb-20 pt-16">
       <div className="container mx-auto px-4 relative z-20 text-center mb-16 pt-10">
         <h2 className="text-4xl md:text-5xl lg:text-6xl font-headline font-bold mb-6 text-foreground tracking-tight">
           Resultados Provados. <br className="sm:hidden" />
@@ -164,9 +146,9 @@ export const StaggerTestimonials: React.FC = () => {
       </div>
 
       <div className="relative z-20 flex flex-col gap-6 w-full">
-        {/* Left and Right Overlays for fading effect (Better performance than mask-image) */}
-        <div className="absolute top-0 left-0 bottom-0 w-20 sm:w-40 bg-gradient-to-r from-background to-transparent z-30 pointer-events-none" />
-        <div className="absolute top-0 right-0 bottom-0 w-20 sm:w-40 bg-gradient-to-l from-background to-transparent z-30 pointer-events-none" />
+        {/* Left and Right Overlays for fading effect */}
+        <div className="absolute top-0 left-0 bottom-0 w-20 sm:w-40 bg-gradient-to-r from-zinc-50 dark:from-zinc-950 to-transparent z-30 pointer-events-none" />
+        <div className="absolute top-0 right-0 bottom-0 w-20 sm:w-40 bg-gradient-to-l from-zinc-50 dark:from-zinc-950 to-transparent z-30 pointer-events-none" />
         
         <MarqueeRow items={testimonialsRow1} direction="left" speed={25} />
         <MarqueeRow items={testimonialsRow2} direction="right" speed={22} />
