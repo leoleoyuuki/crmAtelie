@@ -1,11 +1,13 @@
 'use client';
 
-import { useCollection } from '@/firebase';
-import type { CatalogProduct } from '@/lib/types';
+import { useCollection, useUser, useDocument } from '@/firebase';
+import type { CatalogProduct, UserProfile } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Package, Trash2, Plus } from 'lucide-react';
+import { Package, Trash2, Plus, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { QuotePrintDialog } from '../calculadora/quote-print-dialog';
 import { db } from '@/firebase/config';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -24,8 +26,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function ProductCatalogList({ onAddProduct }: { onAddProduct?: () => void }) {
+    const { user } = useUser();
     const { data: products, loading } = useCollection<CatalogProduct>('catalogProducts');
+    const { data: profile } = useDocument<UserProfile>(user ? `users/${user.uid}` : null);
     const { toast } = useToast();
+    const [printProduct, setPrintProduct] = useState<CatalogProduct | null>(null);
 
     const formatCurrency = (val: number) => {
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
@@ -111,6 +116,16 @@ export function ProductCatalogList({ onAddProduct }: { onAddProduct?: () => void
                             </div>
                         </CardContent>
                         <CardFooter className="pt-0 flex gap-2 justify-end">
+                            <Button 
+                                type="button"
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 gap-1 text-xs" 
+                                onClick={() => setPrintProduct(product)}
+                            >
+                                <Printer className="h-4 w-4" />
+                                Orçamento
+                            </Button>
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                     <Button variant="ghost" size="sm" className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10">
@@ -139,6 +154,19 @@ export function ProductCatalogList({ onAddProduct }: { onAddProduct?: () => void
                     </Card>
                 );
             })}
+            {printProduct && (
+                <QuotePrintDialog
+                    open={!!printProduct}
+                    onOpenChange={(open) => {
+                        if (!open) setPrintProduct(null);
+                    }}
+                    name={printProduct.name}
+                    description={printProduct.description}
+                    materials={printProduct.materials?.map(m => ({ name: m.name, quantity: m.quantity }))}
+                    finalPrice={printProduct.finalPrice}
+                    ticketSettings={profile?.ticketSettings}
+                />
+            )}
         </div>
     );
 }
