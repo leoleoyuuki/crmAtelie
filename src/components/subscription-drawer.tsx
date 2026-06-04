@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight, Check, Loader2, Copy, CheckCheck, Gift, ExternalLink, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { differenceInDays, isValid } from "date-fns";
+import Image from "next/image";
 import type { UserProfile } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
 import { useToast } from "@/hooks/use-toast";
@@ -275,11 +276,48 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
                             <Sparkles className="h-3 w-3" /> Economia de R$200
                           </span>
                         </div>
-                        <div className="flex items-baseline justify-center lg:justify-start gap-1">
-                          <span className="text-muted-foreground text-lg">R$</span>
-                          <span className="text-6xl md:text-7xl font-black tracking-tighter text-foreground drop-shadow-sm">859</span>
-                          <span className="text-6xl md:text-7xl font-black tracking-tighter text-foreground drop-shadow-sm">,00</span>
-                          <span className="text-muted-foreground font-bold text-sm ml-1.5">/ano</span>
+                        <div className="flex items-center justify-center lg:justify-start gap-4">
+                          {/* Preço */}
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-muted-foreground text-lg">R$</span>
+                            <span className="text-6xl md:text-7xl font-black tracking-tighter text-foreground drop-shadow-sm">859</span>
+                            <span className="text-6xl md:text-7xl font-black tracking-tighter text-foreground drop-shadow-sm">,00</span>
+                            <span className="text-muted-foreground font-bold text-sm ml-1.5">/ano</span>
+                          </div>
+
+                          {/* Impressora 3D flutuante ao lado do preço */}
+                          <div className="relative shrink-0 flex items-center justify-center" style={{ perspective: '600px' }}>
+                            {/* Sombra no chão */}
+                            <div
+                              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-5 rounded-full pointer-events-none"
+                              style={{ background: 'radial-gradient(ellipse, hsl(var(--primary)/0.25) 0%, transparent 70%)' }}
+                            />
+                            {/* Glow ambiente */}
+                            <div
+                              className="absolute inset-0 rounded-full pointer-events-none blur-2xl"
+                              style={{ background: 'radial-gradient(circle, hsl(var(--primary)/0.15) 0%, transparent 70%)' }}
+                            />
+                            {/* Ícone 3D */}
+                            <div
+                              className="animate-float relative"
+                              style={{
+                                transform: 'rotateX(12deg) rotateY(-15deg)',
+                                filter: 'drop-shadow(0 20px 14px hsl(var(--primary)/0.25)) drop-shadow(0 8px 6px rgba(0,0,0,0.18)) drop-shadow(0 2px 2px rgba(0,0,0,0.12))',
+                              }}
+                            >
+                              <Image
+                                src="/images/bnbIcons/Printer.png"
+                                alt="Impressora Térmica"
+                                width={144}
+                                height={144}
+                                className="w-36 h-36 object-contain select-none"
+                              />
+                            </div>
+                            {/* Etiqueta GRÁTIS */}
+                            <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-wider z-10">
+                              GRÁTIS
+                            </span>
+                          </div>
                         </div>
                         <p className="text-sm text-muted-foreground mt-2 font-medium">
                           Pagamento único de <span className="line-through opacity-40">R$1.059,00</span> por <span className="font-bold text-foreground">R$859,00</span>
@@ -287,6 +325,21 @@ export function SubscriptionDrawer({ profile, open, onOpenChange }: { profile: U
                       </div>
                     )}
                   </div>
+
+                  {/* Brinde impressora texto — apenas no plano anual */}
+                  {billingCycle === 'anual' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-3 duration-700 py-1">
+                      <div className="space-y-1">
+                        <p className="text-xs font-black uppercase tracking-widest text-primary">🎁 Brinde Exclusivo</p>
+                        <h4 className="font-black text-foreground text-base leading-tight">
+                          Impressora Térmica
+                        </h4>
+                        <p className="text-sm text-muted-foreground font-medium leading-snug">
+                          Ganhe uma impressora de 58mm para imprimir tickets e comprovantes diretamente pelo sistema.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 max-w-lg mx-auto lg:mx-0">
                     {features.map((feature, i) => (

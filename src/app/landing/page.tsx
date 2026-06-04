@@ -39,12 +39,12 @@ export default function LandingPage() {
       <Header />
       <main className="w-full relative z-10">
         <HeroSection />
+        <AllFeatures />
         {/* <div id="recursos" className="w-full">
           <FeatureHighlights />
         </div> */}
         <FaqSection />
         <StaggerTestimonials />
-        <AllFeatures />
         <MobileAccessSection />
         <Cta />
       </main>
