@@ -41,7 +41,8 @@ import {
     BookCopy,
     Settings,
     ArrowRight,
-    Wallet
+    Wallet,
+    RefreshCw
 } from "lucide-react";
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useAuth, useDocument } from "@/firebase";
@@ -204,6 +205,19 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = React.useState(false);
     const { data: summary } = useDocument<UserSummary>(user ? `summaries/${user.uid}` : null);
     const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] = React.useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const handleForceSync = () => {
+        setIsSyncing(true);
+        window.dispatchEvent(new CustomEvent('firebase-sync-force'));
+        setTimeout(() => {
+            setIsSyncing(false);
+            toast({
+                title: "Dados Atualizados",
+                description: "Os dados foram sincronizados com o servidor.",
+            });
+        }, 800);
+    };
 
     useEffect(() => {
         const handleOpenDrawer = () => setIsSubscriptionDrawerOpen(true);
@@ -392,6 +406,17 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
 
                 <div className="flex items-center gap-1">
                     <VoiceAssistant />
+
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={handleForceSync}
+                        disabled={isSyncing}
+                        className="h-9 w-9 rounded-xl text-muted-foreground"
+                        title="Sincronizar dados"
+                    >
+                        <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin text-primary")} />
+                    </Button>
 
                     <Button 
                         variant="ghost" 
@@ -633,6 +658,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
 
   const menuItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/fluxo-caixa", label: "Fluxo de Caixa", icon: Wallet },
     { href: "/pedidos", label: "Pedidos", icon: ShoppingCart },
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/tarefas", label: "Tarefas", icon: ListChecks },

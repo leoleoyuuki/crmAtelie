@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Auth } from 'firebase/auth';
-import { Firestore, collection, onSnapshot, query, where, Timestamp, getDocs, limit, startAfter, endBefore, limitToLast, orderBy, Query, DocumentData, QueryDocumentSnapshot, doc } from 'firebase/firestore';
+import { Firestore, collection, onSnapshot, query, where, Timestamp, getDocs, limit, startAfter, endBefore, limitToLast, orderBy, Query, DocumentData, QueryDocumentSnapshot, doc, getDocsFromCache, getDocsFromServer, QueryConstraint } from 'firebase/firestore';
 import { app, auth, db } from './config';
 import { errorEmitter } from './error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from './errors';
@@ -80,18 +80,16 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
   const orderByValue = options.orderBy;
   const dateRange = options.dateRange;
 
-  const [refreshKey, setRefreshKey] = useState(0);
-  const refresh = () => setRefreshKey(prev => prev + 1);
-
-  React.useEffect(() => {
+  const loadData = useCallback(async (forceServer = false) => {
     if (!auth.currentUser) {
         setLoading(false);
         setData([]); // Clear data if user logs out
         return;
     }
+    setLoading(true);
 
     const collectionRef = collection(db, path);
-    const queryConstraints = [where('userId', '==', auth.currentUser.uid)];
+    const queryConstraints: QueryConstraint[] = [where('userId', '==', auth.currentUser.uid)];
 
     if (orderByValue) {
       queryConstraints.push(orderBy(orderByValue[0], orderByValue[1]));
@@ -106,42 +104,67 @@ export function useCollection<T>(path: string, options: CollectionOptions = {}) 
     
     const q = query(collectionRef, ...queryConstraints);
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const result: T[] = [];
-        snapshot.forEach((doc) => {
-          const docData = doc.data();
-          
-          const convertedData = { ...docData };
-          for (const key in convertedData) {
-            const value = (convertedData as any)[key];
-            if (value instanceof Timestamp) {
-              (convertedData as any)[key] = value.toDate();
-            }
+    try {
+      let snapshot;
+      if (forceServer) {
+        snapshot = await getDocsFromServer(q);
+      } else {
+        try {
+          snapshot = await getDocsFromCache(q);
+          if (snapshot.empty) {
+            snapshot = await getDocsFromServer(q);
           }
-
-          result.push({
-            ...convertedData,
-            id: doc.id,
-          } as T);
-        });
-        setData(result);
-        setLoading(false);
-      },
-      async (err) => {
-        setError(err);
-        setLoading(false);
-        const permissionError = new FirestorePermissionError({
-            path: path,
-            operation: 'list',
-        } satisfies SecurityRuleContext);
-        errorEmitter.emit('permission-error', permissionError);
+        } catch (cacheErr) {
+          // Fallback to server if cache query fails
+          snapshot = await getDocsFromServer(q);
+        }
       }
-    );
 
-    return () => unsubscribe();
-  }, [db, path, auth.currentUser, limitValue, orderByValue?.[0], orderByValue?.[1], dateRange, refreshKey]);
+      const result: T[] = [];
+      snapshot.forEach((doc) => {
+        const docData = doc.data();
+        const convertedData = { ...docData };
+        for (const key in convertedData) {
+          const value = (convertedData as any)[key];
+          if (value instanceof Timestamp) {
+            (convertedData as any)[key] = value.toDate();
+          }
+        }
+
+        result.push({
+          ...convertedData,
+          id: doc.id,
+        } as T);
+      });
+      setData(result);
+      setError(null);
+    } catch (err: any) {
+      setError(err);
+      const permissionError = new FirestorePermissionError({
+          path: path,
+          operation: 'list',
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    } finally {
+      setLoading(false);
+    }
+  }, [db, path, auth.currentUser, limitValue, orderByValue?.[0], orderByValue?.[1], dateRange]);
+
+  useEffect(() => {
+    loadData(false);
+  }, [loadData]);
+
+  useEffect(() => {
+    const handleForceSync = () => {
+      loadData(true);
+    };
+    window.addEventListener('firebase-sync-force', handleForceSync);
+    return () => {
+      window.removeEventListener('firebase-sync-force', handleForceSync);
+    };
+  }, [loadData]);
+
+  const refresh = useCallback(() => loadData(true), [loadData]);
 
   return { data, loading, error, refresh };
 }
@@ -162,7 +185,7 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
     // Using Ref for cursor to avoid re-triggering loadBatch due to dependency loop
     const lastVisibleRef = useRef<QueryDocumentSnapshot<DocumentData> | null>(null);
 
-    const loadBatch = useCallback(async (isInitial = false) => {
+    const loadBatch = useCallback(async (isInitial = false, forceServer = false) => {
         if (!auth.currentUser) return;
         setLoading(true);
         
@@ -178,7 +201,20 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
         }
 
         try {
-            const snapshot = await getDocs(q);
+            let snapshot;
+            if (forceServer) {
+                snapshot = await getDocsFromServer(q);
+            } else {
+                try {
+                    snapshot = await getDocsFromCache(q);
+                    if (snapshot.empty) {
+                        snapshot = await getDocsFromServer(q);
+                    }
+                } catch (e) {
+                    snapshot = await getDocsFromServer(q);
+                }
+            }
+
             const items = snapshot.docs.map(doc => {
                  const docData = doc.data();
                  const convertedData = { ...docData };
@@ -210,7 +246,17 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
     }, [db, path, auth.currentUser, pageSize]);
 
     useEffect(() => {
-        loadBatch(true);
+        loadBatch(true, false);
+    }, [loadBatch]);
+
+    useEffect(() => {
+        const handleForceSync = () => {
+            loadBatch(true, true);
+        };
+        window.addEventListener('firebase-sync-force', handleForceSync);
+        return () => {
+            window.removeEventListener('firebase-sync-force', handleForceSync);
+        };
     }, [loadBatch]);
 
     const loadMore = useCallback(async () => {
@@ -222,7 +268,7 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
         
         // 2. Otherwise, if there is more in DB, fetch next batch
         if (hasMoreInDB) {
-            await loadBatch(false);
+            await loadBatch(false, false);
             setVisibleLimit(prev => prev + pageSize);
         }
     }, [allFetchedData.length, visibleLimit, hasMoreInDB, loadBatch, pageSize]);
@@ -235,6 +281,8 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
     const hasMore = hasMoreInDB || allFetchedData.length > visibleLimit;
     const hasPrev = visibleLimit > pageSize;
 
+    const refresh = useCallback(() => loadBatch(true, true), [loadBatch]);
+
     return { 
         data, 
         loading, 
@@ -243,7 +291,7 @@ export function usePaginatedCollection<T>(path: string, pageSize: number = 10) {
         prevPage: showLess, 
         hasMore, 
         hasPrev, 
-        refresh: () => loadBatch(true) 
+        refresh
     };
 }
 

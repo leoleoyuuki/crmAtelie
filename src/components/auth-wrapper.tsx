@@ -21,7 +21,7 @@ const knownAppRoutes = [
   '/estoque', '/configuracoes', '/ajuda', '/vendas',
   '/catalogo', '/tabela-precos', '/ativacao', '/implementando',
   '/admin', '/freetools', '/calculadora', '/print', '/blog',
-  '/landing', '/login',
+  '/landing', '/login', '/fluxo-caixa',
 ];
 
 export function AuthWrapper({ children }: { children: React.ReactNode }) {
