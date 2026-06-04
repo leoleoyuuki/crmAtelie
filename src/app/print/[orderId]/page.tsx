@@ -103,6 +103,82 @@ export default function PrintPage() {
     }
   }, [orderId]);
 
+  // Escuta os eventos de impressão para fazer a clonagem perfeita do ticket (isolando-o de toda a tela)
+  useEffect(() => {
+    let tempContainer: HTMLDivElement | null = null;
+    let style: HTMLStyleElement | null = null;
+
+    const handleBeforePrint = () => {
+      const printableArea = document.getElementById('printable-area');
+      if (!printableArea) return;
+
+      style = document.createElement('style');
+      style.innerHTML = `
+        @media print {
+          @page {
+            size: portrait;
+            margin: 0;
+          }
+          body, html {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            width: ${paperWidth} !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          .no-print, body > *:not(#print-order-root-temp) {
+            display: none !important;
+          }
+          #print-order-root-temp {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            visibility: visible !important;
+          }
+          #print-order-root-temp * {
+            visibility: visible !important;
+          }
+        }
+      `;
+      
+      tempContainer = document.createElement('div');
+      tempContainer.id = 'print-order-root-temp';
+      tempContainer.innerHTML = printableArea.innerHTML;
+      document.body.appendChild(tempContainer);
+      document.head.appendChild(style);
+    };
+
+    const handleAfterPrint = () => {
+      if (tempContainer && document.body.contains(tempContainer)) {
+        document.body.removeChild(tempContainer);
+      }
+      if (style && document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+      tempContainer = null;
+      style = null;
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+      if (tempContainer && document.body.contains(tempContainer)) {
+        document.body.removeChild(tempContainer);
+      }
+      if (style && document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    };
+  }, [paperWidth]);
+
   const handleWhatsAppShare = async (forcePhone?: string) => {
     if (!ticketRef.current) return;
 
@@ -240,7 +316,7 @@ export default function PrintPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-100">
+      <div className="flex justify-center items-center h-screen bg-background" style={{ backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)', backgroundSize: '48px 48px' }}>
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -248,7 +324,7 @@ export default function PrintPage() {
 
   if (error) {
     return (
-        <div className="flex flex-col gap-4 justify-center items-center h-screen bg-red-50 text-red-700 p-4 text-center">
+        <div className="flex flex-col gap-4 justify-center items-center h-screen bg-background text-red-700 p-4 text-center" style={{ backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)', backgroundSize: '48px 48px' }}>
             <p className="font-bold">{error}</p>
             <Button onClick={() => router.back()} variant="outline">Voltar</Button>
         </div>
@@ -259,47 +335,36 @@ export default function PrintPage() {
 
   return (
     <>
-      <style jsx global>{`
-        @media print {
-          @page {
-            size: portrait;
-            margin: 0;
-          }
-          body, html {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            width: ${paperWidth} !important;
-            height: auto !important;
-            overflow: visible !important;
-          }
-          .no-print {
-            display: none !important;
-          }
-          body * {
-            visibility: hidden;
-          }
-          #printable-area, #printable-area * {
-            visibility: visible;
-          }
-          #printable-area {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-          }
-          /* Remove headers and footers */
-          @page {
-            margin: 0;
-            size: auto;
-          }
-        }
-      `}</style>
-      <main className="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-8 px-4">
-        <div className="no-print w-full max-w-[220px] mb-6 space-y-3">
+      <main className="bg-background min-h-screen flex flex-col items-center justify-start py-8 px-4 lg:flex-row lg:items-start lg:justify-center lg:gap-8 lg:py-12" style={{ backgroundImage: 'linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)', backgroundSize: '48px 48px' }}>
+        
+        {/* Ticket — fica à esquerda no desktop */}
+        <div id="printable-container" className="flex flex-col items-center gap-4 order-2 lg:order-1">
+          <div 
+              id="printable-area" 
+              className="bg-white shadow-2xl rounded-sm transition-all duration-500 overflow-hidden"
+              style={{ 
+                  width: paperWidth === '58mm' ? '220px' : 
+                         paperWidth === '80mm' ? '302px' : 
+                         paperWidth === '110mm' ? '416px' :
+                         paperWidth === '1/4 A4' ? '397px' :
+                         paperWidth === '1/2 A4' ? '560px' : '794px'
+              }}
+          >
+            <OrderTicket 
+              ref={ticketRef} 
+              order={order} 
+              customer={customer} 
+              ticketSettings={ticketSettings} 
+              paperWidth={paperWidth}
+            />
+          </div>
+          <p className="no-print text-[10px] text-muted-foreground text-center max-w-[200px]">
+              Dica: Ao copiar para o WhatsApp, a imagem mantém a logo e formatação profissional.
+          </p>
+        </div>
+
+        {/* Painel de controle — fica à direita no desktop, sticky */}
+        <div className="no-print w-full max-w-[220px] space-y-3 order-1 lg:order-2 mb-6 lg:mb-0 lg:sticky lg:top-8 lg:self-start">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -310,7 +375,7 @@ export default function PrintPage() {
             Voltar
           </Button>
           
-          <div className="p-4 bg-white rounded-xl shadow-sm border space-y-4">
+          <div className="p-4 bg-card rounded-xl shadow-sm border space-y-4">
             <div className="space-y-1.5">
                 <p className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Impressora Térmica</p>
                 <div className="flex bg-muted/50 p-1 rounded-lg border gap-1">
@@ -411,30 +476,6 @@ export default function PrintPage() {
             </div>
           </div>
         </div>
-
-        <div 
-            id="printable-area" 
-            className="bg-white shadow-2xl rounded-sm transition-all duration-500 overflow-hidden"
-            style={{ 
-                width: paperWidth === '58mm' ? '220px' : 
-                       paperWidth === '80mm' ? '302px' : 
-                       paperWidth === '110mm' ? '416px' :
-                       paperWidth === '1/4 A4' ? '397px' :
-                       paperWidth === '1/2 A4' ? '560px' : '794px'
-            }}
-        >
-          <OrderTicket 
-            ref={ticketRef} 
-            order={order} 
-            customer={customer} 
-            ticketSettings={ticketSettings} 
-            paperWidth={paperWidth}
-          />
-        </div>
-        
-        <p className="no-print mt-8 text-[10px] text-muted-foreground text-center max-w-[200px]">
-            Dica: Ao copiar para o WhatsApp, a imagem mantém a logo e formatação profissional.
-        </p>
 
         <AlertDialog open={showWhatsAppConfirm} onOpenChange={setShowWhatsAppConfirm}>
             <AlertDialogContent className="max-w-[400px] rounded-2xl">
