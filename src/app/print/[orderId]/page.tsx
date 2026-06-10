@@ -179,6 +179,16 @@ export default function PrintPage() {
     };
   }, [paperWidth]);
 
+  const handlePrint = () => {
+    try {
+      // Força o método de execução direta do Safari
+      document.execCommand('print', false, null);
+    } catch (e) {
+      // Caso falhe, usa o padrão (Chrome / Android / Firefox)
+      window.print();
+    }
+  };
+
   const handleWhatsAppShare = async (forcePhone?: string) => {
     if (!ticketRef.current) return;
 
@@ -417,7 +427,7 @@ export default function PrintPage() {
             </div>
 
             <div className="space-y-2">
-                <Button className="w-full shadow-md h-11" onClick={() => window.print()}>
+                <Button className="w-full shadow-md h-11" onClick={handlePrint}>
                     <Printer className="mr-2 h-4 w-4" />
                     Imprimir Ticket
                 </Button>
