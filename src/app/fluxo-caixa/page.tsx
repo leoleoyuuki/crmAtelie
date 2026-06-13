@@ -8,12 +8,15 @@ import { UserSummary } from '@/lib/types';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn, formatCurrency } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 import { 
   Filter, 
   Search, 
   AlertCircle,
   Calendar,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,6 +45,8 @@ interface CashFlowItem {
 export default function CashFlowPage() {
   const { user } = useUser();
   const { db } = useFirebase();
+  const router = useRouter();
+  const [showOnboardingGuidance, setShowOnboardingGuidance] = useState(false);
 
   // Filter state
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
@@ -69,7 +74,21 @@ export default function CashFlowPage() {
   useEffect(() => {
     const currentMonth = format(new Date(), 'yyyy-MM');
     setSelectedPeriod(currentMonth);
-  }, []);
+
+    if (user) {
+      const uId = user.uid;
+      // Onboarding visit tracking (user-scoped)
+      localStorage.setItem(`atelierflow_${uId}_visited_fluxo_caixa`, 'true');
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('onboarding-visit-update'));
+
+      // Check if they just came from the onboarding button click
+      const justVisited = localStorage.getItem(`atelierflow_${uId}_just_visited_fluxo_caixa`) === 'true';
+      if (justVisited) {
+        setShowOnboardingGuidance(true);
+      }
+    }
+  }, [user]);
 
   // Fetch all collections with local cache support
   const fetchAllData = useCallback(async (forceServer = false) => {
@@ -316,6 +335,14 @@ export default function CashFlowPage() {
     ? 'Total Acumulado'
     : monthsOptions.find(m => m.value === selectedPeriod)?.label || 'Mensal';
 
+  const handleDismissGuidance = () => {
+    if (user) {
+      localStorage.removeItem(`atelierflow_${user.uid}_just_visited_fluxo_caixa`);
+    }
+    setShowOnboardingGuidance(false);
+    router.push('/');
+  };
+
   return (
     <div className="flex-1 space-y-6 px-4 pt-6 md:px-8 pb-10 max-w-[1600px] mx-auto">
       
@@ -341,7 +368,7 @@ export default function CashFlowPage() {
               <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
-              <SelectItem value="all">Todo o Histórico</SelectItem>
+              <SelectItem value="all">Vitalício (Máximo)</SelectItem>
               {monthsOptions.map(m => (
                 <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
               ))}
@@ -349,6 +376,29 @@ export default function CashFlowPage() {
           </Select>
         </div>
       </div>
+
+      {showOnboardingGuidance && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-2xl bg-background/95 backdrop-blur-md border border-primary/20 rounded-2xl p-4 shadow-xl shadow-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-bottom-6 duration-300">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="bg-primary/10 p-2.5 rounded-xl text-primary shrink-0">
+              <Sparkles className="h-5 w-5 animate-pulse" />
+            </div>
+            <div className="min-w-0 space-y-0.5">
+              <p className="text-xs font-bold text-foreground">Jornada de Introdução: Fluxo de Caixa</p>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                Aqui você visualiza todas as entradas e saídas financeiras do seu ateliê.
+              </p>
+            </div>
+          </div>
+          <Button 
+            onClick={handleDismissGuidance}
+            className="text-xs font-bold gap-1.5 h-10 px-4 rounded-xl shrink-0 w-full sm:w-auto shadow-lg shadow-primary/10"
+          >
+            Voltar para o Checklist
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
 
       {/* BNB / AIRBNB ICON STYLE WHITE SUMMARY CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

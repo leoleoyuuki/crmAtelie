@@ -7,6 +7,8 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/firebase/auth/use-user";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -90,6 +92,8 @@ export function SaleFormDialog({
 }: SaleFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const { toast } = useToast();
+  const router = useRouter();
+  const { user } = useUser();
 
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;
@@ -246,6 +250,11 @@ export function SaleFormDialog({
       onSaleCreated?.();
       setIsOpen(false);
       form.reset(defaultValues);
+
+      if (typeof window !== 'undefined' && localStorage.getItem(`atelierflow_${user?.uid || 'guest'}_checklist_dismissed`) !== 'true') {
+        localStorage.setItem(`atelierflow_${user?.uid || 'guest'}_just_registered_sale`, 'true');
+        router.push('/pedidos/vendas');
+      }
     } catch (error) {
       toast({
         variant: "destructive",

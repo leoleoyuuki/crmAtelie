@@ -248,8 +248,19 @@ export function QuoteCalculatorForm({ isPublic = false }: { isPublic?: boolean }
             description: `Produto registrado no ${destinationText}.`,
         });
 
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('firebase-sync-force'));
+            window.dispatchEvent(new CustomEvent('onboarding-visit-update'));
+        }
+
         // Redirect based on primary destination
-        if (destination === 'priceTable') {
+        const uId = user?.uid || 'guest';
+        const isOnboardingActive = typeof window !== 'undefined' && localStorage.getItem(`atelierflow_${uId}_checklist_dismissed`) !== 'true';
+
+        if (isOnboardingActive) {
+            localStorage.setItem(`atelierflow_${uId}_just_saved_quote`, 'true');
+            router.push('/catalogo');
+        } else if (destination === 'priceTable') {
             router.push('/tabela-precos');
         } else {
             router.push('/catalogo');

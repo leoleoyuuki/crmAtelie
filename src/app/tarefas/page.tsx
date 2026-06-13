@@ -3,11 +3,12 @@
 import { useFirebase } from '@/firebase';
 import { Order, OrderItem } from '@/lib/types';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Timestamp, getDocs, query, collection, where, orderBy, limit, startAfter, type QuerySnapshot } from 'firebase/firestore';
 import { startOfDay } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ListChecks, Search, Sparkles, Clock, AlertCircle, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { ListChecks, Search, Sparkles, Clock, AlertCircle, ChevronDown, ChevronUp, Loader2, ArrowRight } from 'lucide-react';
 import { EditableTaskItemCard } from '@/components/tarefas/task-item-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,8 @@ const ITEMS_PER_PAGE = 8;
 
 export default function TarefasPage() {
   const { db, auth } = useFirebase();
+  const router = useRouter();
+  const [showOnboardingGuidance, setShowOnboardingGuidance] = useState(false);
   const [allTaskOrders, setAllTaskOrders] = useState<Order[]>([]);
   
   // State for Upcoming Tasks
@@ -157,6 +160,18 @@ export default function TarefasPage() {
     if (auth.currentUser) {
       fetchUpcomingTasks(true);
       fetchOverdueTasks(true);
+      
+      // Onboarding visit tracking (user-scoped)
+      const uId = auth.currentUser.uid;
+      localStorage.setItem(`atelierflow_${uId}_visited_tarefas`, 'true');
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('onboarding-visit-update'));
+
+      // Check if they just came from the onboarding button click
+      const justVisited = localStorage.getItem(`atelierflow_${uId}_just_visited_tarefas`) === 'true';
+      if (justVisited) {
+        setShowOnboardingGuidance(true);
+      }
     } else {
       setLoadingUpcoming(false);
       setLoadingOverdue(false);
@@ -264,6 +279,14 @@ export default function TarefasPage() {
     );
   }
 
+  const handleDismissGuidance = () => {
+    if (auth.currentUser) {
+      localStorage.removeItem(`atelierflow_${auth.currentUser.uid}_just_visited_tarefas`);
+    }
+    setShowOnboardingGuidance(false);
+    router.push('/');
+  };
+
   return (
     <div className="flex-1 space-y-8 px-4 pt-8 md:px-10 pb-10 flex flex-col">
       <div className="space-y-4">
@@ -286,6 +309,29 @@ export default function TarefasPage() {
             </button>
         </div>
       </div>
+
+      {showOnboardingGuidance && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-2xl bg-background/95 backdrop-blur-md border border-primary/20 rounded-2xl p-4 shadow-xl shadow-primary/10 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-bottom-6 duration-300">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="bg-primary/10 p-2.5 rounded-xl text-primary shrink-0">
+              <Sparkles className="h-5 w-5 animate-pulse" />
+            </div>
+            <div className="min-w-0 space-y-0.5">
+              <p className="text-xs font-bold text-foreground">Jornada de Introdução: Tela de Tarefas</p>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                Aqui são listados os prazos dos seus pedidos. Conclua tarefas para faturar!
+              </p>
+            </div>
+          </div>
+          <Button 
+            onClick={handleDismissGuidance}
+            className="text-xs font-bold gap-1.5 h-10 px-4 rounded-xl shrink-0 w-full sm:w-auto shadow-lg shadow-primary/10"
+          >
+            Voltar para o Checklist
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
 
       {/* Banner de Status Estilo Patreon */}
       <div className="bg-secondary/10 border border-secondary/20 rounded-2xl p-4 flex items-start gap-4">

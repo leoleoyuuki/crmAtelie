@@ -121,6 +121,11 @@ export function PurchaseFormDialog({
       onPurchaseCreated();
       setIsOpen(false);
       form.reset(defaultValues);
+
+      if (typeof window !== 'undefined' && localStorage.getItem('atelierflow_onboarding_checklist_dismissed') !== 'true') {
+        localStorage.setItem('atelierflow_onboarding_just_purchased', 'true');
+        router.push('/estoque');
+      }
     } catch (error) {
       toast({
         variant: "destructive",

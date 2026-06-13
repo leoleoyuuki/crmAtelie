@@ -67,6 +67,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OnboardingModal } from "./dashboard/onboarding-modal";
+import { OnboardingChecklist } from "./dashboard/onboarding-checklist";
 import { useToast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { SubscriptionDrawer } from "./subscription-drawer";
@@ -837,6 +838,7 @@ export default function AppShell({ children, profile }: { children: React.ReactN
             >
                 <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
                 {children}
+                <OnboardingChecklist />
             </div>
             <BottomNavigation />
         </main>

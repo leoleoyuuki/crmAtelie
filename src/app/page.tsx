@@ -21,6 +21,7 @@ import { CustomerFormDialog } from '@/components/dashboard/customer-form-dialog'
 import { SaleFormDialog } from '@/components/vendas/sale-form-dialog';
 import { PurchaseFormDialog } from '@/components/compras/purchase-form-dialog';
 import { FixedCostFormDialog } from '@/components/compras/fixed-cost-form-dialog';
+import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -636,8 +637,31 @@ export default function DashboardPage() {
     if (summary) setProfitData(getProfitChartDataFromSummary(summary));
   }, [summary]);
 
+  useEffect(() => {
+    const openOrder = () => setIsOrderFormOpen(true);
+    const openCost = () => setIsFixedCostFormOpen(true);
+    const openPurchase = () => setIsPurchaseFormOpen(true);
+    const openSale = () => setIsSaleFormOpen(true);
+
+    window.addEventListener('onboarding-open-order', openOrder);
+    window.addEventListener('onboarding-open-cost', openCost);
+    window.addEventListener('onboarding-open-purchase', openPurchase);
+    window.addEventListener('onboarding-open-sale', openSale);
+
+    return () => {
+      window.removeEventListener('onboarding-open-order', openOrder);
+      window.removeEventListener('onboarding-open-cost', openCost);
+      window.removeEventListener('onboarding-open-purchase', openPurchase);
+      window.removeEventListener('onboarding-open-sale', openSale);
+    };
+  }, []);
+
   const loading = summaryLoading || ordersLoading;
-  const handleDataMutation = () => refresh();
+  const handleDataMutation = () => {
+    refresh();
+    window.dispatchEvent(new Event('firebase-sync-force'));
+    window.dispatchEvent(new CustomEvent('onboarding-visit-update'));
+  };
 
   const periodLabel = selectedPeriod === 'all'
     ? 'Total Acumulado'
@@ -707,6 +731,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
+
+
       {/* ── MOBILE STATS HERO (Image Request) ──────────────── */}
       <div className="lg:hidden">
         <StatsHero
@@ -772,7 +798,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── RECENT ORDERS TABLE ─────────────────────────────── */}
-      <div className="space-y-4">
+      <div id="recent-orders-section" className="space-y-4 transition-all duration-1000 p-2 rounded-3xl border border-transparent">
         <div className="flex items-center justify-between">
           <h3 className="font-headline font-bold text-2xl">Pedidos Recentes</h3>
           <Button asChild variant="link" className="text-primary font-bold p-0 h-auto">
