@@ -27,8 +27,8 @@ interface PurchaseNotificationData {
  */
 export async function notifyTrialStartedAction(data: TrialNotificationData) {
   const embed = {
-    title: '🚀 Novo Trial Iniciado!',
-    description: 'Um novo artesão acaba de se juntar ao AtelierFlow.',
+    title: '💳 Novo Trial Iniciado (Cartão Cadastrado)',
+    description: 'Um novo artesão acaba de iniciar o período de 7 dias grátis cadastrando o cartão de crédito no Stripe Checkout.',
     color: 0xD96142, // Cor primária Earthy Rust
     fields: [
       {

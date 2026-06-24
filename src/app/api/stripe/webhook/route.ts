@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { adminDb } from '@/lib/firebase-admin';
+import { notifyTrialStartedAction, notifyPurchaseAction } from '@/app/actions/notifications';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2023-10-16' as any,
@@ -65,6 +66,49 @@ export async function POST(req: Request) {
 
           await adminDb.collection('users').doc(userId).update(updateData);
           console.log(`Usuário ${userId} ativado com validade (incl. grace period) até ${expiresAt.toLocaleString()}${isTrial ? ' (Em período de Teste/Trial)' : ''}`);
+
+          // Buscar dados do usuário no Firestore para a notificação
+          let userData: any = null;
+          try {
+            const userDoc = await adminDb.collection('users').doc(userId).get();
+            userData = userDoc.exists ? userDoc.data() : null;
+          } catch (err) {
+            console.error('Erro ao buscar dados do usuário no Firestore para notificação:', err);
+          }
+
+          const userName = userData?.displayName || userData?.name || 'Artesão(ã)';
+          const userEmail = userData?.email || session.customer_details?.email || 'N/A';
+          const userPhone = userData?.phone || userData?.whatsapp || session.customer_details?.phone || 'Não informado';
+
+          if (isTrial) {
+            try {
+              await notifyTrialStartedAction({
+                name: userName,
+                email: userEmail,
+                phone: userPhone
+              });
+              console.log(`Notificação de trial enviada ao Discord para o usuário: ${userId}`);
+            } catch (err) {
+              console.error('Erro ao enviar notificação de trial para o Discord no webhook da Stripe:', err);
+            }
+          } else {
+            try {
+              const isAnnual = subscription.plan?.id === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANUAL;
+              const planName = isAnnual ? 'AtelierFlow Pro - Anual' : 'AtelierFlow Pro - Mensal';
+              const priceAmount = isAnnual ? 'R$ 859,00/ano' : 'R$ 62,00/mês';
+
+              await notifyPurchaseAction({
+                name: userName,
+                email: userEmail,
+                phone: userPhone,
+                plan: planName,
+                amount: priceAmount
+              });
+              console.log(`Notificação de nova compra direta enviada ao Discord para o usuário: ${userId}`);
+            } catch (err) {
+              console.error('Erro ao enviar notificação de compra para o Discord no webhook da Stripe:', err);
+            }
+          }
         }
         break;
       }
@@ -82,6 +126,7 @@ export async function POST(req: Request) {
           
           if (!snapshot.empty) {
             const userDoc = snapshot.docs[0];
+            const userData = userDoc.data();
             
             // Pega a data final do período da fatura e adiciona 24h de margem
             const periodEnd = invoice.lines.data[0]?.period?.end;
@@ -97,6 +142,32 @@ export async function POST(req: Request) {
               expiresAt: expiresAt,
             });
             console.log(`Fatura confirmada: Usuário ${userDoc.id} renovado até ${expiresAt.toLocaleString()}`);
+
+            // Enviar notificação se for cobrança recorrente (subscription_cycle) ou transição de trial
+            // Evitamos notificar se for a fatura inicial de criação de assinatura (que já notificamos no checkout.session.completed)
+            const billingReason = invoice.billing_reason;
+            const isRecurrentOrTrialEnd = billingReason === 'subscription_cycle' || billingReason === 'subscription_threshold' || billingReason === 'subscription_update';
+            const amountPaid = invoice.amount_paid ? invoice.amount_paid / 100 : 0;
+
+            if (isRecurrentOrTrialEnd && amountPaid > 0) {
+              try {
+                const planId = invoice.lines.data[0]?.price?.id;
+                const isAnnual = planId === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANUAL;
+                const planName = isAnnual ? 'AtelierFlow Pro - Anual (Renovação)' : 'AtelierFlow Pro - Mensal (Renovação)';
+                const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amountPaid);
+
+                await notifyPurchaseAction({
+                  name: userData?.displayName || userData?.name || 'Artesão(ã)',
+                  email: userData?.email || 'N/A',
+                  phone: userData?.phone || userData?.whatsapp || 'Não informado',
+                  plan: planName,
+                  amount: `${priceFormatted} (${billingReason === 'subscription_cycle' ? 'Ciclo normal' : 'Conversão de Trial'})`
+                });
+                console.log(`Notificação de pagamento recorrente enviada ao Discord para o usuário: ${userDoc.id}`);
+              } catch (err) {
+                console.error('Erro ao enviar notificação de renovação de pagamento para o Discord:', err);
+              }
+            }
           } else {
               console.log(`Usuário com Customer ID ${stripeCustomerId} ainda não mapeado no Firestore.`);
           }
