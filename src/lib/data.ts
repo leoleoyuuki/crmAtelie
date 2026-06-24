@@ -115,13 +115,14 @@ export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt' | 
   const userDocSnap = await getDoc(userDocRef);
   const userData = userDocSnap.data();
 
-  if (isUserInTrial(userData)) {
-      const customersQuery = query(customersCollection, where("userId", "==", auth.currentUser.uid));
-      const customerSnap = await getDocs(customersQuery);
-      if (customerSnap.docs.length >= 5) {
-          throw new Error("TRIAL_LIMIT_CUSTOMERS");
-      }
-  }
+  // Limite do trial desativado temporariamente/permanentemente
+  // if (isUserInTrial(userData)) {
+  //     const customersQuery = query(customersCollection, where("userId", "==", auth.currentUser.uid));
+  //     const customerSnap = await getDocs(customersQuery);
+  //     if (customerSnap.docs.length >= 5) {
+  //         throw new Error("TRIAL_LIMIT_CUSTOMERS");
+  //     }
+  // }
 
   const newCustomerData = {
       ...customer,
@@ -253,13 +254,14 @@ export async function addOrder(order: Omit<Order, 'id' | 'createdAt' | 'userId'>
     const userDocSnap = await getDoc(userDocRef);
     const userData = userDocSnap.data();
 
-    if (isUserInTrial(userData)) {
-        const ordersQuery = query(ordersCollection, where("userId", "==", user.uid));
-        const ordersSnap = await getDocs(ordersQuery);
-        if (ordersSnap.docs.length >= 15) {
-            throw new Error("TRIAL_LIMIT_ORDERS");
-        }
-    }
+    // Limite do trial desativado temporariamente/permanentemente
+    // if (isUserInTrial(userData)) {
+    //     const ordersQuery = query(ordersCollection, where("userId", "==", user.uid));
+    //     const ordersSnap = await getDocs(ordersQuery);
+    //     if (ordersSnap.docs.length >= 15) {
+    //         throw new Error("TRIAL_LIMIT_ORDERS");
+    //     }
+    // }
 
     const now = new Date();
     const monthKey = format(now, 'yyyy-MM');

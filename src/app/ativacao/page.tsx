@@ -395,7 +395,7 @@ function PlanSelectionTab({ profile, onWhatsAppClick }: { profile: UserProfile |
                         <div>
                             <h3 className="font-bold text-slate-900 text-sm sm:text-base">Próximos 7 Dias: Uso Ilimitado</h3>
                             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                                Aproveite todas as funcionalidades do AtelierFlow Pro (limite do trial: 5 clientes e 15 pedidos).
+                                Aproveite todas as funcionalidades do AtelierFlow Pro de forma totalmente ilimitada.
                             </p>
                         </div>
                     </div>
