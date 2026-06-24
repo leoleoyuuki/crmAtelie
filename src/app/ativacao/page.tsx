@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/icons/logo';
 import { useFirebase, useDocument } from '@/firebase';
-import { MessageSquare, LogOut, Loader2, Key, Star, Phone, Printer, Check, ArrowRight, ArrowLeft, Sparkles, BarChart3, FileText } from 'lucide-react';
+import { MessageSquare, LogOut, Loader2, Key, Star, Phone, Printer, Check, ArrowRight, ArrowLeft, Sparkles, BarChart3, FileText, ShieldCheck, Clock, Lock } from 'lucide-react';
 import { initMercadoPago } from '@mercadopago/sdk-react';
 import { useUser } from '@/firebase/auth/use-user';
 import { Separator } from '@/components/ui/separator';
@@ -357,63 +357,160 @@ function PlanSelectionTab({ profile, onWhatsAppClick }: { profile: UserProfile |
   // Free trial card (before trial started)
   if (!profile?.trialStarted) {
       return (
-        <Card className="border-primary bg-primary/5 shadow-2xl max-w-md mx-auto rounded-3xl p-6 overflow-hidden relative border-2">
-            <div className="absolute top-0 right-0 p-8 opacity-5">
-                <Star className="h-32 w-32 fill-primary" />
-            </div>
-            <CardHeader className="text-center relative z-10 pb-4">
-                <div className="inline-block bg-primary/15 text-primary text-xs font-bold px-3 py-1 rounded-full border border-primary/20 mb-3 uppercase tracking-wider">
-                    Experimente Grátis
-                </div>
-                <CardTitle className="font-headline text-3xl text-primary font-bold">7 Dias de Teste</CardTitle>
-                <CardDescription className="text-sm font-medium mt-1">
-                    Acesso completo ao sistema por 7 dias sem pagar nada hoje.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-2 relative z-10 space-y-5">
-                {/* Informational box about Stripe billing */}
-                <div className="bg-white/70 rounded-2xl p-4 border border-primary/10 space-y-2.5 text-left shadow-sm">
-                    <div className="flex items-center justify-between border-b pb-2">
-                        <span className="text-xs font-bold text-muted-foreground">Devido Hoje:</span>
-                        <span className="text-sm font-extrabold text-green-600">R$ 0,00</span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 max-w-5xl mx-auto px-4 items-center">
+            {/* COLUMN 1: BENEFITS & TIMELINE */}
+            <div className="lg:col-span-7 space-y-8 text-left">
+                <div className="space-y-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Acesso Pro Completo
                     </div>
-                    <div className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
-                        <p>
-                            • <strong>Exige cartão de crédito</strong> para ativação e prevenção de fraudes.
-                        </p>
-                        <p>
-                            • Após os 7 dias, a assinatura será de <strong>R$ 62,00/mês</strong>.
-                        </p>
-                        <p>
-                            • <strong>Sem fidelidade:</strong> cancele com apenas 1 clique no seu painel a qualquer momento antes do fim do teste para não ser cobrado.
-                        </p>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black font-headline tracking-tight text-slate-900 leading-[1.1]">
+                        Experimente por 7 dias <span className="text-primary italic">sem custo</span>
+                    </h1>
+                    <p className="text-muted-foreground text-sm sm:text-base font-medium max-w-[50ch]">
+                        Comece a organizar os pedidos, os prazos e a parte financeira do seu ateliê hoje mesmo. Você não será cobrado nada agora.
+                    </p>
+                </div>
+
+                {/* Timeline Step-by-Step */}
+                <div className="relative border-l-2 border-primary/20 pl-6 ml-3 space-y-6">
+                    {/* Step 1 */}
+                    <div className="relative">
+                        <div className="absolute -left-[35px] top-0.5 bg-primary text-white font-bold text-xs h-6 w-6 rounded-full flex items-center justify-center shadow-md shadow-primary/20 ring-4 ring-[#F5F5F3]">
+                            1
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base">Hoje: Ativação do Teste</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                Adicione seu cartão para validação de segurança e prevenção de fraudes. <strong>Cobrança de R$ 0,00 hoje.</strong>
+                            </p>
+                        </div>
+                    </div>
+                    {/* Step 2 */}
+                    <div className="relative">
+                        <div className="absolute -left-[35px] top-0.5 bg-primary text-white font-bold text-xs h-6 w-6 rounded-full flex items-center justify-center shadow-md shadow-primary/20 ring-4 ring-[#F5F5F3]">
+                            2
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base">Próximos 7 Dias: Uso Ilimitado</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                Aproveite todas as funcionalidades do AtelierFlow Pro (limite do trial: 5 clientes e 15 pedidos).
+                            </p>
+                        </div>
+                    </div>
+                    {/* Step 3 */}
+                    <div className="relative">
+                        <div className="absolute -left-[35px] top-0.5 bg-slate-300 text-slate-700 font-bold text-xs h-6 w-6 rounded-full flex items-center justify-center shadow-sm ring-4 ring-[#F5F5F3]">
+                            3
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base">Dia 7: Fim do Teste</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                A partir daqui, inicia a assinatura Pro por <strong>R$ 62,00/mês</strong>. Cancele com 1 clique antes do dia 7 se decidir não continuar.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <Button
-                    size="lg"
-                    className="w-full text-lg py-8 shadow-xl hover:scale-102 transition-all rounded-2xl font-bold bg-primary text-primary-foreground hover:bg-primary/95"
-                    onClick={handleStartTrial}
-                    disabled={isTrialLoading}
-                >
-                    {isTrialLoading ? <Loader2 className="animate-spin" /> : (
-                        <>
-                            Iniciar Teste de 7 Dias
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </>
-                    )}
-                </Button>
-                
-                <div className="flex flex-col gap-2 items-center pt-2">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground/80 font-medium">
-                        <Check className="h-3.5 w-3.5 text-primary shrink-0" /> Limites de teste: 5 clientes e 15 pedidos
+                {/* Features Highlights */}
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="flex items-start gap-2.5">
+                        <div className="bg-primary/10 p-1 rounded-lg shrink-0 mt-0.5">
+                            <Check className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-xs sm:text-sm text-slate-900">Sem burocracia</h4>
+                            <p className="text-[11px] sm:text-xs text-muted-foreground">Cancele quando quiser pelo painel.</p>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground/80 font-medium">
-                        <Check className="h-3.5 w-3.5 text-primary shrink-0" /> Cancele quando quiser sem burocracia
+                    <div className="flex items-start gap-2.5">
+                        <div className="bg-primary/10 p-1 rounded-lg shrink-0 mt-0.5">
+                            <Check className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-xs sm:text-sm text-slate-900">Acesso Pro</h4>
+                            <p className="text-[11px] sm:text-xs text-muted-foreground">Pedidos, financeiro, relatórios.</p>
+                        </div>
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+            </div>
+
+            {/* COLUMN 2: PREMIUM CHECKOUT CARD */}
+            <div className="lg:col-span-5 flex justify-center w-full">
+                <Card className="w-full max-w-sm border-primary/20 bg-white/75 backdrop-blur-md shadow-2xl rounded-3xl p-6 relative overflow-hidden border">
+                    <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none">
+                        <Logo className="h-40 w-40 text-primary" />
+                    </div>
+
+                    <CardHeader className="text-center relative z-10 pb-2 px-0">
+                        <CardTitle className="font-headline text-2xl text-slate-900 font-black">Resumo do Teste</CardTitle>
+                        <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-1">
+                            Período de Experiência
+                        </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="pt-4 relative z-10 space-y-6 px-0">
+                        
+                        {/* Cost Box */}
+                        <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 space-y-3.5 shadow-inner">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-muted-foreground">Hoje:</span>
+                                <span className="text-sm font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-md border border-green-100">GRÁTIS (R$ 0,00)</span>
+                            </div>
+                            <div className="flex items-center justify-between border-t border-slate-200/60 pt-3">
+                                <span className="text-xs font-bold text-muted-foreground">Após 7 dias:</span>
+                                <div className="text-right">
+                                    <span className="text-base font-black text-slate-900">R$ 62,00</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground block leading-none">/mês</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Security features */}
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-xs font-medium text-slate-700 bg-white/50 border border-slate-100 rounded-xl p-2.5">
+                                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                                <span>Cartão exigido para evitar fraudes</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-medium text-slate-700 bg-white/50 border border-slate-100 rounded-xl p-2.5">
+                                <Clock className="h-4 w-4 text-primary shrink-0" />
+                                <span>Lembrete de cancelamento 1 clique</span>
+                            </div>
+                        </div>
+
+                        {/* CTA button */}
+                        <Button
+                            size="lg"
+                            className="w-full text-base py-7 rounded-2xl font-black shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all duration-500 relative overflow-hidden bg-primary text-primary-foreground hover:bg-primary/95 group"
+                            onClick={handleStartTrial}
+                            disabled={isTrialLoading}
+                        >
+                            {/* Shimmer Effect */}
+                            <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none" />
+                            {isTrialLoading ? <Loader2 className="animate-spin" /> : (
+                                <>
+                                    Iniciar Teste Grátis
+                                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </>
+                            )}
+                        </Button>
+
+                        {/* Badges footer */}
+                        <div className="flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-semibold pt-1">
+                            <Lock className="h-3 w-3 text-slate-400" /> Pagamento seguro via Stripe
+                        </div>
+
+                    </CardContent>
+                </Card>
+            </div>
+            
+            <style jsx>{`
+              @keyframes shimmer {
+                100% { transform: translateX(100%); }
+              }
+            `}</style>
+        </div>
       );
   }
 

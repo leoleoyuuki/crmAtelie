@@ -66,7 +66,7 @@ export function Cta() {
                 onClick={handleLeadClick}
                 className="relative px-10 py-7 text-lg rounded-2xl font-bold bg-primary hover:bg-primary/95 text-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg shadow-primary/25"
               >
-                <Link href="/login">
+                <Link href="/login?mode=signup">
                   <Star className="mr-2 h-5 w-5 fill-current" />
                   Começar agora grátis
                 </Link>

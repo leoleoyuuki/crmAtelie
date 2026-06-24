@@ -62,7 +62,7 @@ export function HeroSection() {
 
             {/* CTA Group */}
             <div className="mt-10 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <MagneticButton href="/login" onClick={handleLeadClick}>
+              <MagneticButton href="/login?mode=signup" onClick={handleLeadClick}>
                 Testar 7 dias grátis
                 <ArrowRight className="h-4 w-4" />
               </MagneticButton>

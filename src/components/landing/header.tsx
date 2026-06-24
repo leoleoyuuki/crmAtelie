@@ -54,7 +54,7 @@ export function Header() {
               whileTap={{ scale: 0.95 }}
             >
               <Button asChild onClick={handleLeadClick} className="shadow-lg shadow-primary/20">
-                <Link href="/login">Testar 7 dias grátis</Link>
+                <Link href="/login?mode=signup">Testar 7 dias grátis</Link>
               </Button>
             </motion.div>
           </nav>

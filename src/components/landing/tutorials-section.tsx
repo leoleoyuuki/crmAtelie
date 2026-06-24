@@ -31,7 +31,7 @@ export function TutorialsSection() {
             </p>
             <div className="mt-8">
                 <Button size="lg" asChild>
-                    <Link href="/login">Começar e ver os tutoriais</Link>
+                    <Link href="/login?mode=signup">Começar e ver os tutoriais</Link>
                 </Button>
             </div>
           </motion.div>

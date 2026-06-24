@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Logo from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, TrendingUp, Clock, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, TrendingUp, Clock, Sparkles, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 
 const benefits = [
@@ -33,9 +34,11 @@ const benefits = [
   }
 ];
 
-export default function LoginPage() {
+function LoginContent() {
   const { auth } = useAuth();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode');
   
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
@@ -48,6 +51,13 @@ export default function LoginPage() {
   const [name, setName] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
+  const [tab, setTab] = useState('login');
+
+  useEffect(() => {
+    if (mode === 'signup') {
+      setTab('signup');
+    }
+  }, [mode]);
 
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
@@ -233,7 +243,7 @@ export default function LoginPage() {
             </p>
           </div>
           
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs value={tab} onValueChange={setTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 h-12 p-1 bg-muted/50 rounded-2xl border border-muted">
               <TabsTrigger value="login" className="rounded-xl font-bold transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm">Entrar</TabsTrigger>
               <TabsTrigger value="signup" className="rounded-xl font-bold transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm">Criar Conta</TabsTrigger>
@@ -370,3 +380,18 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+// Rename the internal to differentiate or export properly
+const LoginPageContent = LoginContent;
