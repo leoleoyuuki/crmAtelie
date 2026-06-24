@@ -6,7 +6,7 @@ import { Star, Sparkles } from 'lucide-react';
 
 export function Cta() {
   const handleLeadClick = () => {
-    trackFbqEvent('Lead');
+    // Lead track removido para evitar ruído (será disparado apenas no cadastro real)
   };
 
   return (

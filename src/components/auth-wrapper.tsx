@@ -74,11 +74,40 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
           setProfile(userProfile);
 
         } else {
-          const newUserProfile: Omit<UserProfile, 'id'> = {
+          // Busca UTMs e fbclid salvos no sessionStorage para registrar na criação do perfil
+          let utmCampaign = null;
+          let utmSource = null;
+          let utmMedium = null;
+          let utmContent = null;
+          let utmTerm = null;
+          let fbclid = null;
+
+          try {
+            const savedUtms = sessionStorage.getItem('atelierflow_utm_params');
+            if (savedUtms) {
+              const utmData = JSON.parse(savedUtms);
+              utmCampaign = utmData.utm_campaign || null;
+              utmSource = utmData.utm_source || null;
+              utmMedium = utmData.utm_medium || null;
+              utmContent = utmData.utm_content || null;
+              utmTerm = utmData.utm_term || null;
+              fbclid = utmData.fbclid || null;
+            }
+          } catch (e) {
+            console.error('Erro ao ler UTMs para salvar no Firestore:', e);
+          }
+
+          const newUserProfile: any = {
             displayName: user.displayName || '',
             email: user.email || '',
             photoURL: user.photoURL || '',
             status: 'inactive',
+            utmCampaign,
+            utmSource,
+            utmMedium,
+            utmContent,
+            utmTerm,
+            fbclid,
           };
           setDoc(userRef, newUserProfile).catch(err => {
               console.error("Failed to create user profile:", err);
@@ -93,6 +122,40 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
       setProfileLoading(false);
     }
   }, [user, db, userLoading]);
+
+  // Captura parâmetros de UTM para rastreamento de campanhas
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const utmCampaign = urlParams.get('utm_campaign');
+        const utmSource = urlParams.get('utm_source');
+        const utmMedium = urlParams.get('utm_medium');
+        const utmContent = urlParams.get('utm_content');
+        const utmTerm = urlParams.get('utm_term');
+        const fbclid = urlParams.get('fbclid');
+
+        if (utmCampaign || utmSource || fbclid) {
+          const utmData: Record<string, string> = {};
+          if (utmCampaign) utmData.utm_campaign = utmCampaign;
+          if (utmSource) utmData.utm_source = utmSource;
+          if (utmMedium) utmData.utm_medium = utmMedium;
+          if (utmContent) utmData.utm_content = utmContent;
+          if (utmTerm) utmData.utm_term = utmTerm;
+          if (fbclid) utmData.fbclid = fbclid;
+
+          const existingData = sessionStorage.getItem('atelierflow_utm_params');
+          const parsedExisting = existingData ? JSON.parse(existingData) : {};
+          sessionStorage.setItem(
+            'atelierflow_utm_params',
+            JSON.stringify({ ...parsedExisting, ...utmData })
+          );
+        }
+      } catch (err) {
+        console.error('Erro ao salvar parâmetros UTM:', err);
+      }
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (userLoading || profileLoading) return;

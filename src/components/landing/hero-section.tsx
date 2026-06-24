@@ -30,7 +30,7 @@ export function HeroSection() {
   const isMobile = useIsMobile();
 
   const handleLeadClick = () => {
-    trackFbqEvent('Lead');
+    // Lead track removido para evitar ruído (será disparado apenas no cadastro real)
   };
 
   return (

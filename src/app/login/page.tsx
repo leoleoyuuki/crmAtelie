@@ -3,8 +3,9 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, getAdditionalUserInfo } from 'firebase/auth';
 import { useAuth } from '@/firebase';
+import { trackFbqEvent } from '@/lib/fpixel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,7 +63,26 @@ function LoginContent() {
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const userCredential = await signInWithPopup(auth, provider);
+      const isNewUser = getAdditionalUserInfo(userCredential)?.isNewUser;
+      
+      if (isNewUser) {
+        let utmData = {};
+        try {
+          const savedUtms = sessionStorage.getItem('atelierflow_utm_params');
+          if (savedUtms) {
+            utmData = JSON.parse(savedUtms);
+          }
+        } catch (err) {
+          console.error('Erro ao ler UTMs no cadastro Google:', err);
+        }
+
+        trackFbqEvent('Lead', {
+          content_name: 'Cadastro AtelierFlow via Google',
+          status: 'success',
+          ...utmData
+        });
+      }
     } catch (error) {
       console.error('Error signing in with Google: ', error);
       toast({
@@ -142,6 +162,23 @@ function LoginContent() {
       // Update profile with name
       await updateProfile(userCredential.user, {
         displayName: name
+      });
+
+      // Track Meta Pixel CompleteRegistration
+      let utmData = {};
+      try {
+        const savedUtms = sessionStorage.getItem('atelierflow_utm_params');
+        if (savedUtms) {
+          utmData = JSON.parse(savedUtms);
+        }
+      } catch (err) {
+        console.error('Erro ao ler UTMs no cadastro Email:', err);
+      }
+
+      trackFbqEvent('Lead', {
+        content_name: 'Cadastro AtelierFlow via Email',
+        status: 'success',
+        ...utmData
       });
 
       toast({

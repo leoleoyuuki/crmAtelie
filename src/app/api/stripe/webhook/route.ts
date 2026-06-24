@@ -2,10 +2,74 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { adminDb } from '@/lib/firebase-admin';
 import { notifyTrialStartedAction, notifyPurchaseAction } from '@/app/actions/notifications';
+import crypto from 'crypto';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2023-10-16' as any,
 });
+
+function hashSHA256(value: string): string {
+  return crypto.createHash('sha256').update(value.trim().toLowerCase()).digest('hex');
+}
+
+async function sendMetaCapiEvent(eventName: string, value: number, userData: any) {
+  const pixelId = process.env.META_PIXEL_ID || '25321081740913131';
+  const token = process.env.FB_CONVERSIONS_API_TOKEN;
+
+  if (!token) {
+    console.error('Meta CAPI: FB_CONVERSIONS_API_TOKEN não configurada.');
+    return;
+  }
+
+  const userDataPayload: any = {};
+  if (userData?.email) {
+    userDataPayload.em = [hashSHA256(userData.email)];
+  }
+  
+  const phoneRaw = userData?.phone || userData?.whatsapp;
+  if (phoneRaw) {
+    const cleanPhone = phoneRaw.replace(/\D/g, '');
+    let formattedPhone = cleanPhone;
+    if (cleanPhone.length === 10 || cleanPhone.length === 11) {
+      formattedPhone = '55' + cleanPhone;
+    }
+    userDataPayload.ph = [hashSHA256(formattedPhone)];
+  }
+  
+  if (userData?.fbclid) {
+    userDataPayload.fbc = `fb.1.${Date.now()}.${userData.fbclid}`;
+  }
+
+  const payload = {
+    data: [
+      {
+        event_name: eventName,
+        event_time: Math.floor(Date.now() / 1000),
+        event_source_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://atelierflow.com'}/ativacao/sucesso`,
+        action_source: 'website',
+        user_data: userDataPayload,
+        custom_data: {
+          currency: 'BRL',
+          value: value,
+        },
+      },
+    ],
+  };
+
+  try {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    const resData = await res.json();
+    console.log(`Meta CAPI Response para evento ${eventName}:`, resData);
+  } catch (error) {
+    console.error(`Falha ao enviar evento ${eventName} para Meta CAPI:`, error);
+  }
+}
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
@@ -135,12 +199,16 @@ export async function POST(req: Request) {
               ? new Date((periodEnd * 1000) + GRACE_PERIOD_MS) 
               : new Date(Date.now() + 32 * 24 * 60 * 60 * 1000);
 
-            await userDoc.ref.update({
+            const updateData: any = {
               status: 'active',
-              stripeSubscriptionId,
               subscriptionProvider: 'stripe',
               expiresAt: expiresAt,
-            });
+            };
+            if (stripeSubscriptionId) {
+              updateData.stripeSubscriptionId = stripeSubscriptionId;
+            }
+
+            await userDoc.ref.update(updateData);
             console.log(`Fatura confirmada: Usuário ${userDoc.id} renovado até ${expiresAt.toLocaleString()}`);
 
             // Enviar notificação se for cobrança recorrente (subscription_cycle) ou transição de trial
@@ -166,6 +234,14 @@ export async function POST(req: Request) {
                 console.log(`Notificação de pagamento recorrente enviada ao Discord para o usuário: ${userDoc.id}`);
               } catch (err) {
                 console.error('Erro ao enviar notificação de renovação de pagamento para o Discord:', err);
+              }
+
+              // Dispara a API de Conversões da Meta (CAPI) para registrar o Purchase (Compra)
+              try {
+                await sendMetaCapiEvent('Purchase', amountPaid, userData);
+                console.log(`Compra via Meta CAPI enviada com sucesso para o usuário: ${userDoc.id} no valor de R$ ${amountPaid}`);
+              } catch (capiErr) {
+                console.error('Erro ao enviar evento de Purchase via CAPI no webhook:', capiErr);
               }
             }
           } else {

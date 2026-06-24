@@ -11,7 +11,7 @@ export function Header() {
   const [plansOpen, setPlansOpen] = useState(false);
 
   const handleLeadClick = () => {
-    trackFbqEvent('Lead');
+    // Lead track removido para evitar ruído (será disparado apenas no cadastro real)
   };
 
   return (

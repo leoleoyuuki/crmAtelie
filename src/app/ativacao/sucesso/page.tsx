@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import Logo from '@/components/icons/logo';
 import { useUser } from '@/firebase/auth/use-user';
 import Image from 'next/image';
+import { trackFbqEvent } from '@/lib/fpixel';
 
 export default function SucessoPage() {
     const router = useRouter();
@@ -20,6 +21,33 @@ export default function SucessoPage() {
     useEffect(() => {
         if (!sessionId) {
             router.push('/ativacao');
+            return;
+        }
+
+        // Evitar disparos duplicados se o usuário recarregar a página
+        const trackingKey = `tracked_session_${sessionId}`;
+        const alreadyTracked = sessionStorage.getItem(trackingKey);
+
+        if (!alreadyTracked) {
+            let utmData = {};
+            try {
+                const savedUtms = sessionStorage.getItem('atelierflow_utm_params');
+                if (savedUtms) {
+                    utmData = JSON.parse(savedUtms);
+                }
+            } catch (err) {
+                console.error('Erro ao recuperar UTMs na página de sucesso:', err);
+            }
+
+            // Envia o Início do Trial (StartTrial)
+            trackFbqEvent('StartTrial', {
+                content_name: 'Trial Ativado',
+                value: 0.00,
+                currency: 'BRL',
+                ...utmData
+            });
+
+            sessionStorage.setItem(trackingKey, 'true');
         }
     }, [sessionId, router]);
 
