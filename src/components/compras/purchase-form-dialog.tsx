@@ -29,6 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { addPurchase, getMaterials } from "@/lib/data";
 import { Purchase, Material } from "@/lib/types";
 import { Separator } from "../ui/separator";
+import { useRouter } from 'next/navigation';
 
 const purchaseFormSchema = z.object({
   materialName: z.string().min(1, "O nome do material é obrigatório."),
@@ -56,6 +57,7 @@ export function PurchaseFormDialog({
 }: PurchaseFormDialogProps) {
   const [uncontrolledIsOpen, setUncontrolledIsOpen] = React.useState(false);
   const { toast } = useToast();
+  const router = useRouter();
   
   const isOpen = controlledIsOpen ?? uncontrolledIsOpen;
   const setIsOpen = setControlledIsOpen ?? setUncontrolledIsOpen;

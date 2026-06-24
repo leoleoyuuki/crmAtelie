@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 export async function POST(req: Request) {
   try {
-    const { priceId, userId, userEmail } = await req.json();
+    const { priceId, userId, userEmail, trial } = await req.json();
 
     if (!priceId || !userId || !userEmail) {
       return NextResponse.json(
@@ -18,15 +18,15 @@ export async function POST(req: Request) {
 
     const isAnnual = priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANUAL;
 
-    const session = await stripe.checkout.sessions.create({
+    const promoCode = isAnnual
+      ? process.env.STRIPE_PROMO_CODE_ANUAL
+      : process.env.STRIPE_PROMO_CODE_MENSAL;
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
-      discounts: [{
-        promotion_code: isAnnual 
-          ? 'promo_1THFkFQ2pW7qaWNpGiQ2lmvY' 
-          : 'promo_1THEQfQ2pW7qaWNptEQ3opgj',
-      }],
       subscription_data: {
+        trial_period_days: trial ? 7 : undefined,
         metadata: {
           userId: userId,
         },
@@ -41,7 +41,13 @@ export async function POST(req: Request) {
       client_reference_id: userId,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/ativacao/sucesso?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/ativacao`,
-    });
+    };
+
+    if (promoCode) {
+      sessionParams.discounts = [{ promotion_code: promoCode }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {

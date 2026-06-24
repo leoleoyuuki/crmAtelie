@@ -182,7 +182,7 @@ export default function PrintPage() {
   const handlePrint = () => {
     try {
       // Força o método de execução direta do Safari
-      document.execCommand('print', false, null);
+      document.execCommand('print', false, undefined);
     } catch (e) {
       // Caso falhe, usa o padrão (Chrome / Android / Firefox)
       window.print();

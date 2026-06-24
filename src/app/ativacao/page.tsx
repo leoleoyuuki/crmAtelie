@@ -34,7 +34,7 @@ function PhoneCollectionStep({ user, profile }: { user: any, profile: UserProfil
     const { toast } = useToast();
     const router = useRouter();
 
-    const handleActivateFreeTrial = async () => {
+    const handleSavePhone = async () => {
         const cleanedPhone = phone.replace(/\D/g, '');
         if (cleanedPhone.length < 10) {
             toast({ variant: 'destructive', title: 'Número Inválido', description: 'Por favor, informe seu número de WhatsApp completo com DDD.' });
@@ -63,10 +63,7 @@ function PhoneCollectionStep({ user, profile }: { user: any, profile: UserProfil
                 return;
             }
 
-            await startFreeTrial(user);
-            
-            toast({ title: 'Sucesso!', description: 'Seu período de 7 dias grátis começou. Bem-vindo(a)!' });
-            router.push('/');
+            toast({ title: 'WhatsApp Confirmado!', description: 'Agora prossiga para a ativação do seu teste grátis de 7 dias.' });
         } catch (error: any) {
             toast({ variant: 'destructive', title: 'Erro', description: error.message || 'Não foi possível completar seu cadastro.' });
         } finally {
@@ -78,11 +75,11 @@ function PhoneCollectionStep({ user, profile }: { user: any, profile: UserProfil
         <Card className="border-primary ring-1 ring-primary/20 shadow-xl">
             <CardHeader className="text-center">
                 <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <Star className="h-6 w-6 text-primary fill-current" />
+                    <Phone className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="font-headline text-2xl">Ative seus 7 dias Grátis</CardTitle>
+                <CardTitle className="font-headline text-2xl">Confirmar WhatsApp</CardTitle>
                 <CardDescription>
-                    Informe seu WhatsApp para completar o cadastro e acessar o sistema agora mesmo.
+                    Informe seu WhatsApp para completar o cadastro e avançar para o teste grátis.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -99,8 +96,8 @@ function PhoneCollectionStep({ user, profile }: { user: any, profile: UserProfil
                 </div>
             </CardContent>
             <CardFooter>
-                <Button onClick={handleActivateFreeTrial} className="w-full text-lg py-6" disabled={isLoading}>
-                    {isLoading ? <Loader2 className="animate-spin" /> : "Ativar meu Teste Grátis"}
+                <Button onClick={handleSavePhone} className="w-full text-lg py-6" disabled={isLoading}>
+                    {isLoading ? <Loader2 className="animate-spin" /> : "Continuar para Ativação"}
                 </Button>
             </CardFooter>
         </Card>
@@ -293,48 +290,25 @@ function PlanSelectionTab({ profile, onWhatsAppClick }: { profile: UserProfile |
   const { toast } = useToast();
   const router = useRouter();
   
-  const handleStartTrial = async () => {
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado para iniciar um teste.' });
-        return;
-    }
-    setIsTrialLoading(true);
-    try {
-        const expiresAt = profile?.expiresAt;
-        const sevenDaysFromNow = new Date();
-        sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-
-        if ((profile?.trialStarted || profile?.status === 'active') && expiresAt && expiresAt > sevenDaysFromNow) {
-            toast({ title: 'Assinatura Ativa', description: 'Você já possui uma assinatura ativa superior ao período de teste.' });
-            router.push('/');
-            return;
-        }
-
-        await startFreeTrial(user);
-        toast({ title: 'Período de teste ativado!', description: 'Aproveite o acesso completo por 7 dias. Bem-vindo(a)!' });
-        router.push('/');
-    } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Falha na ativação do teste', description: error.message });
-    } finally {
-        setIsTrialLoading(false);
-    }
-  };
-
-  const createPreference = async (plan: Plan) => {
+  const createPreference = async (plan: Plan, isTrial: boolean = false) => {
     trackFbqEvent('InitiateCheckout', {
         content_name: plan,
         currency: 'BRL',
-        value: (planDetails as any)[plan].price,
+        value: isTrial ? 0 : (planDetails as any)[plan].price,
     });
 
     if (!user) {
         toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado para iniciar um pagamento.' });
         return;
     }
-    setIsLoading(true);
+
+    if (isTrial) {
+        setIsTrialLoading(true);
+    } else {
+        setIsLoading(true);
+    }
+
     try {
-        const isDevelopment = process.env.NODE_ENV === 'development';
-        
         const response = await fetch('/api/stripe/create-checkout-session', {
             method: 'POST',
             headers: {
@@ -343,7 +317,8 @@ function PlanSelectionTab({ profile, onWhatsAppClick }: { profile: UserProfile |
             body: JSON.stringify({ 
                 priceId: plan === 'mensal' ? process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MENSAL : process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_ANUAL, 
                 userId: user.uid, 
-                userEmail: user.email 
+                userEmail: user.email,
+                trial: isTrial
             }),
         });
         const data = await response.json();
@@ -356,45 +331,85 @@ function PlanSelectionTab({ profile, onWhatsAppClick }: { profile: UserProfile |
         console.error(error);
         toast({ variant: 'destructive', title: 'Erro de Pagamento', description: error.message || 'Não foi possível iniciar o pagamento. Tente novamente.' });
         setIsLoading(false);
+        setIsTrialLoading(false);
     }
+  };
+
+  const handleStartTrial = async () => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Erro', description: 'Você precisa estar logado para iniciar um teste.' });
+        return;
+    }
+    
+    const expiresAt = profile?.expiresAt;
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+
+    if ((profile?.trialStarted || profile?.status === 'active') && expiresAt && expiresAt > sevenDaysFromNow) {
+        toast({ title: 'Assinatura Ativa', description: 'Você já possui uma assinatura ativa superior ao período de teste.' });
+        router.push('/');
+        return;
+    }
+
+    await createPreference('mensal', true);
   };
 
   // Free trial card (before trial started)
   if (!profile?.trialStarted) {
       return (
-        <Card className="border-primary bg-primary/5 shadow-2xl max-w-md mx-auto rounded-3xl p-4 overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
+        <Card className="border-primary bg-primary/5 shadow-2xl max-w-md mx-auto rounded-3xl p-6 overflow-hidden relative border-2">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Star className="h-32 w-32 fill-primary" />
             </div>
-            <CardHeader className="text-center relative z-10">
-                <div className="bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Star className="h-8 w-8 text-primary fill-current" />
+            <CardHeader className="text-center relative z-10 pb-4">
+                <div className="inline-block bg-primary/15 text-primary text-xs font-bold px-3 py-1 rounded-full border border-primary/20 mb-3 uppercase tracking-wider">
+                    Experimente Grátis
                 </div>
-                <CardTitle className="font-headline text-3xl text-primary">Teste Grátis</CardTitle>
-                <CardDescription className="text-base font-medium">
-                    Experimente o sistema completo por 7 dias sem pagar nada.
+                <CardTitle className="font-headline text-3xl text-primary font-bold">7 Dias de Teste</CardTitle>
+                <CardDescription className="text-sm font-medium mt-1">
+                    Acesso completo ao sistema por 7 dias sem pagar nada hoje.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="pt-4 relative z-10">
+            <CardContent className="pt-2 relative z-10 space-y-5">
+                {/* Informational box about Stripe billing */}
+                <div className="bg-white/70 rounded-2xl p-4 border border-primary/10 space-y-2.5 text-left shadow-sm">
+                    <div className="flex items-center justify-between border-b pb-2">
+                        <span className="text-xs font-bold text-muted-foreground">Devido Hoje:</span>
+                        <span className="text-sm font-extrabold text-green-600">R$ 0,00</span>
+                    </div>
+                    <div className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
+                        <p>
+                            • <strong>Exige cartão de crédito</strong> para ativação e prevenção de fraudes.
+                        </p>
+                        <p>
+                            • Após os 7 dias, a assinatura será de <strong>R$ 62,00/mês</strong>.
+                        </p>
+                        <p>
+                            • <strong>Sem fidelidade:</strong> cancele com apenas 1 clique no seu painel a qualquer momento antes do fim do teste para não ser cobrado.
+                        </p>
+                    </div>
+                </div>
+
                 <Button
                     size="lg"
-                    className="w-full text-lg py-8 shadow-xl hover:scale-105 transition-transform rounded-2xl font-bold"
+                    className="w-full text-lg py-8 shadow-xl hover:scale-102 transition-all rounded-2xl font-bold bg-primary text-primary-foreground hover:bg-primary/95"
                     onClick={handleStartTrial}
                     disabled={isTrialLoading}
                 >
                     {isTrialLoading ? <Loader2 className="animate-spin" /> : (
                         <>
-                            Ativar meus 7 Dias Grátis
+                            Iniciar Teste de 7 Dias
                             <ArrowRight className="ml-2 h-5 w-5" />
                         </>
                     )}
                 </Button>
-                <div className="mt-6 flex flex-col gap-2 items-center">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Check className="h-3 w-3" /> Acesso a todos os recursos
+                
+                <div className="flex flex-col gap-2 items-center pt-2">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground/80 font-medium">
+                        <Check className="h-3.5 w-3.5 text-primary shrink-0" /> Limites de teste: 5 clientes e 15 pedidos
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Check className="h-3 w-3" /> Cartão ou Pix (via revendedor)
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground/80 font-medium">
+                        <Check className="h-3.5 w-3.5 text-primary shrink-0" /> Cancele quando quiser sem burocracia
                     </div>
                 </div>
             </CardContent>

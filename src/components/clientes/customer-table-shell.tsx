@@ -195,6 +195,7 @@ export function CustomerTableShell({
                     <CustomerCardMobile
                         key={row.id}
                         row={row as Row<Customer>}
+                        onCustomerDeleted={onDataMutated}
                     />
                 ))
             ) : (

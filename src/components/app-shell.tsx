@@ -66,7 +66,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { OnboardingModal } from "./dashboard/onboarding-modal";
 import { OnboardingChecklist } from "./dashboard/onboarding-checklist";
 import { useToast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -198,7 +197,7 @@ function MonthProgress({ summary }: { summary: UserSummary | null }) {
     );
 }
 
-function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null, onOpenOnboarding: () => void }) {
+function AppHeader({ profile }: { profile: UserProfile | null }) {
     const { user } = useUser();
     const { auth } = useAuth();
     const { toast } = useToast();
@@ -277,7 +276,7 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
     }, [profile?.expiresAt]);
 
     const isTrialAccount = useMemo(() => {
-        if (!profile?.trialStarted || profile?.stripeCustomerId || !profile?.trialExpiresAt || !isValid(profile.trialExpiresAt)) {
+        if (!profile?.trialStarted || !profile?.trialExpiresAt || !isValid(profile.trialExpiresAt)) {
             return false;
         }
         return new Date() <= profile.trialExpiresAt;
@@ -486,16 +485,6 @@ function AppHeader({ profile, onOpenOnboarding }: { profile: UserProfile | null,
                             )}
 
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                                onSelect={() => {
-                                    setTimeout(() => onOpenOnboarding(), 100);
-                                }} 
-                                className="cursor-pointer py-3"
-                            >
-                                <Sparkles className="mr-2 h-4 w-4 text-primary" />
-                                <span className="font-medium">Tour Inicial</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => auth.signOut()} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer py-3">
                                 <LogOut className="mr-2 h-4 w-4" />
                                 <span className="font-medium">Sair da conta</span>
@@ -644,16 +633,6 @@ export default function AppShell({ children, profile }: { children: React.ReactN
   const { user } = useUser();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
-
-  useEffect(() => {
-    if (profile && !profile.hasSeenOnboarding) {
-      const timer = setTimeout(() => {
-        setIsOnboardingOpen(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [profile]);
 
   const isAdmin = user?.uid === "3YuL6Ff7G9cHAV7xa81kyQF4bCw2";
 
@@ -836,14 +815,12 @@ export default function AppShell({ children, profile }: { children: React.ReactN
                 className="flex-1 overflow-y-auto modern-scrollbar"
                 style={{ paddingBottom: '140px' }}
             >
-                <AppHeader profile={profile} onOpenOnboarding={() => setIsOnboardingOpen(true)} />
+                <AppHeader profile={profile} />
                 {children}
                 <OnboardingChecklist />
             </div>
             <BottomNavigation />
         </main>
-        
-        <OnboardingModal open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen} />
       </div>
   );
 }

@@ -48,14 +48,23 @@ export async function POST(req: Request) {
           const GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
           const expiresAt = new Date((subscription.current_period_end * 1000) + GRACE_PERIOD_MS);
 
-          await adminDb.collection('users').doc(userId).update({
+          const isTrial = subscription.status === 'trialing';
+
+          const updateData: any = {
             stripeCustomerId,
             stripeSubscriptionId,
             subscriptionProvider: 'stripe',
             status: 'active',
             expiresAt: expiresAt,
-          });
-          console.log(`Usuário ${userId} ativado com validade (incl. grace period) até ${expiresAt.toLocaleString()}`);
+          };
+
+          if (isTrial) {
+            updateData.trialStarted = true;
+            updateData.trialExpiresAt = expiresAt;
+          }
+
+          await adminDb.collection('users').doc(userId).update(updateData);
+          console.log(`Usuário ${userId} ativado com validade (incl. grace period) até ${expiresAt.toLocaleString()}${isTrial ? ' (Em período de Teste/Trial)' : ''}`);
         }
         break;
       }
@@ -96,7 +105,7 @@ export async function POST(req: Request) {
       }
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        const stripeSubscriptionId = invoice.subscription as string;
+        const stripeSubscriptionId = (invoice as any).subscription as string;
         
         if (stripeSubscriptionId) {
             const usersRef = adminDb.collection('users');

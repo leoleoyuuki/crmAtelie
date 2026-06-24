@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
           const userData = {
             em: payer.email ? hash(payer.email) : undefined,
             ph: payer.phone?.number ? hash(payer.phone.number) : undefined,
-            client_ip_address: request.ip,
+            client_ip_address: (request as any).ip,
             client_user_agent: request.headers.get('user-agent'),
           };
 

@@ -12,6 +12,7 @@ import { PurchaseTableRowActions } from './purchase-table-row-actions';
 
 interface PurchaseCardMobileProps {
     row: Row<Purchase>;
+    onPurchaseDeleted?: () => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -21,7 +22,7 @@ const formatCurrency = (value: number) => {
     }).format(value);
 }
 
-export function PurchaseCardMobile({ row }: PurchaseCardMobileProps) {
+export function PurchaseCardMobile({ row, onPurchaseDeleted }: PurchaseCardMobileProps) {
     const purchase = row.original;
     const createdAt = purchase.createdAt;
 
@@ -55,7 +56,7 @@ export function PurchaseCardMobile({ row }: PurchaseCardMobileProps) {
                 </div>
             </CardContent>
             <CardFooter className="bg-muted/50 p-2 border-t flex justify-end">
-                 <PurchaseTableRowActions purchase={purchase} />
+                 <PurchaseTableRowActions purchase={purchase} onPurchaseDeleted={onPurchaseDeleted || (() => {})} />
             </CardFooter>
         </Card>
     )

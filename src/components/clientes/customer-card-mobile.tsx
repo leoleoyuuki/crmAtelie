@@ -9,9 +9,10 @@ import { format } from "date-fns";
 
 interface CustomerCardMobileProps {
     row: Row<Customer>;
+    onCustomerDeleted?: () => void;
 }
 
-export function CustomerCardMobile({ row }: CustomerCardMobileProps) {
+export function CustomerCardMobile({ row, onCustomerDeleted }: CustomerCardMobileProps) {
     const customer = row.original;
 
     return (
@@ -37,6 +38,7 @@ export function CustomerCardMobile({ row }: CustomerCardMobileProps) {
             <CardFooter className="bg-muted/50 p-2 border-t flex justify-end">
                 <CustomerTableRowActions 
                     customer={customer} 
+                    onCustomerDeleted={onCustomerDeleted || (() => {})}
                 />
             </CardFooter>
         </Card>

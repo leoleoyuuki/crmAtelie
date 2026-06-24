@@ -408,7 +408,7 @@ export function OnboardingChecklist() {
                                   variant="default" 
                                   size="sm" 
                                   onClick={() => {
-                                    step.action();
+                                    step.action?.();
                                   }}
                                   className="h-7 px-3 text-[10px] rounded-lg font-bold bg-primary text-primary-foreground hover:bg-primary/95 gap-1 shadow-sm mt-1"
                                 >

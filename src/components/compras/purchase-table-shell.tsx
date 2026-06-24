@@ -213,6 +213,7 @@ export function PurchaseTableShell({
                     <PurchaseCardMobile
                         key={row.id}
                         row={row as Row<Purchase>}
+                        onPurchaseDeleted={onDataMutated}
                     />
                 ))
             ) : (
