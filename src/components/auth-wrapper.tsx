@@ -6,7 +6,8 @@ import AppShell from '@/components/app-shell';
 import LoginPage from '@/app/login/page';
 import AtivacaoPage from '@/app/ativacao/page';
 import LandingPage from '@/app/landing/page';
-import { Skeleton } from '@/components/ui/skeleton';
+import LoadingScreen from '@/components/loading-screen';
+
 import { useUser } from '@/firebase/auth/use-user';
 import { PasswordProvider } from '@/contexts/password-context';
 import PhoneRequiredScreen from '@/components/phone-required-screen';
@@ -127,17 +128,7 @@ export function AuthWrapper({ children }: { children: React.ReactNode }) {
   const loading = userLoading || (user && profileLoading);
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center w-full">
-        <div className="flex flex-col items-center space-y-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
   
   if (shouldRedirect) {
