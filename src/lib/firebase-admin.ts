@@ -8,10 +8,19 @@ function initializeAdmin() {
     return admin.app();
   }
 
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+  // Remove aspas que podem ter sido coladas no painel da Vercel
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.slice(1, -1);
+  }
+  if (privateKey.startsWith("'") && privateKey.endsWith("'")) {
+    privateKey = privateKey.slice(1, -1);
+  }
+  privateKey = privateKey.replace(/\\n/g, '\n');
+
   const serviceAccount: admin.ServiceAccount = {
     projectId: process.env.FIREBASE_PROJECT_ID,
-    // Garante que a chave privada seja uma string, mesmo que a variável de ambiente não esteja definida
-    privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+    privateKey: privateKey,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
   };
 
