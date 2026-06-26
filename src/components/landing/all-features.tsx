@@ -48,7 +48,7 @@ const features = [
 
 export function AllFeatures() {
   return (
-    <section className="relative py-28 sm:py-36 overflow-hidden">
+    <section id="recursos" className="relative py-28 sm:py-36 overflow-hidden">
       {/* ── MANTIDO: Ambient colour blobs da sua identidade ── */}
       <div className="absolute -top-32 -left-32 w-[32rem] h-[32rem] bg-primary/[0.06] rounded-full blur-[120px] pointer-events-none z-0" />
       <div className="absolute -bottom-32 -right-32 w-[32rem] h-[32rem] bg-orange-400/[0.06] rounded-full blur-[120px] pointer-events-none z-0" />

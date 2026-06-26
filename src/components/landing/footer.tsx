@@ -4,8 +4,16 @@ import Logo from '../icons/logo';
 import { Instagram, MessageCircle, Mail } from 'lucide-react';
 
 export function Footer() {
+  const handleScrollToRecursos = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const element = document.getElementById('recursos');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
-    <footer className="relative overflow-hidden bg-secondary/80 text-white/80 border-t border-emerald-500/30">
+    <footer className="relative overflow-hidden bg-secondary text-white/80 border-t border-emerald-500/30">
       
       {/* Decorative Blur Spheres for visual depth */}
       <div className="absolute top-0 left-1/4 w-80 h-80 bg-orange-400/20 rounded-full blur-[80px] pointer-events-none -z-10" />
@@ -33,7 +41,13 @@ export function Footer() {
                 <Link href="/" className="text-white/80 hover:text-white transition-colors">Home</Link>
               </li>
               <li>
-                <a href="#recursos" className="text-white/80 hover:text-white transition-colors">Recursos</a>
+                <a
+                  href="#recursos"
+                  onClick={handleScrollToRecursos}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  Recursos
+                </a>
               </li>
               <li>
                 <Link href="/login" className="text-white/80 hover:text-white transition-colors">Acessar</Link>
